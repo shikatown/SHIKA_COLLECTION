@@ -1,0 +1,28 @@
+{
+  "townName": "志賀町",
+  "gpsAccuracyLimit": 120,
+  "defaultRadius": 200,
+  "mapCenter": { "lat": 37.1057, "lng": 136.7376 },
+  "mapZoom": 11,
+  "coin": {
+    "daily": 1,
+    "sakeSnack": 1,
+    "duplicatePer5": 1,
+    "categoryPer5": 2,
+    "spotFirst": 3,
+    "spotRevisit": 1,
+    "townFirst": 5
+  },
+  "event": {
+    "enabled": false,
+    "name": "",
+    "startAt": "",
+    "endAt": "",
+    "sakeSnackBonus": true,
+    "venueBonus": false,
+    "lat": null,
+    "lng": null,
+    "radius": 150,
+    "message": ""
+  }
+}

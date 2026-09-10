@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>アイテム.xlsx → cards.json 変換ツール</title>
+<style>
+  :root{ --ink:#22201d; --ink3:#8d867c; --line:#e7e2d9; --accent:#1f6f5c; --danger:#b3402f; --warn:#8a5a12 }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:26px 18px 60px;background:#fbfaf7;color:var(--ink);line-height:1.75;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:19px;margin:0 0 4px}
+  .lead{color:var(--ink3);font-size:13px;margin:0 0 20px}
+  .drop{
+    border:2px dashed #cfc7b8;border-radius:16px;padding:38px 20px;text-align:center;background:#fff;
+    cursor:pointer;transition:border-color .15s ease,background .15s ease;
+  }
+  .drop.is-over{border-color:var(--accent);background:#f2f8f6}
+  .drop b{display:block;font-size:15px;margin-bottom:4px}
+  .drop span{font-size:12.5px;color:var(--ink3)}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:16px}
+  .panel h2{font-size:14px;margin:0 0 10px}
+  label{font-size:13px;display:block;margin-bottom:6px}
+  select,input[type=text]{
+    font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:10px 20px;font:inherit;font-weight:600;cursor:pointer;
+  }
+  .btn--primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn[disabled]{opacity:.45;pointer-events:none}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:8px}
+  th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{color:var(--ink3);font-weight:600;white-space:nowrap}
+  .stat{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+  .stat b{font-size:16px}
+  ul.msgs{margin:0;padding-left:1.2em;font-size:12.5px}
+  ul.msgs li{margin-bottom:3px}
+  .err{color:var(--danger)}
+  .warn{color:var(--warn)}
+  .ok{color:var(--accent)}
+  pre{background:#f3efe8;padding:10px;border-radius:8px;font-size:11.5px;overflow:auto;max-height:220px}
+  .note{font-size:12px;color:var(--ink3)}
+  .hint{background:#fff8e8;border:1px solid #f0e0c0;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#7a5a1c}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>アイテム.xlsx → cards.json 変換ツール</h1>
+  <p class="lead">ブラウザの中だけで変換します。ファイルはどこにも送信されません。インストールも不要です。</p>
+
+  <div class="drop" id="drop">
+    <b>xlsx ファイルをドラッグ＆ドロップ</b>
+    <span>またはクリックしてファイルを選ぶ</span>
+    <input type="file" id="file" accept=".xlsx" hidden>
+  </div>
+
+  <div class="panel" id="sheetPanel" hidden>
+    <h2>シートを選ぶ</h2>
+    <select id="sheet"></select>
+    <p class="note" style="margin:8px 0 0">「カードID」の見出しがある行を自動で探します。</p>
+  </div>
+
+  <div class="panel">
+    <h2>カード画像フォルダ（任意）</h2>
+    <p class="note" style="margin:0 0 8px">
+      画像の入ったフォルダを選ぶと、ファイル名の数字とカードIDを突き合わせて自動で割り当てます
+      （例 <code>card-01.webp</code> → カードID <code>001</code>）。<br>
+      Excelの「カード画像」列に書いてある場合は、そちらが優先されます。画像が無いカードは空欄のままです。
+    </p>
+    <input type="file" id="imgdir" webkitdirectory directory multiple>
+    <p class="note" id="imgStat" style="margin:8px 0 0"></p>
+  </div>
+
+  <div class="panel" id="resultPanel" hidden>
+    <h2>変換結果</h2>
+    <div class="stat" id="stat"></div>
+    <div id="messages"></div>
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn--primary" id="save">cards.json を保存</button>
+      <button class="btn" id="preview">中身を確認</button>
+    </div>
+    <pre id="previewBox" hidden></pre>
+    <p class="note" style="margin-top:12px">
+      保存した cards.json を、GitHub のリポジトリの <code>data/cards.json</code> に上書きアップロードしてください。
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>列の対応</h2>
+    <table>
+      <tr><th>Excelの列名</th><th>cards.json</th></tr>
+      <tr><td>カードID</td><td>id（永続。再利用しない）</td></tr>
+      <tr><td>アプリカテゴリ</td><td>category（グルメ→gourmet / スポット→spot / 文化→culture）</td></tr>
+      <tr><td>公開</td><td>published（○ のみ公開）</td></tr>
+      <tr><td>名前 / 説明文</td><td>name / description</td></tr>
+      <tr><td>緯度経度</td><td>gps.lat, gps.lng（「37.12345,136.6789」の形式）</td></tr>
+      <tr><td>酒のアテ</td><td>sakeSnack（○ のみ。自動推論はしない）</td></tr>
+      <tr><td>GPS対象 / GPS判定半径(m)</td><td>gps.enabled / gps.radius</td></tr>
+      <tr><td>カード画像 / 詳細写真1〜3</td><td>cardImage / detailPhotos</td></tr>
+      <tr><td>購入検索 / Maps検索ワード</td><td>purchase.enabled / purchase.searchWord</td></tr>
+      <tr><td>店舗1〜3 名称・MapsURL</td><td>purchase.shops[]</td></tr>
+      <tr><td>外部リンク種別 / URL</td><td>externalLinks[]</td></tr>
+      <tr><td>旬・開催時期 / 見どころ・楽しみ方</td><td>season / highlight</td></tr>
+      <tr><td>アプリ備考</td><td>（出力しません。管理者用）</td></tr>
+    </table>
+  </div>
+
+  <p class="note" style="margin-top:20px">
+    このツールは xlsx を自前で読みます（外部ライブラリを同梱していません）。<br>
+    Chrome / Edge / Safari 16.4 以降で動作します。
+  </p>
+</div>
+
+<script>
+const CAT = { 'グルメ':'gourmet', 'スポット':'spot', '文化':'culture' };
+/** カード番号 → 画像ファイル名。フォルダを選んだときだけ入る */
+const imageFiles = new Map();
+const NS_MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+const NS_REL  = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+let book = null;      // { sheets:[{name,path}], strings:[], zip:Map }
+let output = null;
+
+/* ========== ZIP 読み取り（deflate-raw は標準APIで展開） ========== */
+async function readZip(buf) {
+  const dv = new DataView(buf);
+  const u8 = new Uint8Array(buf);
+  let eocd = -1;
+  for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('xlsx ファイルとして読み取れませんでした。');
+  const count = dv.getUint16(eocd + 10, true);
+  let off = dv.getUint32(eocd + 16, true);
+
+  const entries = new Map();
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(off, true) !== 0x02014b50) break;
+    const method = dv.getUint16(off + 10, true);
+    const csize = dv.getUint32(off + 20, true);
+    const nameLen = dv.getUint16(off + 28, true);
+    const extraLen = dv.getUint16(off + 30, true);
+    const cmtLen = dv.getUint16(off + 32, true);
+    const local = dv.getUint32(off + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(off + 46, off + 46 + nameLen));
+    entries.set(name, { method, csize, local });
+    off += 46 + nameLen + extraLen + cmtLen;
+  }
+
+  const zip = new Map();
+  for (const [name, e] of entries) {
+    const lnLen = dv.getUint16(e.local + 26, true);
+    const leLen = dv.getUint16(e.local + 28, true);
+    const start = e.local + 30 + lnLen + leLen;
+    zip.set(name, { bytes: u8.subarray(start, start + e.csize), method: e.method });
+  }
+  return zip;
+}
+
+async function readText(zip, name) {
+  const e = zip.get(name);
+  if (!e) return null;
+  if (e.method === 0) return new TextDecoder('utf-8').decode(e.bytes);
+  if (e.method !== 8) throw new Error('未対応の圧縮形式が含まれています。');
+  if (!('DecompressionStream' in window)) throw new Error('このブラウザでは展開できません。Chrome / Edge をお使いください。');
+  const ds = new DecompressionStream('deflate-raw');
+  const stream = new Blob([e.bytes]).stream().pipeThrough(ds);
+  return new TextDecoder('utf-8').decode(await new Response(stream).arrayBuffer());
+}
+
+function xml(text) {
+  const doc = new DOMParser().parseFromString(text, 'application/xml');
+  if (doc.querySelector('parsererror')) throw new Error('ファイルの中身を読み取れませんでした。');
+  return doc;
+}
+
+/* ========== ブック読み込み ========== */
+async function openWorkbook(file) {
+  const zip = await readZip(await file.arrayBuffer());
+  const wbText = await readText(zip, 'xl/workbook.xml');
+  if (!wbText) throw new Error('xlsx ファイルではないようです。');
+  const relText = await readText(zip, 'xl/_rels/workbook.xml.rels');
+  const rels = {};
+  for (const r of xml(relText).getElementsByTagName('Relationship')) {
+    rels[r.getAttribute('Id')] = r.getAttribute('Target');
+  }
+  const sheets = [];
+  for (const s of xml(wbText).getElementsByTagNameNS(NS_MAIN, 'sheet')) {
+    const rid = s.getAttributeNS(NS_REL, 'id') || s.getAttribute('r:id');
+    let target = rels[rid] || '';
+    target = target.replace(/^\/?xl\//, '').replace(/^\//, '');
+    sheets.push({ name: s.getAttribute('name'), path: 'xl/' + target });
+  }
+
+  // 共有文字列（ふりがな rPh は本文に含めない）
+  const strings = [];
+  const ssText = await readText(zip, 'xl/sharedStrings.xml');
+  if (ssText) {
+    for (const si of xml(ssText).getElementsByTagNameNS(NS_MAIN, 'si')) {
+      let s = '';
+      for (const ch of si.children) {
+        if (ch.localName === 't') s += ch.textContent;
+        else if (ch.localName === 'r') {
+          for (const t of ch.children) if (t.localName === 't') s += t.textContent;
+        }
+      }
+      strings.push(s);
+    }
+  }
+  return { zip, sheets, strings };
+}
+
+function colNum(ref) {
+  const m = /^([A-Z]+)/.exec(ref);
+  let n = 0;
+  for (const ch of m ? m[1] : '') n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n;
+}
+
+async function readSheet(bk, path) {
+  const text = await readText(bk.zip, path);
+  const doc = xml(text);
+  const rows = [];
+  for (const row of doc.getElementsByTagNameNS(NS_MAIN, 'row')) {
+    const cells = {};
+    for (const c of row.getElementsByTagNameNS(NS_MAIN, 'c')) {
+      const t = c.getAttribute('t');
+      if (t === 'e') continue;                    // #VALUE! などのエラー値は無視
+      let v = '';
+      if (t === 'inlineStr') {
+        const is = c.getElementsByTagNameNS(NS_MAIN, 't');
+        for (const n of is) v += n.textContent;
+      } else {
+        const vn = c.getElementsByTagNameNS(NS_MAIN, 'v')[0];
+        if (!vn) continue;
+        if (t === 's') v = bk.strings[Number(vn.textContent)] ?? '';
+        else if (t === 'b') v = vn.textContent === '1' ? 'TRUE' : 'FALSE';
+        else v = vn.textContent;
+      }
+      v = String(v).trim();
+      if (v) cells[colNum(c.getAttribute('r'))] = v;
+    }
+    rows.push(cells);
+  }
+  return rows;
+}
+
+/* ========== 変換 ========== */
+function convert(rows) {
+  const msgs = [];
+  const hIndex = rows.findIndex((r) => Object.values(r).some((v) => v === 'カードID'));
+  if (hIndex < 0) throw new Error('「カードID」の見出しが見つかりません。シートを選び直してください。');
+  const header = rows[hIndex];
+  const col = {};
+  for (const [k, v] of Object.entries(header)) col[v] = Number(k);
+  const get = (r, name) => (col[name] ? (r[col[name]] || '') : '');
+
+  const cards = [];
+  const seen = new Set();
+
+  for (let i = hIndex + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!Object.keys(r).length) continue;
+    const id = get(r, 'カードID');
+    const name = get(r, '名前');
+    if (!id) {
+      if (name) msgs.push({ level: 'err', text: `${i + 1}行目「${name}」: カードIDがありません。` });
+      continue;
+    }
+    if (seen.has(id)) { msgs.push({ level: 'err', text: `カードID ${id} が重複しています。` }); continue; }
+    seen.add(id);
+
+    const catJa = get(r, 'アプリカテゴリ');
+    let category = CAT[catJa] || null;
+    if (catJa && !category) msgs.push({ level: 'err', text: `${id} ${name}: アプリカテゴリ「${catJa}」は使えません（グルメ / スポット / 文化）。` });
+
+    let published = get(r, '公開') === '○';
+    if (published && !category) {
+      msgs.push({ level: 'err', text: `${id} ${name}: 公開○ですがアプリカテゴリが空欄のため、非公開として出力しました。` });
+      published = false;
+    }
+
+    let lat = null, lng = null;
+    const ll = get(r, '緯度経度');
+    if (ll) {
+      const m = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(ll);
+      if (m) { lat = Number(m[1]); lng = Number(m[2]); }
+      else msgs.push({ level: 'err', text: `${id} ${name}: 緯度経度の形式が不正です（${ll}）。` });
+    }
+
+    let gpsOn = get(r, 'GPS対象') === '○';
+    if (gpsOn && (lat === null || lng === null)) {
+      msgs.push({ level: 'err', text: `${id} ${name}: GPS対象ですが座標がないため、対象から外しました。` });
+      gpsOn = false;
+    }
+    let radius = Number(get(r, 'GPS判定半径(m)')) || null;
+    if (radius !== null && (radius < 50 || radius > 1000)) {
+      msgs.push({ level: 'warn', text: `${id} ${name}: GPS判定半径 ${radius}m は想定外の値です（通常100〜300m）。` });
+    }
+    if (gpsOn && !radius) radius = 200;
+
+    const photos = ['詳細写真１', '詳細写真1', '詳細写真2', '詳細写真3']
+      .map((k) => get(r, k)).filter((v, i, a) => v && a.indexOf(v) === i);
+
+    const shops = [];
+    for (const n of [1, 2, 3]) {
+      const sn = get(r, `店舗${n}名称`);
+      const su = get(r, `店舗${n}MapsURL`);
+      if (!sn && !su) continue;
+      if (su && !/^https?:\/\//i.test(su)) {
+        msgs.push({ level: 'err', text: `${id} ${name}: 店舗${n}のURLが http(s) で始まっていません。` });
+        continue;
+      }
+      shops.push({ name: sn, url: su });
+    }
+
+    const links = [];
+    const lu = get(r, '外部リンクURL');
+    if (lu) {
+      if (/^https?:\/\//i.test(lu)) links.push({ label: get(r, '外部リンク種別') || '詳しく見る', url: lu });
+      else msgs.push({ level: 'err', text: `${id} ${name}: 外部リンクURLが http(s) で始まっていません。` });
+    }
+
+    let cardImage = get(r, 'カード画像');
+    if (!cardImage && imageFiles.size) {
+      const n = Number(id);
+      if (imageFiles.has(n)) cardImage = imageFiles.get(n);
+    }
+    if (published && !cardImage) {
+      msgs.push({ level: 'warn', text: `${id} ${name}: カード画像が未設定です（代替表示になります）。` });
+    }
+
+    const purchaseOn = get(r, '購入検索') === '○';
+    const searchWord = get(r, 'Maps検索ワード');
+    if (purchaseOn && !searchWord && !shops.length) {
+      msgs.push({ level: 'warn', text: `${id} ${name}: 購入検索○ですが検索ワードが空です（名前で検索します）。` });
+    }
+
+    cards.push({
+      id, name,
+      reading: '',
+      category,
+      subCategory: get(r, '分類'),
+      published,
+      cardImage,
+      description: get(r, '説明文'),
+      season: get(r, '旬・開催時期'),
+      highlight: get(r, '見どころ・楽しみ方'),
+      detailPhotos: photos,
+      sakeSnack: get(r, '酒のアテ') === '○',
+      gps: { enabled: gpsOn, lat, lng, radius: radius },
+      purchase: { enabled: purchaseOn, searchWord, shops },
+      externalLinks: links,
+    });
+  }
+
+  if (!cards.length) throw new Error('カードが1件も読み取れませんでした。');
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return {
+    doc: {
+      dataVersion: `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`,
+      generatedAt: d.toISOString().slice(0, 19),
+      cards,
+    },
+    msgs,
+  };
+}
+
+/* ========== 画面 ========== */
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const sheetPanel = document.getElementById('sheetPanel');
+const sheetSel = document.getElementById('sheet');
+const resultPanel = document.getElementById('resultPanel');
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('is-over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+drop.addEventListener('drop', (e) => {
+  e.preventDefault(); drop.classList.remove('is-over');
+  if (e.dataTransfer.files[0]) handle(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handle(fileInput.files[0]); });
+
+async function handle(file) {
+  resultPanel.hidden = true;
+  try {
+    book = await openWorkbook(file);
+  } catch (e) {
+    alert(e.message || String(e));
+    return;
+  }
+  sheetSel.replaceChildren();
+  for (const s of book.sheets) {
+    const o = document.createElement('option');
+    o.value = s.path; o.textContent = s.name;
+    sheetSel.append(o);
+  }
+  sheetPanel.hidden = false;
+  // 「カードID」が見つかるシートを自動選択
+  for (const s of book.sheets) {
+    try {
+      const rows = await readSheet(book, s.path);
+      if (rows.some((r) => Object.values(r).includes('カードID'))) { sheetSel.value = s.path; break; }
+    } catch (_) { /* skip */ }
+  }
+  run();
+}
+
+sheetSel.addEventListener('change', run);
+
+document.getElementById('imgdir').addEventListener('change', (e) => {
+  imageFiles.clear();
+  const skipped = [];
+  for (const f of e.target.files) {
+    if (!/\.(webp|png|jpe?g|avif|gif)$/i.test(f.name)) continue;
+    const m = /(\d+)/.exec(f.name);          // ファイル名の最初の数字をカード番号とみなす
+    if (!m) { skipped.push(f.name); continue; }
+    const n = Number(m[1]);
+    if (imageFiles.has(n)) { skipped.push(f.name); continue; }
+    imageFiles.set(n, f.name);
+  }
+  const stat = document.getElementById('imgStat');
+  stat.textContent = imageFiles.size
+    ? `${imageFiles.size} 枚を認識しました。` + (skipped.length ? `（番号が読めない/重複: ${skipped.length} 件は無視）` : '')
+    : '画像ファイルが見つかりませんでした。';
+  if (book) run();
+});
+
+/* 「分類」（海の幸 など）が別シートにある場合、カードIDで突き合わせて補う。
+   これがないと、再変換のたびに subCategory が失われてしまう。 */
+async function fillSubCategories(doc) {
+  const need = doc.cards.filter((c) => !c.subCategory);
+  if (!need.length) return;
+  for (const s of book.sheets) {
+    let rows;
+    try { rows = await readSheet(book, s.path); } catch (_) { continue; }
+    const hi = rows.findIndex((r) => {
+      const v = Object.values(r);
+      return v.includes('カードID') && v.includes('分類');
+    });
+    if (hi < 0) continue;
+    const col = {};
+    for (const [k, v] of Object.entries(rows[hi])) col[v] = Number(k);
+    const map = new Map();
+    for (let i = hi + 1; i < rows.length; i++) {
+      const id = rows[i][col['カードID']];
+      const sub = rows[i][col['分類']];
+      if (id && sub) map.set(String(id), sub);
+    }
+    if (!map.size) continue;
+    for (const c of doc.cards) if (!c.subCategory && map.has(c.id)) c.subCategory = map.get(c.id);
+    return;
+  }
+}
+
+async function run() {
+  try {
+    const rows = await readSheet(book, sheetSel.value);
+    const { doc, msgs } = convert(rows);
+    await fillSubCategories(doc);
+    output = doc;
+    show(doc, msgs);
+  } catch (e) {
+    output = null;
+    resultPanel.hidden = false;
+    document.getElementById('stat').textContent = '';
+    document.getElementById('messages').innerHTML = '';
+    const p = document.createElement('p');
+    p.className = 'err';
+    p.textContent = e.message || String(e);
+    document.getElementById('messages').append(p);
+    document.getElementById('save').disabled = true;
+  }
+}
+
+function show(doc, msgs) {
+  resultPanel.hidden = false;
+  const pub = doc.cards.filter((c) => c.published);
+  const byCat = {};
+  for (const c of pub) byCat[c.category] = (byCat[c.category] || 0) + 1;
+  const stat = document.getElementById('stat');
+  stat.replaceChildren();
+  const add = (k, v) => {
+    const d = document.createElement('div');
+    d.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = String(v);
+    const s = document.createElement('span'); s.textContent = ' ' + k;
+    d.append(b, s); stat.append(d);
+  };
+  add('件（全体）', doc.cards.length);
+  add('件（公開）', pub.length);
+  add('グルメ', byCat.gourmet || 0);
+  add('スポット', byCat.spot || 0);
+  add('文化', byCat.culture || 0);
+  add('GPS対象', pub.filter((c) => c.gps.enabled).length);
+
+  const box = document.getElementById('messages');
+  box.replaceChildren();
+  const errs = msgs.filter((m) => m.level === 'err');
+  const warns = msgs.filter((m) => m.level === 'warn');
+  if (!errs.length && !warns.length) {
+    const p = document.createElement('p');
+    p.className = 'ok'; p.textContent = '問題は見つかりませんでした。';
+    box.append(p);
+  }
+  for (const [label, list, cls] of [['要確認', errs, 'err'], ['注意', warns, 'warn']]) {
+    if (!list.length) continue;
+    const h = document.createElement('p');
+    h.className = cls;
+    h.textContent = `${label}（${list.length}件）`;
+    const ul = document.createElement('ul');
+    ul.className = 'msgs ' + cls;
+    for (const m of list) {
+      const li = document.createElement('li');
+      li.textContent = m.text;
+      ul.append(li);
+    }
+    box.append(h, ul);
+  }
+  document.getElementById('save').disabled = false;
+}
+
+document.getElementById('save').addEventListener('click', () => {
+  if (!output) return;
+  const blob = new Blob([JSON.stringify(output, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cards.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+});
+
+document.getElementById('preview').addEventListener('click', () => {
+  const box = document.getElementById('previewBox');
+  box.hidden = !box.hidden;
+  if (!box.hidden && output) box.textContent = JSON.stringify(output.cards.slice(0, 3), null, 1);
+});
+</script>
+</body>
+</html>

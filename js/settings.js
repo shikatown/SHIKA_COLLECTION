@@ -1,0 +1,233 @@
+/* settings.js — 設定・遊び方・プライバシー・リセット。 */
+
+import { app, commit, setState, storage, CATEGORIES } from './state.js';
+import { el, clear, toast, dialog, confirm2 } from './ui.js';
+import { sfx, unlock } from './sound.js';
+import * as backup from './backup.js';
+import { coinCfg, titles, categoryProgress, duplicateGaugeInfo } from './rewards.js';
+import { SINGLE_COST, TEN_COST } from './gacha.js';
+import { go } from './router.js';
+
+export function renderMore(view) {
+  clear(view);
+  view.append(el('h2', { text: 'その他' }));
+
+  const list = el('div', { class: 'list' });
+  list.append(link('遊び方', '#/help'));
+  list.append(link('集めた記録', '#/records'));
+  list.append(link('設定', '#/settings'));
+  list.append(link('プライバシーについて', '#/privacy'));
+  view.append(list);
+
+  const v = app.version;
+  view.append(el('p', {
+    class: 'muted center', style: { marginTop: '18px', fontSize: '11.5px' },
+    text: v ? `アプリ ${v.appVersion || '-'} ／ データ ${v.dataVersion || '-'}` : '',
+  }));
+}
+
+function link(label, href) {
+  return el('a', { class: 'list__item', attrs: { href } }, [
+    el('span', { text: label }),
+    el('span', { html: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', style: { flex: 'none', width: '16px', height: '16px', color: '#b9b2a6' } }),
+  ]);
+}
+
+/* ===== 設定 ===== */
+export function renderSettings(view) {
+  clear(view);
+  view.append(el('h2', { text: '設定' }));
+
+  const list = el('div', { class: 'list' });
+  list.append(toggleRow('効果音', 'sound'));
+  list.append(toggleRow('振動', 'vibration'));
+  view.append(list);
+  view.append(el('p', { class: 'muted', style: { fontSize: '11.5px', marginTop: '8px' }, text: '効果音はアプリ内で生成しています。BGMはありません。振動に対応していない端末では無視されます。' }));
+
+  view.append(el('h3', { text: 'データ' }));
+  const data = el('div', { class: 'list' });
+  data.append(actionRow('バックアップを保存', () => backup.download()));
+  data.append(actionRow('バックアップから復元', async () => {
+    const f = await backup.pickFile();
+    if (f) { const ok = await backup.restoreFromFile(f); if (ok) go('#/home'); }
+  }));
+  view.append(data);
+  view.append(el('p', {
+    class: 'muted', style: { fontSize: '11.5px', marginTop: '8px' },
+    text: storage.isPersistent()
+      ? 'カードとコインはこの端末の中だけに保存されます。ブラウザのデータを消すと失われます。'
+      : 'このブラウザでは保存領域を使えないため、進行が残りません（プライベートモードなど）。',
+  }));
+
+  view.append(el('h3', { text: 'このアプリについて' }));
+  const about = el('div', { class: 'list' });
+  about.append(link('遊び方', '#/help'));
+  about.append(link('プライバシーについて', '#/privacy'));
+  view.append(about);
+
+  const reset = el('div', { style: { marginTop: '26px' } });
+  reset.append(el('button', {
+    class: 'btn btn--danger btn--block', attrs: { type: 'button' }, text: 'ぜんぶのデータをリセット',
+    on: { click: () => doReset() },
+  }));
+  view.append(reset);
+}
+
+function toggleRow(label, key) {
+  const row = el('div', { class: 'list__item' });
+  row.append(el('span', { text: label }));
+  const sw = el('button', {
+    class: `switch${app.state.settings[key] ? ' is-on' : ''}`,
+    attrs: { type: 'button', role: 'switch', 'aria-checked': String(app.state.settings[key]), 'aria-label': label },
+  });
+  sw.addEventListener('click', () => {
+    commit((s) => { s.settings[key] = !s.settings[key]; });
+    const on = app.state.settings[key];
+    sw.classList.toggle('is-on', on);
+    sw.setAttribute('aria-checked', String(on));
+    if (key === 'sound' && on) { unlock(); sfx.tap(); }
+    if (key === 'vibration' && on && 'vibrate' in navigator) navigator.vibrate(15);
+  });
+  row.append(sw);
+  return row;
+}
+
+function actionRow(label, fn) {
+  return el('button', { class: 'list__item', attrs: { type: 'button' }, on: { click: fn } }, [
+    el('span', { text: label }),
+  ]);
+}
+
+async function doReset() {
+  const first = await confirm2(
+    'ぜんぶのデータをリセット',
+    ['集めたカード、SHIKA COIN、訪問記録、設定がすべて消えます。', 'この操作は元に戻せません。'],
+    '次へ'
+  );
+  if (!first) return;
+  const second = await dialog({
+    title: '本当にリセットしますか',
+    body: ['リセットすると、無料10連からやり直しになります。'],
+    actions: [{ label: 'やめる', value: false }, { label: 'リセットする', value: true, danger: true }],
+  });
+  if (!second) return;
+  storage.clear();
+  setState(storage.defaultState());
+  toast('リセットしました');
+  go('#/home');
+}
+
+/* ===== 遊び方 ===== */
+export function renderHelp(view) {
+  clear(view);
+  const cfg = coinCfg();
+  view.append(el('h2', { text: '遊び方' }));
+
+  view.append(section('ガチャ', [
+    `1回 ${SINGLE_COST} SHIKA COIN、10連 ${TEN_COST} SHIKA COIN です（10連割引はありません）。`,
+    'すべてのカードが同じ確率で登場します。レアリティはありません。',
+    'はじめての方は無料10連から。10枚すべて重複なし、グルメ・スポット・文化が最低1枚ずつ入ります。',
+  ]));
+
+  view.append(section('SHIKA COIN の集め方', [
+    `毎日はじめて開いたとき +${cfg.daily}`,
+    `酒のアテカードを初めて手に入れたとき +${cfg.sakeSnack}`,
+    `カードが5枚かぶるごとに +${cfg.duplicatePer5}（繰り越されます）`,
+    `同じカテゴリを5種類集めるごとに +${cfg.categoryPer5}`,
+    `スポットに実際に行くと 初回 +${cfg.spotFirst}、再訪は1日1回 +${cfg.spotRevisit}`,
+    `志賀町にはじめて来たとき +${cfg.townFirst}（1回限り）`,
+  ]));
+
+  view.append(section('カードを見る', [
+    'カード画像をタップすると、3Dでカードをじっくり眺められます。',
+    '指でドラッグすると回り、裏面まで見られます。ダブルタップで正面に戻ります。',
+  ]));
+
+  view.append(section('まち巡り', [
+    '「現在地を確認」を押したときだけ位置情報を使います。自動では取得しません。',
+    'スポットの近く（およそ200m以内）にいるとチェックインでき、範囲内のスポットはまとめて判定されます。',
+    'まだ持っていないスポットカードは、現地に行くと手に入ります。',
+    '経路や所要時間は Google Maps で確認してください。アプリ内の距離は直線距離の目安です。',
+  ]));
+
+  view.append(section('データについて', [
+    '集めたカードやコインは、この端末の中だけに保存されます。',
+    '設定からバックアップを保存しておくと、機種変更や再インストールのときに復元できます。',
+  ]));
+
+  view.append(el('a', { class: 'btn btn--block', text: 'プライバシーについて', attrs: { href: '#/privacy' }, style: { marginTop: '16px' } }));
+}
+
+function section(title, lines) {
+  const s = el('div', { class: 'panel', style: { marginBottom: '12px' } });
+  s.append(el('h3', { class: 'panel__title', text: title, style: { margin: '0 0 8px' } }));
+  const ul = el('ul', { style: { margin: 0, paddingLeft: '1.1em', fontSize: '13px' } });
+  for (const l of lines) ul.append(el('li', { text: l, style: { marginBottom: '4px' } }));
+  s.append(ul);
+  return s;
+}
+
+/* ===== プライバシー ===== */
+export function renderPrivacy(view) {
+  clear(view);
+  view.append(el('h2', { text: 'プライバシーについて' }));
+  view.append(section('集めない情報', [
+    '氏名・住所・電話番号・メールアドレスは入力欄そのものがありません。',
+    'ユーザー登録やアカウントはありません。',
+    'アクセス解析・行動分析・利用者の追跡は行っていません。解析タグも入れていません。',
+  ]));
+  view.append(section('位置情報', [
+    '現在地は「現在地を確認」を押したときだけ取得します。',
+    '取得した緯度経度は保存も送信もしません。判定が終わると端末のメモリから消えます。',
+    '残るのは「どのスポットを訪問済みか」「最終訪問日」だけです。',
+  ]));
+  view.append(section('遊びのデータ', [
+    'カード・SHIKA COIN・気になる・設定は、この端末のブラウザ内にだけ保存されます。',
+    'サーバーへは送信していません（そもそも保存用のサーバーがありません）。',
+  ]));
+  view.append(section('外部への通信', [
+    'カードデータ・画像・地図タイルの読み込みのために通信します。',
+    '「Google Maps で行く」などのリンクを押したときだけ、外部サイトへ移動します。',
+  ]));
+}
+
+/* ===== 集めた記録 ===== */
+export function renderRecords(view) {
+  clear(view);
+  const s = app.state;
+  view.append(el('h2', { text: '集めた記録' }));
+
+  const p = el('div', { class: 'panel' });
+  const stat = (k, v) => el('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', padding: '3px 0' } }, [
+    el('span', { text: k }), el('b', { text: String(v) }),
+  ]);
+  p.append(stat('SHIKA COIN', s.coins));
+  p.append(stat('集めたカード', `${s.ownedCardIds.length} 枚`));
+  p.append(stat('現地訪問', `${Object.values(s.visits).filter((v) => v.firstVisitedAt).length} か所`));
+  p.append(stat('気になる', `${s.favorites.length} 件`));
+  const g = duplicateGaugeInfo();
+  p.append(stat('かぶりゲージ', `${g.current} / 5`));
+  view.append(p);
+
+  view.append(el('h3', { text: 'カテゴリ' }));
+  const cp = el('div', { class: 'panel' });
+  for (const c of categoryProgress()) {
+    cp.append(el('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13px' } }, [
+      el('span', { text: c.label }),
+      el('span', { class: 'muted', text: `${c.owned}/${c.total}${c.complete ? ' ・コンプリート' : (c.remain != null ? ` ・次の報酬まであと${c.remain}` : '')}` }),
+    ]));
+    cp.append(el('div', { class: 'bar', style: { margin: '6px 0 12px' } }, [
+      el('span', { style: { width: `${c.total ? (c.owned / c.total) * 100 : 0}%` } }),
+    ]));
+  }
+  view.append(cp);
+
+  const t = titles();
+  view.append(el('h3', { text: '称号' }));
+  const bg = el('div', { class: 'badgegrid' });
+  const all = [...CATEGORIES.map((c) => c.master), '志賀町マスター'];
+  for (const name of all) {
+    bg.append(el('span', { class: `badge${t.includes(name) ? ' badge--on' : ''}`, text: t.includes(name) ? name : `${name}（未達成）` }));
+  }
+  view.append(bg);
+}

@@ -1,0 +1,96 @@
+/* 3Dカードビューア — カード鑑賞専用の空間。説明文は出さない。 */
+
+.viewer3d{
+  position:fixed;inset:0;z-index:70;
+  background:radial-gradient(120% 90% at 50% 35%, #2a2724 0%, #141312 70%, #0d0c0b 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  touch-action:none;overscroll-behavior:contain;
+}
+.viewer3d__close{
+  position:absolute;right:10px;top:calc(10px + env(safe-area-inset-top));
+  width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;
+  background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;
+}
+.viewer3d__close svg{width:20px;height:20px}
+.viewer3d__nav{
+  position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:0;right:0;
+  display:flex;align-items:center;justify-content:center;gap:14px;
+}
+.viewer3d__nav button{
+  background:rgba(255,255,255,.1);border:0;color:#fff;border-radius:999px;
+  padding:9px 16px;font-size:12.5px;cursor:pointer;
+}
+.viewer3d__nav button[disabled]{opacity:.3;pointer-events:none}
+.viewer3d__hint{
+  position:absolute;left:0;right:0;bottom:calc(74px + env(safe-area-inset-bottom));
+  text-align:center;color:rgba(255,255,255,.6);font-size:11.5px;letter-spacing:.04em;
+}
+
+.stage3d{ perspective:1400px; width:min(74vw, 300px); }
+.stage3d__shadow{
+  position:absolute;left:50%;top:50%;width:min(70vw,280px);height:26px;
+  transform:translate(-50%, calc(min(74vw,300px) * 0.66));
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.55), rgba(0,0,0,0) 70%);
+  filter:blur(2px);pointer-events:none;transition:transform .1s linear, opacity .1s linear;
+}
+
+.card3d{
+  position:relative;width:100%;aspect-ratio:4/5;
+  transform-style:preserve-3d;
+  transform:rotateX(0deg) rotateY(0deg);
+  will-change:transform;
+}
+.card3d.is-easing{ transition:transform .55s cubic-bezier(.22,.9,.28,1) }
+
+.card3d__side{
+  position:absolute;inset:0;border-radius:14px;overflow:hidden;
+  backface-visibility:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.5);
+}
+.card3d__side--front{ transform:translateZ(1.2px) }
+.card3d__side--back{ transform:rotateY(180deg) translateZ(1.2px) }
+/* 厚み（実物より少しだけ強調） */
+.card3d__edge{
+  position:absolute;inset:0;border-radius:14px;
+  transform:translateZ(-1.2px);
+  background:linear-gradient(90deg,#cfc7b8,#efeae0 30%,#d8d0c1 70%,#bfb7a8);
+  box-shadow:0 0 0 1px rgba(0,0,0,.12);
+}
+
+/* 光沢レイヤー（画像そのものは加工しない・独立レイヤーで重ねる） */
+.card3d__sheen{
+  position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+  background:linear-gradient(105deg,
+    rgba(255,255,255,0) 34%,
+    rgba(255,255,255,.34) 48%,
+    rgba(255,255,255,.06) 60%,
+    rgba(255,255,255,0) 72%);
+  background-size:260% 100%;
+  background-position:var(--sheen, 50%) 0;
+  opacity:.85;
+}
+.card3d__side--back .card3d__sheen{ opacity:.35 }
+.card3d__sheen--auto{ transition:background-position 3s ease-in-out }
+
+.viewer3d__caption{
+  position:absolute;left:0;right:0;top:calc(18px + env(safe-area-inset-top));
+  text-align:center;color:rgba(255,255,255,.85);font-size:13px;font-weight:700;letter-spacing:.06em;
+}
+
+/* 初回の操作案内。カードを隠さないよう下寄せにする */
+.tut3d{
+  position:absolute;inset:auto 0 0;display:grid;justify-items:center;
+  padding:0 24px calc(112px + env(safe-area-inset-bottom));
+  color:#fff;text-align:center;font-size:14px;line-height:1.8;z-index:5;
+  background:linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,0));
+  padding-top:60px;pointer-events:auto;
+}
+.tut3d__demo{
+  width:44px;height:44px;margin:0 auto 10px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.6);
+  animation:tutSwing 1.8s ease-in-out infinite;
+}
+@keyframes tutSwing{
+  0%,100%{ transform:translateX(-14px) }
+  50%{ transform:translateX(14px) }
+}

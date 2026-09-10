@@ -1,0 +1,105 @@
+/* ガチャ演出まわり。演出は「確定済みの結果を見せるだけ」。 */
+
+@keyframes fadeOut{ to{ opacity:0; visibility:hidden } }
+@keyframes bootCopy{ to{ opacity:1; transform:translateY(0) } }
+@keyframes floatIn{
+  from{ opacity:0; transform:translate(var(--fx,0px), 60px) rotate(var(--fr,0deg)) scale(.8) }
+  to  { opacity:1; transform:translate(var(--fx,0px), 0) rotate(var(--fr,0deg)) scale(1) }
+}
+@keyframes gather{ to{ transform:translate(0,0) rotate(0deg) scale(1) } }
+@keyframes popIn{
+  0%{ opacity:0; transform:scale(.86) }
+  60%{ opacity:1; transform:scale(1.03) }
+  100%{ opacity:1; transform:scale(1) }
+}
+@keyframes riseUp{ from{ transform:translateY(14px); opacity:0 } to{ transform:translateY(0); opacity:1 } }
+@keyframes shine{
+  from{ transform:translateX(-140%) rotate(18deg) }
+  to  { transform:translateX(240%) rotate(18deg) }
+}
+@keyframes glowPulse{
+  0%,100%{ opacity:.25; transform:scale(1) }
+  50%{ opacity:.7; transform:scale(1.12) }
+}
+
+/* 起動画面のカード束 */
+.bootcard{
+  position:absolute;left:50%;top:50%;width:44%;aspect-ratio:4/5;margin:-27.5% 0 0 -22%;
+  border-radius:10px;overflow:hidden;box-shadow:0 8px 22px rgba(34,32,29,.22);
+  transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(.92);
+  animation:gather .9s cubic-bezier(.22,.8,.3,1) forwards;
+  animation-delay:var(--d,0s);
+}
+
+/* ===== ガチャ画面 ===== */
+.gachastage{
+  position:relative;width:100%;height:min(62vh,440px);
+  display:grid;place-items:center;perspective:1100px;
+}
+.gachastage__glow{
+  position:absolute;width:64%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,231,168,.85) 0%, rgba(255,231,168,0) 68%);
+  opacity:0;pointer-events:none;
+}
+.gachastage__glow.is-on{animation:glowPulse 1.1s ease-in-out infinite}
+.drawcard{
+  position:relative;width:min(58%,220px);aspect-ratio:4/5;
+  transform-style:preserve-3d;transition:transform .52s cubic-bezier(.3,.9,.35,1);
+  border-radius:12px;
+}
+.drawcard.is-flipped{ transform:rotateY(180deg) }
+.drawcard__side{
+  position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;overflow:hidden;
+  box-shadow:0 10px 30px rgba(34,32,29,.25);
+}
+.drawcard__side--back{ transform:rotateY(0deg) }
+.drawcard__side--front{ transform:rotateY(180deg) }
+.drawcard.is-new .drawcard__side--front::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.75) 45%, transparent 90%);
+  width:60%;animation:shine .85s ease .1s 1 forwards;
+}
+.drawcard--enter{ animation:popIn .38s cubic-bezier(.2,.9,.3,1) both }
+
+.gacha__counter{
+  position:absolute;top:6px;left:0;right:0;text-align:center;
+  font-size:12px;color:var(--ink-3);letter-spacing:.08em;
+}
+.gacha__newtag{
+  position:absolute;left:50%;transform:translateX(-50%);bottom:14%;
+  background:var(--danger);color:#fff;font-weight:800;font-size:12px;letter-spacing:.2em;
+  padding:3px 12px;border-radius:999px;animation:popIn .3s ease both;
+}
+.gacha__name{
+  margin-top:14px;font-size:16px;font-weight:800;text-align:center;
+  animation:riseUp .35s ease both;
+}
+.gacha__acts{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.gacha__skip{
+  position:absolute;right:6px;top:2px;background:transparent;border:0;
+  color:var(--ink-3);font-size:12px;cursor:pointer;padding:8px 10px;
+}
+
+/* 結果一覧 */
+.result__grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.result__cell{position:relative;animation:popIn .26s ease both}
+.result__cell:nth-child(n){animation-delay:calc(var(--i,0) * 40ms)}
+.bonusbox{
+  background:var(--coin-soft);border:1px solid #efe1c2;border-radius:var(--radius);
+  padding:12px 14px;margin-top:14px;
+}
+.bonusbox h3{margin:0 0 6px;font-size:13px;color:var(--coin);letter-spacing:.06em}
+.bonusbox__row{display:flex;justify-content:space-between;font-size:13px;padding:2px 0}
+.bonusbox__total{
+  display:flex;justify-content:space-between;font-size:14px;font-weight:800;
+  border-top:1px dashed #e2ceaa;margin-top:6px;padding-top:6px;color:var(--coin);
+}
+
+.reveal-msg{
+  text-align:center;font-size:13px;color:var(--ink-2);margin-top:16px;
+  animation:riseUp .4s ease both;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+}

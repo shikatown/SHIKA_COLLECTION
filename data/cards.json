@@ -1,0 +1,1384 @@
+{
+ "dataVersion": "20260910-2",
+ "generatedAt": "2026-09-10T15:13:37",
+ "cards": [
+  {
+   "id": "001",
+   "name": "甘えび",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-01.webp",
+   "description": "とろけるような身と甘さが魅力の甘えび。新鮮な海の恵みを鮮度抜群のまま味わえます。",
+   "season": "12月上旬～4月上旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 甘えび",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "002",
+   "name": "加能ガニ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-02.webp",
+   "description": "極寒の日本海・西海沖が育む極上のズワイガニ。ギュっと詰まった身は上品で格別な味です。",
+   "season": "11月上旬～3月下旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 加能ガニ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "003",
+   "name": "香箱ガニ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-03.webp",
+   "description": "志賀沖で獲れたズワイガニの雌。味噌や卵の独特の風味が楽しめます。濃厚で旨味もたっぷり。",
+   "season": "11月上旬～12月下旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 香箱ガニ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "004",
+   "name": "紅ズワイガニ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-04.webp",
+   "description": "栄養豊富な海で育っているので、身がしっかり詰まっています。甘さが強いのが特徴です。",
+   "season": "3月～12月",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 紅ズワイガニ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "005",
+   "name": "活アワビ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-05.webp",
+   "description": "サイズが大きなものを素潜りで採っています。弾力のある身は噛むほどに味わい深いです。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 活アワビ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "006",
+   "name": "活サザエ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-06.webp",
+   "description": "志賀町沖で獲れるサザエは、身はコリコリ、肝は濃厚で、磯の香りが食欲をそそります。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 活サザエ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "007",
+   "name": "イカの塩辛　糀漬け",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-07.webp",
+   "description": "旨みが凝縮された塩辛。ご飯やお酒のお供にぴったりで、味わい深い逸品です。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 イカの塩辛　糀漬け",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "008",
+   "name": "イカの塩辛　黒づくり",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "",
+   "description": "",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 イカの塩辛　黒づくり",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "009",
+   "name": "天然岩かき",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-09.webp",
+   "description": "６～８月が旬の大ぶりな岩かき。濃厚な旨みとクリーミーな食感が特徴です。",
+   "season": "6月中旬～8月中旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 天然岩かき",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "010",
+   "name": "能登岩のり",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-10.webp",
+   "description": "磯の香り豊かな志賀の岩のり。ご飯や汁物に加えると、風味が一層引き立ちます。",
+   "season": "1月下旬～5月下旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登岩のり",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "011",
+   "name": "いかづくし（もみいか）",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "海の幸",
+   "published": true,
+   "cardImage": "card-11.webp",
+   "description": "スルメイカとホタルイカを昔ながらの製法で加工し、旨さを引き出しました。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 いかづくし（もみいか）",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "012",
+   "name": "能登牛（のとうし）",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-12.webp",
+   "description": "きめ細やかな肉質と豊かな旨みが特徴の能登牛。焼いても煮ても絶品です。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登牛（のとうし）",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "013",
+   "name": "能登豚",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-13.webp",
+   "description": "能登の恵みで育った能登豚。しつこさが無い脂身は、甘く上品な味わい。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登豚",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "014",
+   "name": "志賀米こしひかり",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-14.webp",
+   "description": "清らかな水と良質な土が育む志賀米。ふっくら艶やかで、噛むほどに甘みが増します。",
+   "season": "10月上旬～3月",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 志賀米こしひかり",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "015",
+   "name": "能登金時",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-15.webp",
+   "description": "能登唯一のサツマイモの産地で育った能登金時は、甘みが強く、ホクホクとしています。",
+   "season": "8月中旬～10月中旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登金時",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "016",
+   "name": "能登白ねぎ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-16.webp",
+   "description": "根から葉先までしっかりと張りがあり、食べるとほのかに甘く感じます。",
+   "season": "7月中旬～12月中旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登白ねぎ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "017",
+   "name": "能登だいこん",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-17.webp",
+   "description": "白くスマートな外見が美しいです。肉質は緻密でみずみずしさを感じます。",
+   "season": "10月中旬～12月下旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登だいこん",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "018",
+   "name": "能登かぼちゃ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-18.webp",
+   "description": "試し切りをしてから完熟を見極めて収穫。色鮮やかでホクホクと甘みがつよいです。",
+   "season": "7月上旬～8月上旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登かぼちゃ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "019",
+   "name": "能登すいか",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-19.webp",
+   "description": "シャキシャキとした歯触りとたっぷりの果汁、高い糖度の三拍子がそろった逸品です。",
+   "season": "7月上旬～8月上旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登すいか",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "020",
+   "name": "上棚赤土メロン",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-20.webp",
+   "description": "蜜蜂を使った自然交配によりできたメロンは、甘みが凝縮され、深い味わいが楽しめます。",
+   "season": "7月下旬～8月上旬",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 上棚赤土メロン",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "021",
+   "name": "カネヨ醤油",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-21.webp",
+   "description": "能登の海の幸に合うように造られた、自家製のもろ味から造るお醤油です。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 カネヨ醤油",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "022",
+   "name": "竹葉　百万石乃白",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "山の幸",
+   "published": true,
+   "cardImage": "card-22.webp",
+   "description": "能登杜氏が能登の素材にこだわって作りました。老舗酒蔵が満を持してお届けする大吟醸です。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 竹葉　百万石乃白",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "023",
+   "name": "能登志賀ころ柿",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "お菓子",
+   "published": true,
+   "cardImage": "card-23.webp",
+   "description": "冬の寒風でじっくり干し上げた甘み濃厚なころ柿。自然の甘さが口いっぱいに広がります。",
+   "season": "12月",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 能登志賀ころ柿",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "024",
+   "name": "志賀あられ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "お菓子",
+   "published": true,
+   "cardImage": "card-24.webp",
+   "description": "昔ながらの製法を守り、塩と砂糖だけで味付けしました。ふんわりと焼き上げています。",
+   "season": "3月～12月",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 志賀あられ",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "025",
+   "name": "志賀かきもち",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "お菓子",
+   "published": true,
+   "cardImage": "card-25.webp",
+   "description": "自家栽培のもと米を使用し、熟練の技で一枚一枚焼き上げます。ほっとする素朴な味です。",
+   "season": "3月～12月",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 志賀かきもち",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "026",
+   "name": "嫁入り紅白幸せせんべい",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "お菓子",
+   "published": true,
+   "cardImage": "card-26.webp",
+   "description": "昔から志賀町の結婚式で幸せを願いふるまわれます。サクッとほんのり甘いお菓子です。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 嫁入り紅白幸せせんべい",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "027",
+   "name": "さざえ最中",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "お菓子",
+   "published": true,
+   "cardImage": "card-27.webp",
+   "description": "さざえの形をした香ばしい最中の皮に、青のりとあずきの２種類の餡を入れた和菓子です。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 さざえ最中",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "028",
+   "name": "こぼりのチーズまんじゅう",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "お菓子",
+   "published": true,
+   "cardImage": "card-28.webp",
+   "description": "和菓子の技術に洋菓子のテイストをプラス。チーズケーキのような味わいをぜひご賞味ください。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 こぼりのチーズまんじゅう",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "029",
+   "name": "あいまぜ",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "郷土料理",
+   "published": true,
+   "cardImage": "card-29.webp",
+   "description": "「あいまぜ」は、主に能登地域で食べられている伝統料理。大根や人参といった根菜類を中心に使った煮物である。使う野菜はその土地土地でとれる旬の野菜が使われるため、見た目や味わいはさまざま。幅広いアレンジがほどこされ、いまに伝わっている。地域性があらわれるのも、この料理の特徴の一つである。 出典：農林水産省「うちの郷土料理」",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "030",
+   "name": "お汁（お祭り）",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "郷土料理",
+   "published": true,
+   "cardImage": "card-30.webp",
+   "description": "志賀町の郷土料理の１品。地域によって、祭りの時などに振る舞われます。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "031",
+   "name": "かぶし（どぼづけ）",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "郷土料理",
+   "published": true,
+   "cardImage": "card-31.webp",
+   "description": "志賀町の郷土料理。酒粕に大根や蕪の根菜・葉、こんか漬けのイワシやサバを丸ごと入れて煮込む、ご飯や酒が進む味として親しまれてきた冬の保存食です。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "032",
+   "name": "さくら貝",
+   "reading": "",
+   "category": "culture",
+   "subCategory": "工芸品",
+   "published": true,
+   "cardImage": "card-32.webp",
+   "description": "小貝名所の一つの増穂浦では、１１月から３月にかけて日本海から吹く偏西風「貝よせの風」により、波打ちぎわに小さなさくら貝が打ち寄せられます。気候条件が揃ってこそ現れるさくら貝は「西能登の冬の風物詩」とされ、地元では貝細工にされるなど、「幸せを呼ぶ」貝として親しまれています。",
+   "season": "通年",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "033",
+   "name": "ヤセの断崖",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-33.webp",
+   "description": "松本清張作の映画「ゼロの焦点」の舞台となった「ヤセの断崖」。その大迫力に圧倒されます。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.209359,
+    "lng": 136.683272,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "034",
+   "name": "義経の舟隠し",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-34.webp",
+   "description": "源義経が追手から逃げる際に舟を隠したと伝わる断崖絶壁の美しい入り江です。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.206223,
+    "lng": 136.681109,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "036",
+   "name": "増穂浦海岸",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-36.webp",
+   "description": "「日本の白砂青松１００選」にも選ばれる、全長４ｋｍの静かで美しい海岸で、幸せを呼ぶといわれる「さくら貝」が採れます。特に１１月から３月にかけて冬の時期が貝集めのベストシーズンで、さくら貝のほか「三十六歌仙貝」と呼ばれる様々な貝殻が浜辺に打ち寄せられます。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.150038,
+    "lng": 136.707409,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "037",
+   "name": "道の駅　とぎ海街道",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-37.webp",
+   "description": "「世界一長いベンチ」に隣接し、増穂浦（ますほがうら）海岸のすぐそばに位置する、海とグルメを楽しめる観光拠点。季節の魚介や農産物、地元ならではの品々がずらり！ぜひ立ち寄りたいスポットです。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.140173,
+    "lng": 136.725168,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "038",
+   "name": "世界一長いベンチ",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-38.webp",
+   "description": "１９８９年に「世界一長いベンチ」としてギネスブックに掲載された全長４６０．９ｍのベンチです。日本海に沈む夕日をゆったり眺められ、夏から秋にかけて設置されるイルミネーションは幻想的な雰囲気が楽しめます。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.139615,
+    "lng": 136.724362,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "039",
+   "name": "機具岩",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-39.webp",
+   "description": "高さ１６ｍと１２ｍの２つの岩が寄り添って並び、しめ縄で結ばれた夫婦岩。志賀町屈指の夕日スポットで夏季、冬季にライトアップされる姿は幻想的です。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.122186,
+    "lng": 136.726767,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "040",
+   "name": "松尾神社",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-40.webp",
+   "description": "室町時代末期建立とされる、茅葺き屋根の古めかしい拝殿が特徴で、志賀町を代表する文化財です。本殿は国の指定文化財です。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": 37.104712,
+    "lng": 136.772147,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "041",
+   "name": "高爪山",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-41.webp",
+   "description": "山容の美しさから「能登富士」と呼ばれ、神体山としても仰がれています。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": 37.206952,
+    "lng": 136.724368,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "042",
+   "name": "巌門",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-42.webp",
+   "description": "荒波で作られた天然の洞窟「巌門」。能登を代表する絶景スポットのひとつです。遊覧船に乗れば、海上から周辺の奇岩とともに雄大な景色が楽しめます。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.094349,
+    "lng": 136.726401,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "043",
+   "name": "日本遺産　北前船寄港地福浦港",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-43.webp",
+   "description": "志賀町福浦港は、古くは渤海国との交流の地として、そして「動く総合商社」とも呼ばれた北前船の寄港地として栄えました。「荒波を越えた男たちの夢が紡いだ異空間～北前船寄港地・船主集落～」の一つとして日本遺産に設定されており、まち歩きすればレトロな風景があちこちに！",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": 37.083221,
+    "lng": 136.726773,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "044",
+   "name": "旧福浦灯台",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-44.webp",
+   "description": "当初の建設場所に留まって現在する木造洋式灯台としては、わが国では最古！慶長１３年（１６０８）に、日和山の岸壁上に篝火を焚き、暗夜の海を航行する船を護ったことが最初と伝わります。現存する灯台は明治９年（１８７６）に１７代長兵衛によって建造されました。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.083165,
+    "lng": 136.72313,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "045",
+   "name": "道の駅　ころ柿の里しか（みちのえき旬菜館）",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-45.webp",
+   "description": "「みちのえき旬菜館」では、町の特産品や近隣農家直送の農産物がお手頃な価格で購入できます。温泉施設「アクアパーク　シ・オン」や電源が使えるＲＶパーク※も併設！　※ＲＶパーク・・・安心して車中泊ができる場所",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.006877,
+    "lng": 136.780114,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "046",
+   "name": "天領大庄屋　平家",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-46.webp",
+   "description": "江戸時代には大庄屋として13もの村々を治めた平家。６，０００坪にも及ぶ広大な屋敷地の前庭は、県の名勝に指定されています。歴史を伝える数々の展示も必見！",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": 37.007666,
+    "lng": 136.759428,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "047",
+   "name": "安部屋弁天島",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-47.webp",
+   "description": "陸続きで渡れる、夕日と松林のコントラストが美しい志賀町の隠れた絶景スポットです。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": true,
+    "lat": 37.005153,
+    "lng": 136.754914,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "048",
+   "name": "大島諸願堂",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-48.webp",
+   "description": "町の指定文化財になっている石積みの六角地蔵塔が有名です。室町時代に作られたと言われています。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": 36.986798,
+    "lng": 136.76637,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "049",
+   "name": "大島キャンプ場（海水浴場）",
+   "reading": "",
+   "category": "spot",
+   "subCategory": "スポット",
+   "published": true,
+   "cardImage": "card-49.webp",
+   "description": "透明度の高い海と豊かな自然に囲まれ、アウトドアが満喫できます。夏は地引網体験が人気です。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": 36.983187,
+    "lng": 136.772988,
+    "radius": 200
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "050",
+   "name": "冨来八朔祭礼",
+   "reading": "",
+   "category": "culture",
+   "subCategory": "祭りと文化",
+   "published": true,
+   "cardImage": "card-50.webp",
+   "description": "約３０基のキリコが太鼓や鐘の音に合わせて街を練り歩き、参道から境内へ駆け上がる様子は圧巻！男神と女神の年に一度の逢瀬から始まったと言われます。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "051",
+   "name": "西海祭り",
+   "reading": "",
+   "category": "culture",
+   "subCategory": "祭りと文化",
+   "published": true,
+   "cardImage": "card-51.webp",
+   "description": "女性も勇ましくキリコを担ぐことで知られる、全国的にも珍しい祭り。太鼓が響く夕暮れ、日本海を背に神輿とキリコが乱舞し、漁師町ならではの熱気が夜遅くまで続きます。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "052",
+   "name": "福浦祭り",
+   "reading": "",
+   "category": "culture",
+   "subCategory": "祭りと文化",
+   "published": true,
+   "cardImage": "card-52.webp",
+   "description": "福浦港の総鎮守社である猿田彦神社の秋季祭礼。猿田彦神社から海上渡御を行う神様船までの間を天狗が先導し、町民が仮装行列して盛り上げます。志賀町の指定無形民俗文化財。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "056",
+   "name": "獅子舞",
+   "reading": "",
+   "category": "culture",
+   "subCategory": "祭りと文化",
+   "published": true,
+   "cardImage": "card-56.webp",
+   "description": "石川県志賀町の獅子舞は、秋祭りに奉納される伝統芸能。巨大な蚊帳獅子と天狗（獅子捕り）が対峙する躍動感あふれる演舞が特徴で、無病息災や五穀豊穣を祈願します。",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": false,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": false,
+    "searchWord": "",
+    "shops": []
+   },
+   "externalLinks": []
+  },
+  {
+   "id": "057",
+   "name": "まつり寿司（押し寿司）",
+   "reading": "",
+   "category": "gourmet",
+   "subCategory": "郷土料理",
+   "published": true,
+   "cardImage": "",
+   "description": "",
+   "season": "",
+   "highlight": "",
+   "detailPhotos": [],
+   "sakeSnack": true,
+   "gps": {
+    "enabled": false,
+    "lat": null,
+    "lng": null,
+    "radius": null
+   },
+   "purchase": {
+    "enabled": true,
+    "searchWord": "志賀町 まつり寿司（押し寿司）",
+    "shops": []
+   },
+   "externalLinks": []
+  }
+ ]
+}

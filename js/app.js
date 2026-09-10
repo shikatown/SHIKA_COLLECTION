@@ -1,0 +1,255 @@
+/* app.js — 起動処理と画面の組み立て。 */
+
+import {
+  app, initState, loadPublicData, subscribe, publishedCards, isOwned,
+  categoryStats, CATEGORIES, todayKey,
+} from './state.js';
+import * as router from './router.js';
+import { el, clear, cardBack, toast, sleep, reduceMotion } from './ui.js';
+import { renderGacha, showResults, offerDaily } from './gacha.js';
+import { renderCollection } from './collection.js';
+import { renderCardDetail } from './card-detail.js';
+import { renderMap } from './map.js';
+import { renderSettings, renderHelp, renderPrivacy, renderMore, renderRecords } from './settings.js';
+import { startOfflineWatch } from './offline.js';
+import { registerSW, checkDataUpdate, maybeSuggestInstall } from './update.js';
+import { maybeSuggestBackup } from './backup.js';
+import { categoryProgress, dailyAvailable, coinCfg } from './rewards.js';
+import * as geo from './geo.js';
+
+/* ===== 動作環境の確認 ===== */
+function unsupportedReason() {
+  if (!window.fetch) return 'このブラウザは fetch に対応していません。';
+  if (!window.Promise) return 'このブラウザは Promise に対応していません。';
+  if (!('replaceChildren' in Element.prototype)) return 'このブラウザは対応していない機能があります。';
+  if (!CSS || !CSS.supports || !CSS.supports('color', 'var(--x)')) return 'このブラウザはCSS変数に対応していません。';
+  return null;
+}
+
+async function boot() {
+  const reason = unsupportedReason();
+  if (reason) {
+    document.getElementById('boot').hidden = true;
+    document.getElementById('unsupportedReason').textContent = reason;
+    document.getElementById('unsupported').hidden = false;
+    return;
+  }
+  if (location.protocol === 'file:') {
+    document.getElementById('boot').hidden = true;
+    document.getElementById('filenote').hidden = false;
+    return;
+  }
+
+  initState();
+  startOfflineWatch();
+
+  const intro = playIntro();
+
+  let dataVersion = '';
+  try {
+    const r = await loadPublicData();
+    dataVersion = r.dataVersion;
+  } catch (e) {
+    console.error(e);
+    document.getElementById('boot').hidden = true;
+    const note = document.getElementById('filenote');
+    note.querySelector('h1').textContent = 'データを読み込めませんでした';
+    clear(note);
+    note.append(
+      el('h1', { text: 'データを読み込めませんでした' }),
+      el('p', { text: 'data/cards.json を読み込めませんでした。通信状況を確認して、もう一度開いてください。' }),
+      el('p', { class: 'muted', text: String(e && e.message ? e.message : e) })
+    );
+    note.hidden = false;
+    return;
+  }
+
+  setupRoutes();
+  document.getElementById('btnBack').addEventListener('click', () => router.back());
+  subscribe(updateChrome);
+  router.setOnChange(onRouteChange);
+
+  await intro;
+  document.getElementById('boot').hidden = true;
+  document.getElementById('app').hidden = false;
+
+  router.start();
+  updateChrome();
+
+  // 起動後のお知らせ類（順番に1つずつ）
+  await offerDaily();
+  await checkDataUpdate(dataVersion);
+  registerSW();
+  await maybeSuggestInstall();
+  await maybeSuggestBackup();
+}
+
+/* ===== 起動演出 ===== */
+function playIntro() {
+  const stage = document.getElementById('bootStage');
+  const bootEl = document.getElementById('boot');
+  const skip = document.getElementById('bootSkip');
+  const spread = [
+    { tx: '-64%', ty: '-8%', rot: '-16deg', d: '0s' },
+    { tx: '52%', ty: '-14%', rot: '14deg', d: '.06s' },
+    { tx: '-22%', ty: '16%', rot: '-6deg', d: '.12s' },
+    { tx: '26%', ty: '10%', rot: '7deg', d: '.18s' },
+    { tx: '0%', ty: '0%', rot: '0deg', d: '.24s' },
+  ];
+  for (const s of spread) {
+    const c = el('div', { class: 'bootcard' });
+    c.style.setProperty('--tx', s.tx);
+    c.style.setProperty('--ty', s.ty);
+    c.style.setProperty('--rot', s.rot);
+    c.style.setProperty('--d', s.d);
+    c.append(cardBack());
+    stage.append(c);
+  }
+
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      bootEl.classList.add('is-out');
+      setTimeout(resolve, 380);
+    };
+    skip.addEventListener('click', finish);
+    setTimeout(finish, reduceMotion() ? 400 : 2100);
+  });
+}
+
+/* ===== ルート ===== */
+function setupRoutes() {
+  router.define('/home', renderHome);
+  router.define('/gacha', (view) => {
+    const pending = app.state.pendingResult;
+    if (pending && pending.autoOpen) { showResults(view, pending); return; }
+    renderGacha(view);
+  });
+  router.define('/collection', renderCollection);
+  router.define('/card/:id', renderCardDetail);
+  router.define('/map', renderMap);
+  router.define('/more', renderMore);
+  router.define('/settings', renderSettings);
+  router.define('/help', renderHelp);
+  router.define('/privacy', renderPrivacy);
+  router.define('/records', renderRecords);
+  router.setNotFound((view) => {
+    clear(view);
+    view.append(el('p', { class: 'empty', text: 'ページが見つかりません。' }));
+    view.append(el('a', { class: 'btn btn--block', text: 'ホームへ', attrs: { href: '#/home' } }));
+  });
+}
+
+const TITLES = {
+  '/home': '志賀町をあつめよう',
+  '/gacha': 'ガチャ',
+  '/collection': 'カード',
+  '/card/:id': 'カード詳細',
+  '/map': 'まち巡り',
+  '/more': 'その他',
+  '/settings': '設定',
+  '/help': '遊び方',
+  '/privacy': 'プライバシー',
+  '/records': '集めた記録',
+};
+const TAB_OF = {
+  '/home': 'home', '/gacha': 'gacha', '/collection': 'collection',
+  '/card/:id': 'collection', '/map': 'map', '/more': 'more',
+  '/settings': 'more', '/help': 'more', '/privacy': 'more', '/records': 'more',
+};
+
+function onRouteChange(route) {
+  document.getElementById('appTitle').textContent = TITLES[route.path] || '志賀町をあつめよう';
+  document.getElementById('btnBack').hidden = route.path === '/home';
+  const tab = TAB_OF[route.path];
+  for (const a of document.querySelectorAll('.tab')) {
+    a.classList.toggle('is-active', a.dataset.tab === tab);
+  }
+  updateChrome();
+}
+
+function updateChrome() {
+  const total = publishedCards().length;
+  const owned = publishedCards().filter((c) => isOwned(c.id)).length;
+  const cards = document.getElementById('statCards');
+  cards.querySelector('b').textContent = String(owned);
+  cards.querySelector('i').textContent = String(total);
+  document.getElementById('statCoins').querySelector('b').textContent = String(app.state.coins);
+}
+
+/* ===== ホーム ===== */
+function renderHome(view) {
+  clear(view);
+  const s = app.state;
+
+  const hero = el('div', { class: 'hero' });
+  hero.append(el('p', { class: 'hero__lead', text: 'SHIKA TOWN COLLECTION' }));
+  hero.append(el('h2', { class: 'hero__title', text: '志賀町を、あつめよう。' }));
+  view.append(hero);
+
+  const main = el('div', { class: 'home__main' });
+
+  const gachaLabel = s.flags.firstFreeTenDone
+    ? `${s.coins} SHIKA COIN で引けます`
+    : 'はじめての方は無料10連から';
+  main.append(bigBtn('#/gacha', 'ガチャを引く', gachaLabel, true,
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 6v12" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>'));
+
+  const total = publishedCards().length;
+  const owned = publishedCards().filter((c) => isOwned(c.id)).length;
+  main.append(bigBtn('#/collection', 'カードを見る', `${owned} / ${total} 種類`, false,
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="4.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="3.5" y="14.5" width="7" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="14.5" width="7" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>'));
+
+  const vs = geo.visitStats();
+  main.append(bigBtn('#/map', 'まちを巡る', `現地訪問 ${vs.visited} / ${vs.total} か所`, false,
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6.5-6.2 6.5-10.5A6.5 6.5 0 0 0 5.5 10.5C5.5 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="10.3" r="2.3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'));
+
+  view.append(main);
+
+  if (s.pendingResult) {
+    const p = el('div', { class: 'panel', style: { marginTop: '14px' } });
+    p.append(el('p', { style: { margin: '0 0 10px', fontSize: '13.5px' }, text: '前回のガチャの結果がまだ残っています。' }));
+    p.append(el('a', { class: 'btn btn--block', text: '結果を見る', attrs: { href: '#/gacha' } }));
+    view.append(p);
+  }
+
+  const prog = el('div', { class: 'panel', style: { marginTop: '14px' } });
+  prog.append(el('div', { class: 'panel__head' }, [
+    el('h3', { class: 'panel__title', text: '集まりぐあい' }),
+    el('a', { class: 'muted', text: '記録を見る', attrs: { href: '#/records' } }),
+  ]));
+  for (const c of categoryProgress()) {
+    prog.append(el('div', { class: 'progressline', style: { marginBottom: '8px' } }, [
+      el('span', { style: { width: '4.6em', flex: 'none' }, text: c.label }),
+      el('div', { class: 'bar' }, [el('span', { style: { width: `${c.total ? (c.owned / c.total) * 100 : 0}%` } })]),
+      el('span', { style: { flex: 'none', fontSize: '11.5px' }, text: `${c.owned}/${c.total}` }),
+    ]));
+  }
+  view.append(prog);
+
+  if (dailyAvailable()) {
+    view.append(el('p', {
+      class: 'muted center', style: { marginTop: '12px' },
+      text: `今日のログインボーナス +${coinCfg().daily} SHIKA COIN を受け取れます`,
+    }));
+  }
+
+  const sub = el('div', { class: 'home__sub' });
+  sub.append(el('a', { class: 'btn', text: '遊び方', attrs: { href: '#/help' } }));
+  sub.append(el('a', { class: 'btn', text: '設定', attrs: { href: '#/settings' } }));
+  view.append(sub);
+}
+
+function bigBtn(href, title, sub, accent, iconSvg) {
+  const a = el('a', { class: `bigbtn${accent ? ' bigbtn--accent' : ''}`, attrs: { href } });
+  a.append(el('span', { class: 'bigbtn__ico', html: iconSvg }));
+  const t = el('span');
+  t.append(el('span', { class: 'bigbtn__t', text: title }));
+  t.append(el('span', { class: 'bigbtn__sub', text: sub }));
+  a.append(t);
+  return a;
+}
+
+boot();

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>イベント設定エディタ（config.json）</title>
+<style>
+  :root{ --ink:#22201d; --ink3:#8d867c; --line:#e7e2d9; --accent:#1f6f5c }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:26px 18px 60px;background:#fbfaf7;color:var(--ink);line-height:1.75;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  }
+  .wrap{max-width:680px;margin:0 auto}
+  h1{font-size:19px;margin:0 0 4px}
+  .lead{color:var(--ink3);font-size:13px;margin:0 0 20px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .panel h2{font-size:14px;margin:0 0 12px}
+  .row{margin-bottom:12px}
+  label{font-size:13px;display:block;margin-bottom:4px}
+  input[type=text],input[type=number],input[type=datetime-local],textarea{
+    font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%;
+  }
+  textarea{min-height:70px;resize:vertical}
+  .check{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:10px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:10px 20px;font:inherit;font-weight:600;cursor:pointer;
+  }
+  .btn--primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  pre{background:#f3efe8;padding:12px;border-radius:8px;font-size:11.5px;overflow:auto}
+  .note{font-size:12px;color:var(--ink3)}
+  .warn{background:#fff8e8;border:1px solid #f0e0c0;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#7a5a1c;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>イベント設定エディタ</h1>
+  <p class="lead">config.json を作るだけのツールです。ブラウザの中だけで動き、GitHubへの接続や認証は行いません。</p>
+
+  <div class="warn">
+    作った config.json は、GitHub のリポジトリの <code>data/config.json</code> に手動で差し替えてください。
+  </div>
+
+  <div class="panel">
+    <h2>読み込み（任意）</h2>
+    <p class="note" style="margin:0 0 8px">いまの config.json を読み込んでから編集できます。</p>
+    <input type="file" id="load" accept="application/json,.json">
+  </div>
+
+  <div class="panel">
+    <h2>イベント</h2>
+    <div class="check"><input type="checkbox" id="enabled"><label for="enabled" style="margin:0">イベントモードを使う</label></div>
+    <div class="row"><label for="name">イベント名</label><input type="text" id="name" placeholder="例：志賀町ふるさとまつり"></div>
+    <div class="cols">
+      <div class="row"><label for="startAt">開始日時</label><input type="datetime-local" id="startAt"></div>
+      <div class="row"><label for="endAt">終了日時</label><input type="datetime-local" id="endAt"></div>
+    </div>
+    <p class="note">期間外は自動的に通常モードで動きます。</p>
+    <div class="check"><input type="checkbox" id="sakeSnackBonus" checked><label for="sakeSnackBonus" style="margin:0">「酒のアテ」ボーナスを有効にする</label></div>
+    <div class="check"><input type="checkbox" id="venueBonus"><label for="venueBonus" style="margin:0">会場GPSボーナスを有効にする</label></div>
+    <div class="cols">
+      <div class="row"><label for="lat">会場の緯度</label><input type="number" id="lat" step="0.000001" placeholder="37.105700"></div>
+      <div class="row"><label for="lng">会場の経度</label><input type="number" id="lng" step="0.000001" placeholder="136.737600"></div>
+    </div>
+    <div class="row"><label for="radius">会場の判定半径（m）</label><input type="number" id="radius" value="150" min="50" max="1000"></div>
+    <div class="row"><label for="message">会場での表示メッセージ</label><textarea id="message" placeholder="会場にお越しいただきありがとうございます！"></textarea></div>
+  </div>
+
+  <div class="panel">
+    <h2>基本設定</h2>
+    <div class="cols">
+      <div class="row"><label for="defaultRadius">GPS判定半径の既定値（m）</label><input type="number" id="defaultRadius" value="200"></div>
+      <div class="row"><label for="gpsAccuracyLimit">許容する測位誤差（m）</label><input type="number" id="gpsAccuracyLimit" value="120"></div>
+    </div>
+    <div class="cols">
+      <div class="row"><label for="mapLat">地図の中心（緯度）</label><input type="number" id="mapLat" step="0.0001" value="37.1057"></div>
+      <div class="row"><label for="mapLng">地図の中心（経度）</label><input type="number" id="mapLng" step="0.0001" value="136.7376"></div>
+    </div>
+    <div class="row"><label for="mapZoom">地図の初期ズーム</label><input type="number" id="mapZoom" value="11" min="8" max="17"></div>
+  </div>
+
+  <div class="panel">
+    <h2>SHIKA COIN</h2>
+    <div class="cols">
+      <div class="row"><label for="c_daily">デイリー</label><input type="number" id="c_daily" value="1"></div>
+      <div class="row"><label for="c_sake">酒のアテ 初取得</label><input type="number" id="c_sake" value="1"></div>
+      <div class="row"><label for="c_dup">かぶり5枚ごと</label><input type="number" id="c_dup" value="1"></div>
+      <div class="row"><label for="c_cat">カテゴリ5種類ごと</label><input type="number" id="c_cat" value="2"></div>
+      <div class="row"><label for="c_first">スポット初訪問</label><input type="number" id="c_first" value="3"></div>
+      <div class="row"><label for="c_re">スポット再訪（1日1回）</label><input type="number" id="c_re" value="1"></div>
+      <div class="row"><label for="c_town">志賀町 初訪問</label><input type="number" id="c_town" value="5"></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn--primary" id="save">config.json を生成</button>
+    <button class="btn" id="show">内容を確認</button>
+  </div>
+  <pre id="out" hidden></pre>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function toISO(v) {
+  if (!v) return '';
+  const d = new Date(v);
+  return isNaN(d) ? '' : d.toISOString();
+}
+function fromISO(v) {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d)) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function num(id, fallback) {
+  const v = Number($(id).value);
+  return isFinite(v) && $(id).value !== '' ? v : fallback;
+}
+
+function build() {
+  const evOn = $('enabled').checked;
+  return {
+    townName: '志賀町',
+    gpsAccuracyLimit: num('gpsAccuracyLimit', 120),
+    defaultRadius: num('defaultRadius', 200),
+    mapCenter: { lat: num('mapLat', 37.1057), lng: num('mapLng', 136.7376) },
+    mapZoom: num('mapZoom', 11),
+    coin: {
+      daily: num('c_daily', 1),
+      sakeSnack: num('c_sake', 1),
+      duplicatePer5: num('c_dup', 1),
+      categoryPer5: num('c_cat', 2),
+      spotFirst: num('c_first', 3),
+      spotRevisit: num('c_re', 1),
+      townFirst: num('c_town', 5),
+    },
+    event: {
+      enabled: evOn,
+      name: $('name').value.trim(),
+      startAt: toISO($('startAt').value),
+      endAt: toISO($('endAt').value),
+      sakeSnackBonus: $('sakeSnackBonus').checked,
+      venueBonus: $('venueBonus').checked,
+      lat: $('lat').value === '' ? null : Number($('lat').value),
+      lng: $('lng').value === '' ? null : Number($('lng').value),
+      radius: num('radius', 150),
+      message: $('message').value.trim(),
+    },
+  };
+}
+
+$('save').addEventListener('click', () => {
+  const cfg = build();
+  if (cfg.event.enabled && cfg.event.venueBonus && (cfg.event.lat === null || cfg.event.lng === null)) {
+    alert('会場GPSボーナスを使うには、会場の緯度・経度が必要です。');
+    return;
+  }
+  if (cfg.event.enabled && cfg.event.startAt && cfg.event.endAt && cfg.event.startAt > cfg.event.endAt) {
+    alert('終了日時が開始日時より前になっています。');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'config.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+});
+
+$('show').addEventListener('click', () => {
+  const out = $('out');
+  out.hidden = !out.hidden;
+  if (!out.hidden) out.textContent = JSON.stringify(build(), null, 2);
+});
+
+$('load').addEventListener('change', async () => {
+  const f = $('load').files[0];
+  if (!f) return;
+  try {
+    const c = JSON.parse(await f.text());
+    const ev = c.event || {};
+    $('enabled').checked = !!ev.enabled;
+    $('name').value = ev.name || '';
+    $('startAt').value = fromISO(ev.startAt);
+    $('endAt').value = fromISO(ev.endAt);
+    $('sakeSnackBonus').checked = ev.sakeSnackBonus !== false;
+    $('venueBonus').checked = !!ev.venueBonus;
+    $('lat').value = ev.lat ?? '';
+    $('lng').value = ev.lng ?? '';
+    $('radius').value = ev.radius ?? 150;
+    $('message').value = ev.message || '';
+    $('defaultRadius').value = c.defaultRadius ?? 200;
+    $('gpsAccuracyLimit').value = c.gpsAccuracyLimit ?? 120;
+    $('mapLat').value = (c.mapCenter && c.mapCenter.lat) ?? 37.1057;
+    $('mapLng').value = (c.mapCenter && c.mapCenter.lng) ?? 136.7376;
+    $('mapZoom').value = c.mapZoom ?? 11;
+    const co = c.coin || {};
+    $('c_daily').value = co.daily ?? 1;
+    $('c_sake').value = co.sakeSnack ?? 1;
+    $('c_dup').value = co.duplicatePer5 ?? 1;
+    $('c_cat').value = co.categoryPer5 ?? 2;
+    $('c_first').value = co.spotFirst ?? 3;
+    $('c_re').value = co.spotRevisit ?? 1;
+    $('c_town').value = co.townFirst ?? 5;
+  } catch (e) {
+    alert('読み込めませんでした: ' + e.message);
+  }
+});
+</script>
+</body>
+</html>
