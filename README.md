@@ -28,8 +28,9 @@
 
 - `data/cards.json` の内容（説明文・旬・座標）が最新か
 - 公開したくないカードの「公開」列が空欄になっているか
-- カード画像は `assets/cards/` に51枚入っています。008（イカの塩辛　黒づくり）と
-  057（まつり寿司（押し寿司））だけ画像が無く、代替表示になります
+- 写真は `assets/photos/` に52枚入っています。051（西海祭り）だけ写真が無く「写真準備中」と出ます
+- カードに載る説明が長いものは3行で切れます。Excel に「カード説明文」列を作って
+  短い文を入れると整います（該当10件は変換ツールが名前を挙げて教えてくれます）
 
 ---
 
@@ -50,8 +51,11 @@ python -m http.server 8000
 
 | やりたいこと | 触るファイル | 手順 |
 |---|---|---|
-| カードの追加・修正・非公開 | `data/cards.json` | Excel を編集 → `tools/excel-to-json.html` で変換 → 差し替え |
-| カード画像の追加 | `assets/cards/` | `card-<番号>.webp` の名前で置く（例 card-08.webp）。変換ツールでフォルダを選ぶと自動で紐づきます |
+| 文言・リンク・カードの追加 | `data/cards.json` | Excel を編集 → `tools/excel-to-json.html` にドロップ → 「cards.json を保存」 |
+| 写真の差し替え | `assets/photos/` | Excel の「詳細写真１」に画像を貼る → 同ツールの「写真を書き出す」→ photos.zip を展開して上書き |
+| カードの枠・アイコン・ロゴ | `assets/frames/` | ジャンル共通の部品。差し替えるとカード全体の見た目が変わります |
+| カード裏面 | `assets/cards/_back.png` | 置き換えるだけでガチャ演出と3Dビューアの裏面が変わります |
+| ボタンの文言 | `data/config.json` | `cardButtons` でジャンルごとに設定。カード個別はExcelの「カードボタン文言」列 |
 | イベント設定 | `data/config.json` | `tools/event-config-editor.html` で作成 → 差し替え |
 | データ更新の通知 | `data/version.json` | `dataVersion` を新しい値に |
 | アプリ本体の更新 | `service-worker.js` | `APP_VERSION` の数字を上げてからアップロード |
@@ -76,7 +80,9 @@ js/                         アプリのプログラム
 data/cards.json             カードデータ（Excelから生成）
 data/config.json            イベント・コイン・地図の設定
 data/version.json           バージョン情報
-assets/cards/               カード画像 51枚（1080×1350 / WebP。ファイル名の数字がカードID）
+assets/photos/              カードの写真 52枚（Excelから書き出したもの）
+assets/frames/              ジャンル別の台紙・カテゴリアイコン・SHIKAロゴ
+assets/cards/               カード裏面（_back.png）と、完成画像で上書きする場合
 assets/details/             詳細画面の写真
 assets/pwa/                 ホーム画面用アイコン
 tools/excel-to-json.html    Excel → cards.json 変換（ローカルで開く）
@@ -101,6 +107,7 @@ JavaScript ライブラリ・Webフォント・アイコンCDN・BGM素材は**�
 ## 権利・注意
 
 - カードの写真と説明文は志賀町の資料（アイテム.xlsx）と、支給されたカード画像に基づいています。公開前に内容をご確認ください。
-- カード画像は配布用に PNG から WebP へ変換しています（寸法 1080×1350 のまま。トリミング・構図変更なし）。
-  原本の PNG は `Documents/Codex/2026-09-03/kak/outputs/SHIKA_COLLECTION_20260910/cards` に残してあります。
+- カードは1枚絵ではなく、写真と文字を組み立てて表示しています。
+  Excel を直すだけで文言・写真・リンクを更新でき、画像を作り直す必要はありません。
+- 写真は Excel に貼られていた原本をそのまま使っています（変換・圧縮なし）。
 - 掲載している旬・開催時期・営業状況は変わることがあります。

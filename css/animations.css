@@ -31,44 +31,101 @@
   animation-delay:var(--d,0s);
 }
 
-/* ===== ガチャ画面 ===== */
+/* ===== ガチャ演出 =====
+   円舞 → 三分 → 合一 → 抜刀。位置と動きは js/gacha-anim.js が毎フレーム書く。
+   ここでは重なり順と見た目だけを定義する。 */
 .gachastage{
   position:relative;width:100%;height:min(62vh,440px);
-  display:grid;place-items:center;perspective:1100px;
+  border-radius:16px;overflow:hidden;
+  background:radial-gradient(118% 88% at 50% 38%,#fff 0%,#fdfaf3 52%,#f2ece0 100%);
+  border:1px solid var(--line);
+  perspective:1100px;
 }
-.gachastage__glow{
-  position:absolute;width:64%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle, rgba(255,231,168,.85) 0%, rgba(255,231,168,0) 68%);
-  opacity:0;pointer-events:none;
-}
-.gachastage__glow.is-on{animation:glowPulse 1.1s ease-in-out infinite}
-.drawcard{
-  position:relative;width:min(58%,220px);aspect-ratio:4/5;
-  transform-style:preserve-3d;transition:transform .52s cubic-bezier(.3,.9,.35,1);
-  border-radius:12px;
-}
-.drawcard.is-flipped{ transform:rotateY(180deg) }
-.drawcard__side{
-  position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;overflow:hidden;
-  box-shadow:0 10px 30px rgba(34,32,29,.25);
-}
-.drawcard__side--back{ transform:rotateY(0deg) }
-.drawcard__side--front{ transform:rotateY(180deg) }
-.drawcard.is-new .drawcard__side--front::after{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.75) 45%, transparent 90%);
-  width:60%;animation:shine .85s ease .1s 1 forwards;
-}
-.drawcard--enter{ animation:popIn .38s cubic-bezier(.2,.9,.3,1) both }
+.gs{position:absolute;inset:0}
+.gs__cam{position:absolute;inset:0;will-change:transform}
 
+.gs__veil{
+  position:absolute;inset:0;opacity:0;pointer-events:none;
+  background:
+    radial-gradient(62% 44% at 50% 44%, color-mix(in srgb, var(--gs-accent,#E8873A) 20%, transparent) 0%, transparent 74%),
+    radial-gradient(132% 100% at 50% 48%, transparent 30%, rgba(206,192,164,.58) 100%);
+}
+.gs__fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+/* 背景の紋。ゆっくり回り続ける */
+.gs__sigil{
+  position:absolute;left:50%;top:44%;width:86%;aspect-ratio:1;translate:-50% -50%;
+  opacity:.30;pointer-events:none;transform:rotateX(64deg);
+  animation:gsSigil 52s linear infinite;
+}
+.gs__sigil svg{width:100%;height:100%;display:block}
+.gs__sigil--b{width:52%;opacity:.26;animation-duration:38s;animation-direction:reverse}
+@keyframes gsSigil{ to{ rotate:360deg } }
+
+/* 円舞する裏面 */
+.gs__deck{position:absolute;inset:0;transform-style:preserve-3d}
+.gs__orb{
+  position:absolute;left:50%;top:44%;
+  width:clamp(46px,15.5%,72px);aspect-ratio:4/5;
+  border-radius:6px;overflow:hidden;opacity:0;
+  will-change:transform,opacity;backface-visibility:visible;
+}
+.gs__orb .card{position:absolute;inset:0;width:100%;height:100%;border-radius:6px;box-shadow:none}
+.gs__orb > i{
+  position:absolute;inset:0;border-radius:6px;opacity:0;
+  mix-blend-mode:soft-light;display:block;pointer-events:none;
+}
+
+/* 抜刀するカード */
+.gs__reveal{
+  position:absolute;left:50%;top:44%;
+  width:clamp(150px,50%,206px);aspect-ratio:4/5;
+  transform-style:preserve-3d;opacity:0;will-change:transform;
+}
+.gs__face{
+  position:absolute;inset:0;border-radius:11px;overflow:hidden;
+  backface-visibility:hidden;
+}
+.gs__face--front{transform:rotateY(180deg)}
+.gs__face .card{position:absolute;inset:0;width:100%;height:100%;border-radius:11px;box-shadow:none}
+.gs__sheen{
+  position:absolute;inset:-30%;pointer-events:none;opacity:0;z-index:3;
+  background:linear-gradient(104deg,transparent 42%,rgba(255,255,255,.6) 50%,transparent 58%);
+}
+
+/* 着弾の光 */
+.gs__flash{
+  position:absolute;inset:0;opacity:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 44%, #fff 0%, #fff 12%,
+    color-mix(in srgb, var(--gs-accent,#E8873A) 88%, #fff) 30%,
+    color-mix(in srgb, var(--gs-accent,#E8873A) 34%, transparent) 54%, transparent 74%);
+}
+.gs__wave{
+  position:absolute;left:50%;top:44%;width:110px;height:110px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;border:2px solid currentColor;opacity:0;pointer-events:none;
+}
+.gs__rays{position:absolute;left:50%;top:44%;width:0;height:0;pointer-events:none;opacity:0}
+.gs__ray{
+  position:absolute;left:-1.5px;top:0;width:3px;height:200px;transform-origin:50% 0;
+  background:linear-gradient(180deg,var(--gs-accent,#E8873A),transparent);
+}
+
+/* ===== ガチャ画面のUI（演出とは別。ここは従来どおり） ===== */
 .gacha__counter{
-  position:absolute;top:6px;left:0;right:0;text-align:center;
+  position:absolute;top:6px;left:0;right:0;text-align:center;z-index:5;
   font-size:12px;color:var(--ink-3);letter-spacing:.08em;
 }
+/* popIn は transform を上書きしてしまうので、中央寄せ込みの専用キーフレームを使う */
+@keyframes newTagIn{
+  0%{ opacity:0; transform:translateX(-50%) scale(.86) }
+  60%{ opacity:1; transform:translateX(-50%) scale(1.04) }
+  100%{ opacity:1; transform:translateX(-50%) scale(1) }
+}
 .gacha__newtag{
-  position:absolute;left:50%;transform:translateX(-50%);bottom:14%;
+  position:absolute;left:50%;bottom:11%;z-index:5;
   background:var(--danger);color:#fff;font-weight:800;font-size:12px;letter-spacing:.2em;
-  padding:3px 12px;border-radius:999px;animation:popIn .3s ease both;
+  padding:3px 12px;border-radius:999px;animation:newTagIn .3s ease both;
 }
 .gacha__name{
   margin-top:14px;font-size:16px;font-weight:800;text-align:center;
@@ -76,8 +133,8 @@
 }
 .gacha__acts{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 .gacha__skip{
-  position:absolute;right:6px;top:2px;background:transparent;border:0;
-  color:var(--ink-3);font-size:12px;cursor:pointer;padding:8px 10px;
+  position:absolute;right:6px;top:2px;z-index:6;background:rgba(255,255,255,.7);border:0;
+  color:var(--ink-3);font-size:12px;cursor:pointer;padding:6px 10px;border-radius:999px;
 }
 
 /* 結果一覧 */

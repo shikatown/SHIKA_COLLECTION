@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.3.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -18,14 +18,18 @@ const SHELL = [
   './manifest.webmanifest',
   './css/app.css',
   './css/animations.css',
+  './css/card-art.css',
   './css/card-3d.css',
   './js/app.js',
   './js/router.js',
   './js/state.js',
   './js/storage.js',
+  './js/dom.js',
   './js/ui.js',
+  './js/card-render.js',
   './js/sound.js',
   './js/gacha.js',
+  './js/gacha-anim.js',
   './js/rewards.js',
   './js/collection.js',
   './js/card-detail.js',

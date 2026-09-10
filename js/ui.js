@@ -1,24 +1,11 @@
 /* ui.js — 画面部品の共通処理（仕様書§35の推奨構成に対する追加ファイル）。
    innerHTML への値の直接流し込みは避け、テキストは textContent で入れる。 */
 
-import { CATEGORY_LABEL, app } from './state.js';
+import { CATEGORY_LABEL, app, publishedCards } from './state.js';
+import { el, clear } from './dom.js';
+import { renderCardArt } from './card-render.js';
 
-export function el(tag, opts = {}, children = []) {
-  const n = document.createElement(tag);
-  if (opts.class) n.className = opts.class;
-  if (opts.text != null) n.textContent = opts.text;
-  if (opts.html != null) n.innerHTML = opts.html;   // 固定文字列（SVG等）のみ
-  if (opts.attrs) for (const [k, v] of Object.entries(opts.attrs)) {
-    if (v === true) n.setAttribute(k, '');
-    else if (v != null && v !== false) n.setAttribute(k, String(v));
-  }
-  if (opts.on) for (const [k, v] of Object.entries(opts.on)) n.addEventListener(k, v);
-  if (opts.style) Object.assign(n.style, opts.style);
-  for (const c of [].concat(children)) if (c) n.append(c);
-  return n;
-}
-
-export function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+export { el, clear };
 
 /* ===== トースト ===== */
 let toastTimer = null;
@@ -70,6 +57,11 @@ export function confirm2(title, body, okLabel = 'OK') {
    カード画像が未設定/読み込めない場合だけ、代替の面を描く。
    完成カード画像がある場合は画像をそのまま（トリミング・加工なしで）表示する。 */
 
+/**
+ * カード表示。原則は部品から組み立てる（card-render.js）。
+ * cards.json の cardImage に完成画像が指定されている場合だけ、それをそのまま貼る。
+ * どちらも使えないときは、色と名前だけの簡易表示に落とす。
+ */
 export function cardFace(cardData, { small = false } = {}) {
   const wrap = el('div', { class: `card${small ? ' card--sm' : ''}` });
   const fallback = () => {
@@ -84,6 +76,9 @@ export function cardFace(cardData, { small = false } = {}) {
     img.addEventListener('error', fallback, { once: true });
     wrap.classList.add('card--img');
     wrap.append(img);
+  } else if (cardData.category) {
+    wrap.classList.add('card--img');
+    wrap.append(renderCardArt(cardData, { total: publishedCards().length }));
   } else {
     fallback();
   }
@@ -104,23 +99,35 @@ function placeholderFace(c) {
   return face;
 }
 
+/** 未取得カード。カテゴリ（枠の意匠）だけ見せ、写真・名前・説明は伏せる。 */
 export function lockedCard(cardData, { small = false } = {}) {
+  if (cardData.category) {
+    const wrap = el('div', { class: `card card--img${small ? ' card--sm' : ''}` });
+    wrap.append(renderCardArt(cardData, { total: publishedCards().length, locked: true }));
+    return wrap;
+  }
   const wrap = el('div', { class: `card card--locked${small ? ' card--sm' : ''}` });
-  // 未取得は「カテゴリ」だけ見せる。名前・細かい分類・画像は伏せる
   wrap.append(placeholderFace({ ...cardData, name: '???', subCategory: '', cardImage: '' }));
   return wrap;
 }
 
-// 専用の裏面画像（assets/cards/_back.webp）があるかは、起動後に1回だけ確かめる
+// 専用の裏面画像（assets/cards/_back.webp または _back.png）があるかは、起動後に1回だけ確かめる
 let backImagePromise = null;
 function backImageSrc() {
   if (!backImagePromise) {
-    backImagePromise = new Promise((resolve) => {
-      const probe = new Image();
-      probe.onload = () => resolve(probe.src);
-      probe.onerror = () => resolve(null);
-      probe.src = './assets/cards/_back.webp';
-    });
+    const candidates = ['./assets/cards/_back.png', './assets/cards/_back.webp'];
+    backImagePromise = (async () => {
+      for (const src of candidates) {
+        const ok = await new Promise((resolve) => {
+          const probe = new Image();
+          probe.onload = () => resolve(true);
+          probe.onerror = () => resolve(false);
+          probe.src = src;
+        });
+        if (ok) return src;
+      }
+      return null;
+    })();
   }
   return backImagePromise;
 }

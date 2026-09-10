@@ -74,7 +74,10 @@ function normalizeCard(c) {
     category: c.category || null,
     subCategory: c.subCategory || '',
     published: c.published === true,
-    cardImage: c.cardImage || '',
+    photo: c.photo || '',            // カードの写真（assets/photos/）
+    cardText: c.cardText || '',      // カード表示用の短い説明（空なら description）
+    cardButton: c.cardButton || '',   // カード下部のボタン文言（空ならジャンル既定）
+    cardImage: c.cardImage || '',    // 完成画像で上書きする場合のみ
     description: c.description || '',
     season: c.season || '',
     highlight: c.highlight || '',
@@ -104,6 +107,13 @@ function withConfigDefaults(cfg) {
     defaultRadius: typeof c.defaultRadius === 'number' ? c.defaultRadius : 200,
     mapCenter: c.mapCenter || { lat: 37.1057, lng: 136.7376 },
     mapZoom: typeof c.mapZoom === 'number' ? c.mapZoom : 11,
+    // カード下部のボタン文言（ジャンル既定）。空にするとそのジャンルにはボタンを出さない
+    cardButtons: {
+      gourmet: '取扱店を検索する',
+      spot: 'Googleマップで経路を見る',
+      culture: '',
+      ...(c.cardButtons || {}),
+    },
     coin: {
       daily: 1, sakeSnack: 1, duplicatePer5: 1, categoryPer5: 2,
       spotFirst: 3, spotRevisit: 1, townFirst: 5,

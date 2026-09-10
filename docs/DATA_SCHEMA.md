@@ -22,7 +22,10 @@
 | `category` | `"gourmet"` \| `"spot"` \| `"culture"` \| null | 公開時○ | アプリ上のカテゴリ。null のカードはガチャに出ない |
 | `subCategory` | string | | Excel側の細かい分類（例「海の幸」）。表示の補足にのみ使う |
 | `published` | boolean | ○ | `true` のみ公開・ガチャ対象 |
-| `cardImage` | string | | カード画像のファイル名または相対パス。空なら代替表示。変換ツールで画像フォルダを選ぶと、ファイル名の数字とIDで自動割り当て |
+| `photo` | string | 公開時推奨 | **カードの写真**。`assets/photos/` の下のファイル名（例 `001.jpeg`）。Excelの「詳細写真１」のセル内画像から書き出す |
+| `cardText` | string | | **カードに載せる短い説明**（3行まで）。空なら `description` を使う |
+| `cardButton` | string | | カード下部のボタン文言。空なら `config.json` の `cardButtons` のジャンル既定を使う |
+| `cardImage` | string | | 完成画像で上書きする場合のみ。通常は空。指定するとそのカードは組み立てを行わず画像をそのまま表示する |
 | `description` | string | | 説明文 |
 | `season` | string | | 旬・開催時期 |
 | `highlight` | string | | 見どころ・楽しみ方 |
@@ -38,14 +41,31 @@
 
 不要な項目は `null` または空配列・空文字で出す（キー自体は残す）。
 
+### カードの組み立て
+
+カードは1枚の完成画像ではなく、次の部品を重ねて作る（`js/card-render.js` と `css/card-art.css`）。
+文言や写真を直すのに画像を作り直す必要はない。
+
+| 層 | 中身 | どこから |
+|---|---|---|
+| ① 写真 | 産品・風景の写真 | `assets/photos/<photo>` |
+| ② 台紙 | 外枠・背景・区切り線・所在地ピル・罫線 | `assets/frames/<category>.png`（写真部分は透過） |
+| ③ バッジ | 紺のピル＋アイコン＋カテゴリ名 | `assets/frames/icon-<category>.png` ＋ アプリ側で描画 |
+| ④ 番号 | `#01 / 53` | `id` と公開枚数から生成 |
+| ⑤ 名前 | カード名 | `name` |
+| ⑥ 説明 | 3行まで | `cardText`（空なら `description`） |
+| ⑦ ボタン | 白い角丸ボタン | `cardButton`（空なら `config.json` の `cardButtons`） |
+| ⑧ ロゴ | SHIKA COLLECTION | `assets/frames/logo.png` |
+
+設計サイズは **1080×1350（縦横比 4:5）**。位置は `css/card-art.css` に割合で書いてある。
+
 ### 解決ルール（アプリ側）
 
-カード画像は **1080×1350（縦横比 4:5）** を前提に表示する。別の比率だと余白が出る。
-
-- `cardImage` が `http(s)://` で始まる → そのまま
+- `http(s)://` で始まる → そのまま
 - `assets/` で始まる → そのまま相対参照
-- それ以外 → `assets/cards/` の下と見なす
-- `detailPhotos` は同様に `assets/details/` の下
+- `photo` はそれ以外なら `assets/photos/` の下
+- `cardImage` はそれ以外なら `assets/cards/` の下
+- `detailPhotos` は `assets/details/` の下
 
 ### 更新時の扱い
 
@@ -63,6 +83,9 @@
 | `mapCenter` / `mapZoom` | 志賀町中心 / 11 | 地図の初期表示 |
 | `coin.*` | 下表 | コイン付与量 |
 | `event.*` | 無効 | イベント設定 |
+
+`cardButtons` … カード下部のボタン文言（ジャンル既定）。空文字にするとそのジャンルにはボタンを出さない。
+既定は グルメ「取扱店を検索する」/ スポット「Googleマップで経路を見る」/ 文化「」。
 
 `coin` の既定値：`daily:1` / `sakeSnack:1` / `duplicatePer5:1` / `categoryPer5:2` /
 `spotFirst:3` / `spotRevisit:1` / `townFirst:5`

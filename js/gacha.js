@@ -8,6 +8,8 @@ import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dia
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
+import { photoUrl } from './card-render.js';
+import { createGachaStage } from './gacha-anim.js';
 
 export const SINGLE_COST = 1;
 export const TEN_COST = 10;
@@ -81,17 +83,33 @@ export function commitDraw(kind) {
 
 export function clearPending() { commit((s) => { s.pendingResult = null; }); }
 
-/* ===== 画像の先読み ===== */
+/* ===== 画像の先読み =====
+   仕様§9.5: 当落画像を先に読み込み、表示できる状態になってから演出を始める。
+   カードは部品から組み立てるので、写真とジャンル共通の部品（台紙・アイコン・ロゴ）を先に読む。 */
 function preload(ids) {
-  const jobs = ids.map((id) => new Promise((resolve) => {
+  const urls = new Set();
+  for (const id of ids) {
     const c = app.cardsById.get(id);
-    if (!c || !c.cardImage) return resolve();
+    if (!c) continue;
+    if (c.cardImage) {
+      urls.add(c.cardImage.startsWith('http') ? c.cardImage
+        : (c.cardImage.startsWith('assets/') ? `./${c.cardImage}` : `./assets/cards/${c.cardImage}`));
+      continue;
+    }
+    if (c.photo) urls.add(photoUrl(c.photo));
+    if (c.category) {
+      urls.add(`./assets/frames/${c.category}.png`);
+      urls.add(`./assets/frames/icon-${c.category}.png`);
+    }
+  }
+  urls.add('./assets/frames/logo.png');
+  urls.add('./assets/cards/_back.png');
+  const jobs = [...urls].map((src) => new Promise((resolve) => {
     const img = new Image();
     img.onload = img.onerror = () => resolve();
-    img.src = c.cardImage.startsWith('http') ? c.cardImage
-      : (c.cardImage.startsWith('assets/') ? `./${c.cardImage}` : `./assets/cards/${c.cardImage}`);
+    img.src = src;
   }));
-  return Promise.race([Promise.all(jobs), sleep(4000)]);
+  return Promise.race([Promise.all(jobs), sleep(8000)]);
 }
 
 /* ===== ガチャ画面 ===== */
@@ -229,76 +247,64 @@ export async function playSequence(view, payload) {
   const ids = payload.results.map((r) => r.id);
   clear(view);
 
-  const stage = el('div', { class: 'gachastage' });
+  const stageBox = el('div', { class: 'gachastage' });
   const counter = el('div', { class: 'gacha__counter' });
-  const glow = el('div', { class: 'gachastage__glow' });
-  const skip = el('button', { class: 'gacha__skip', attrs: { type: 'button' }, text: 'SKIP' });
-  skip.hidden = true;
-  stage.append(glow, counter, skip);
-  view.append(stage);
+  const skipBtn = el('button', { class: 'gacha__skip', attrs: { type: 'button' }, text: 'SKIP' });
+  skipBtn.hidden = true;
+  stageBox.append(counter, skipBtn);
+  view.append(stageBox);
 
   const loading = el('p', { class: 'muted center', text: 'カードを準備しています…' });
   view.append(loading);
   await preload(ids);
   loading.remove();
 
+  const stage = createGachaStage(stageBox);
   let skipped = false;
-  skip.addEventListener('click', () => { skipped = true; });
+  const skipAll = () => { skipped = true; stage.skip(); };
+  skipBtn.addEventListener('click', (e) => { e.stopPropagation(); skipAll(); });
+  // 舞台をタップすると、その1枚の演出だけ最後まで飛ばす
+  stageBox.addEventListener('click', () => stage.skip());
 
   const total = payload.results.length;
   for (let i = 0; i < total; i++) {
-    if (skipped) break;
     const r = payload.results[i];
-    const c = app.cardsById.get(r.id);
+    const card = app.cardsById.get(r.id);
+    if (!card) continue;
     counter.textContent = total > 1 ? `${i + 1} / ${total}` : '';
-    const quick = i > 0;                       // 2枚目以降は短縮
-    await revealOne(stage, c, r.isNew, quick, () => skipped);
-    if (i === 0 && total > 1) skip.hidden = false;   // 1枚目表示後からSKIP可
-  }
 
-  showResults(view, payload);
-}
+    const oldName = view.querySelector('.gacha__name');
+    if (oldName) oldName.remove();
+    const oldTag = stageBox.querySelector('.gacha__newtag');
+    if (oldTag) oldTag.remove();
 
-function revealOne(stage, card, isNew, quick, isSkipped) {
-  return new Promise(async (resolve) => {
-    const holder = stage.querySelector('.drawcard');
-    if (holder) holder.remove();
-    const nameEl = stage.parentElement.querySelector('.gacha__name');
-    if (nameEl) nameEl.remove();
-
-    const wrap = el('div', { class: 'drawcard drawcard--enter' });
-    const back = el('div', { class: 'drawcard__side drawcard__side--back' }, [cardBack()]);
-    const front = el('div', { class: 'drawcard__side drawcard__side--front' }, [cardFace(card)]);
-    wrap.append(back, front);
-    stage.append(wrap);
-
-    const fast = reduceMotion() || quick;
-    await sleep(fast ? 90 : 320);
-    if (isSkipped()) { wrap.classList.add('is-flipped'); return resolve(); }
-
-    if (isNew) { stage.querySelector('.gachastage__glow').classList.add('is-on'); }
-    sfx.flip();
-    wrap.classList.add('is-flipped');
-    if (isNew) wrap.classList.add('is-new');
-    await sleep(fast ? 220 : 520);
-
-    if (isNew) {
-      sfx.neu(); vibrate([18, 40, 26]);
-      const tag = el('div', { class: 'gacha__newtag', text: 'NEW' });
-      stage.append(tag);
-    } else {
-      sfx.normal(); vibrate(10);
+    if (skipped) {
+      // 残りは演出せず、最後の1枚だけ最終状態で見せる
+      if (i < total - 1) continue;
     }
 
-    const label = el('p', { class: 'gacha__name', text: card.name });
-    stage.parentElement.append(label);
+    await stage.play(cardFace(card), {
+      category: card.category || 'gourmet',
+      quick: i > 0,
+      hold: i === 0 || i === total - 1,   // 1枚目と最後の1枚は余韻まで見せる
+      onBeat: (beat) => {
+        if (beat === 'impact') {
+          if (r.isNew) { sfx.neu(); vibrate([18, 40, 26]); }
+          else { sfx.normal(); vibrate(10); }
+          if (r.isNew) stageBox.append(el('div', { class: 'gacha__newtag', text: 'NEW' }));
+        }
+        if (beat === 'name') {
+          view.append(el('p', { class: 'gacha__name', text: card.name }));
+        }
+      },
+    });
 
-    await sleep(fast ? 380 : 900);
-    stage.querySelector('.gachastage__glow').classList.remove('is-on');
-    const tag = stage.querySelector('.gacha__newtag');
-    if (tag) tag.remove();
-    resolve();
-  });
+    if (i === 0 && total > 1 && !skipped) skipBtn.hidden = false;
+    if (!skipped && i < total - 1) await sleep(reduceMotion() ? 60 : 260);
+  }
+
+  stage.destroy();
+  showResults(view, payload);
 }
 
 /* ===== 結果一覧 ===== */

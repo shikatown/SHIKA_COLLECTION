@@ -142,6 +142,7 @@ a{color:var(--accent)}
 /* ===== ホーム ===== */
 .hero{ text-align:center;padding:10px 0 4px; }
 .hero__lead{font-size:12px;color:var(--ink-3);margin:0 0 2px;letter-spacing:.14em}
+.hero__logo{display:block;width:min(64%,230px);margin:0 auto 4px}
 .hero__title{font-size:21px;margin:0 0 12px;letter-spacing:.06em;font-weight:800}
 .home__main{display:grid;gap:10px;margin-top:6px}
 .bigbtn{
@@ -192,7 +193,8 @@ a{color:var(--accent)}
 }
 /* 完成カード画像を表示するときは、画像の意匠を邪魔しない */
 .card--img{background:transparent;box-shadow:none}
-.card img{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
+/* 完成画像で上書きする場合の1枚絵。組み立てカード（.cardart 内の画像）には効かせない */
+.card > img{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
 .card__face{
   position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
   padding:9% 8%;color:#fff;
@@ -227,10 +229,11 @@ a{color:var(--accent)}
   font-size:30px;font-size:26cqw;font-weight:800;color:rgba(255,255,255,.72);
 }
 .card--sm{border-radius:7px}
+/* NEW は右下。カード意匠（バッジ・番号ピル・ロゴ）と重ならない位置 */
 .card__new{
-  position:absolute;left:0;bottom:7%;background:var(--danger);color:#fff;
-  font-size:8.5px;font-weight:800;letter-spacing:.12em;padding:2px 6px 2px 5px;
-  border-radius:0 4px 4px 0;
+  position:absolute;right:0;bottom:6%;background:var(--danger);color:#fff;
+  font-size:8.5px;font-weight:800;letter-spacing:.12em;padding:2px 5px 2px 6px;
+  border-radius:4px 0 0 4px;
 }
 
 /* カード裏面 */

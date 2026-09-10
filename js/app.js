@@ -185,7 +185,10 @@ function renderHome(view) {
   const s = app.state;
 
   const hero = el('div', { class: 'hero' });
-  hero.append(el('p', { class: 'hero__lead', text: 'SHIKA TOWN COLLECTION' }));
+  hero.append(el('img', {
+    class: 'hero__logo',
+    attrs: { src: './assets/frames/logo.png', alt: 'SHIKA COLLECTION', decoding: 'async' },
+  }));
   hero.append(el('h2', { class: 'hero__title', text: '志賀町を、あつめよう。' }));
   view.append(hero);
 

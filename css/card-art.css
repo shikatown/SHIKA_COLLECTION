@@ -1,0 +1,132 @@
+/* card-art.css — カードの組み立て位置。
+   数値はすべて 1080×1350 の設計座標を割合にしたもの。カードの表示サイズが変わっても崩れない。
+
+   実測した設計座標:
+     カード内側      x  57–1022 ,  y   57–1293
+     写真            x  57–1022 ,  y   57– 679
+     カテゴリバッジ  x  82–     ,  y   74– 138
+     番号ピル        x 878– 993 ,  y   88– 140
+     所在地ピル      x  95–     ,  y  748– 782   （台紙に含む）
+     名前            x  95– 990 ,  y  790– 878
+     罫線                         ,  y      884   （台紙に含む）
+     説明文          x  95– 990 ,  y  890–1045
+     ボタン          x  96– 984 ,  y 1048–1110
+     SHIKAロゴ       x 428– 650 ,  y 1126–1253
+
+   cqw = カード幅の1%。1080px 換算のときは 10.8px にあたる。 */
+
+.cardart{
+  position:absolute; inset:0;
+  container-type:size;
+  font-family:var(--font);
+  -webkit-font-smoothing:antialiased;
+}
+/* ボタン文字の色は元のカードから実測したジャンル別の色 */
+.cardart--gourmet{ --cardink:#4a2314 }
+.cardart--spot{    --cardink:#0c3336 }
+.cardart--culture{ --cardink:#33254a }
+
+/* ① 写真 */
+.cardart__photo{
+  position:absolute;
+  left:5.278%; top:4.222%; width:89.352%; height:46.148%;
+  overflow:hidden; background:#17151a;
+}
+.cardart__photo img{ width:100%; height:100%; object-fit:cover; display:block }
+.cardart__photo.is-empty,
+.cardart__photo.is-locked{ display:grid; place-items:center }
+.cardart__photo.is-empty span{
+  color:rgba(255,255,255,.82); font-size:4.2cqw; font-weight:800; letter-spacing:.12em;
+}
+.cardart__photo.is-locked span{
+  color:rgba(255,255,255,.5); font-size:16cqw; font-weight:800; line-height:1;
+}
+
+/* ② 台紙（写真の窓が透過） */
+.cardart__plate{
+  position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none; user-select:none;
+}
+
+/* ③ カテゴリバッジ（紺のピル＋アイコン＋カテゴリ名） */
+.cardart__badge{
+  position:absolute; left:7.593%; top:5.481%; height:4.815%;
+  display:flex; align-items:center; gap:.22em;
+  padding:0 1.55em 0 .2em;
+  background:#0b3a6b; border-radius:99px;
+  color:#fff; line-height:1; white-space:nowrap;
+}
+.cardart__badge img{ height:94%; width:auto; display:block }
+.cardart__badge span{ font-size:3.1cqw; font-weight:800; letter-spacing:.04em }
+
+/* ④ 番号 */
+.cardart__num{
+  position:absolute; left:81.296%; top:6.519%; width:10.741%; height:3.926%;
+  background:#0b3a6b; border-radius:99px;
+  display:flex; align-items:baseline; justify-content:center; gap:.22em;
+  color:#fff; line-height:1; letter-spacing:.01em; white-space:nowrap;
+}
+.cardart__num b{ font-size:3.1cqw; font-weight:800 }
+.cardart__num span{ font-size:2.1cqw; font-weight:600; opacity:.82 }
+
+/* ⑤ 名前 */
+.cardart__title{
+  position:absolute; left:8.796%; top:58.519%; width:82.87%; height:6.519%;
+  display:flex; align-items:center;
+  color:#fff; font-weight:800; font-size:6.5cqw; line-height:1.1;
+  white-space:nowrap; overflow:hidden;
+}
+.cardart__title--mid{ font-size:5.1cqw }
+.cardart__title--long{
+  font-size:3.7cqw; line-height:1.1; white-space:normal;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+}
+
+/* ⑥ 説明 */
+.cardart__desc{
+  position:absolute; left:8.796%; top:65.926%; width:82.87%;
+  /* ちょうど3行分の高さにして、4行目が半分だけ覗くのを防ぐ */
+  height:3.78em; max-height:11.481%;
+  color:#fff; font-weight:700; font-size:3.6cqw; line-height:1.26;
+  overflow:hidden;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+}
+
+/* ⑦ ボタン（文言は cards.json / config.json から） */
+.cardart__btn{
+  position:absolute; left:8.889%; top:77.63%; width:82.222%; height:4.593%;
+  background:#fff; border-radius:99px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 3.2% 0 3.6%;
+  color:var(--cardink,#3a2a20);
+  font-size:3.1cqw; font-weight:800; line-height:1; letter-spacing:.01em;
+}
+.cardart__btn span{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis }
+.cardart__btn i{ font-style:normal; font-size:3.6cqw; font-weight:600; flex:none; margin-left:.5em }
+
+/* ⑧ ロゴ */
+.cardart__logo{
+  position:absolute; left:50%; top:88.11%;
+  transform:translate(-50%,-50%);
+  width:24%; height:11.5%; object-fit:contain;
+  pointer-events:none; user-select:none;
+}
+
+/* 未取得カード */
+.cardart--locked .cardart__title{ color:rgba(255,255,255,.6); letter-spacing:.1em }
+.cardart--locked .cardart__plate,
+.cardart--locked .cardart__badge,
+.cardart--locked .cardart__logo,
+.cardart--locked .cardart__btn{ filter:saturate(.3) brightness(.72) }
+.cardart--locked .cardart__num{ background:#3a4250 }
+
+/* 小さく表示するときは読めない要素を省く */
+@container (max-width: 190px){
+  .cardart__desc{ display:none }
+  .cardart__btn{ display:none }
+  .cardart__title{ font-size:7.4cqw }
+  .cardart__title--mid{ font-size:6cqw }
+  .cardart__title--long{ font-size:4.6cqw }
+  .cardart__badge span{ display:none }
+  .cardart__badge{ padding:0 .2em }
+}
