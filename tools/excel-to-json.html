@@ -101,6 +101,17 @@
   </div>
 
   <div class="panel">
+    <h2>カード写真のフォルダ（Excelに写真を貼らない場合）</h2>
+    <p class="note" style="margin:0 0 8px">
+      Excelの「写真ファイル名」列にファイル名を書き、その写真が入ったフォルダをここで選びます。<br>
+      「写真ファイル名」が空の行は、<code>カードID</code> と同じ名前のファイル（例：<code>001.jpeg</code>）を探します。<br>
+      Excelのセルに写真を貼っている場合は、こちらを選ばなくてもかまいません。
+    </p>
+    <input type="file" id="photodir" webkitdirectory directory multiple>
+    <p class="note" id="photoStat" style="margin:8px 0 0"></p>
+  </div>
+
+  <div class="panel">
     <h2>完成カード画像で上書きする（任意）</h2>
     <p class="note" style="margin:0 0 8px">
       通常は不要です。カードは写真と文字から組み立てられます。<br>
@@ -119,6 +130,7 @@
       <tr><td>公開</td><td>published（○ のみ公開）</td></tr>
       <tr><td>名前</td><td>name … カードの見出し</td></tr>
       <tr><td>詳細写真１ のセル内画像</td><td>photo … <b>カードの写真</b>（写真の書き出しで取り出せます）</td></tr>
+      <tr><td>写真ファイル名</td><td>photo … 上のフォルダから同じ名前の写真を取り込む（セル内画像より優先）</td></tr>
       <tr><td>カード説明文</td><td>cardText … <b>カードに載せる短い文</b>（3行まで。空なら説明文を使う）</td></tr>
       <tr><td>カードボタン文言</td><td>cardButton … カード下部のボタン文字（空ならジャンル既定。config.json で設定）</td></tr>
       <tr><td>説明文</td><td>description … 詳細画面の本文</td></tr>
@@ -150,6 +162,7 @@ let book = null;      // { zip, sheets, strings, richImages }
 let output = null;    // 変換後の cards.json
 let photos = [];      // [{ name, data:Uint8Array }]
 const cardImageFiles = new Map();   // 完成カード画像（任意）
+const photoFiles = new Map();       // カード写真のフォルダ（小文字のファイル名 -> File）
 
 /* ========== ZIP 読み取り（deflate-raw は標準APIで展開） ========== */
 async function readZip(buf) {
@@ -423,10 +436,29 @@ async function convert(rows) {
       published = false;
     }
 
-    // 写真（セル内画像）
+    /* 写真。フォルダから取り込む方を先に見る。
+       「写真ファイル名」が空なら、カードIDと同じ名前のファイルを探す。
+       どちらも無ければ、Excelのセルに貼られた画像を使う。 */
     let photo = '';
+    const wanted = get(r, '写真ファイル名');
+    if (photoFiles.size) {
+      let f = wanted ? photoFiles.get(wanted.toLowerCase()) : null;
+      if (!f && !wanted) {
+        for (const e of ['.jpeg', '.jpg', '.png', '.webp']) {
+          f = photoFiles.get(`${id}${e}`);
+          if (f) break;
+        }
+      }
+      if (f) {
+        const ext = (f.name.match(/\.[a-z0-9]+$/i) || ['.jpeg'])[0].toLowerCase();
+        photo = `${id}${ext}`;
+        photos.push({ name: photo, data: new Uint8Array(await f.arrayBuffer()) });
+      } else if (wanted) {
+        msgs.push({ level: 'err', text: `${id} ${name}: 写真「${wanted}」がフォルダにありません。` });
+      }
+    }
     const photoCols = ['詳細写真１', '詳細写真1'].map((k) => col[k]).filter(Boolean);
-    for (const pc of photoCols) {
+    for (const pc of photo ? [] : photoCols) {
       const vm = r.vms[pc];
       if (!vm) continue;
       const media = book.richImages.get(vm);
@@ -608,6 +640,21 @@ async function handle(file) {
 }
 
 sheetSel.addEventListener('change', run);
+
+document.getElementById('photodir').addEventListener('change', (e) => {
+  photoFiles.clear();
+  for (const f of e.target.files) {
+    if (!/\.(webp|png|jpe?g|avif|gif)$/i.test(f.name)) continue;
+    const path = f.webkitRelativePath || f.name;     // フォルダ内の位置（区切りは /）
+    if (/(^|\/)thumb\//i.test(path)) continue;        // 縮小版のフォルダは取り込まない
+    photoFiles.set(f.name.toLowerCase(), f);
+  }
+  const stat = document.getElementById('photoStat');
+  stat.textContent = photoFiles.size
+    ? `${photoFiles.size} 枚の写真を読み込みました。`
+    : '画像ファイルが見つかりませんでした。';
+  if (book) run();
+});
 
 document.getElementById('imgdir').addEventListener('change', (e) => {
   cardImageFiles.clear();

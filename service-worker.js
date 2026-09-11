@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.10.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -88,13 +88,23 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // 画面遷移
+  /* 画面遷移。
+     アプリ本体（/ か /index.html）だけを控えから返す。
+     tools/ の変換ツールなど、ほかのページまで本体に差し替えないこと。 */
   if (req.mode === 'navigate') {
+    const root = new URL('./', self.registration.scope || self.location.href).pathname;
+    const isApp = url.pathname === root || url.pathname === `${root}index.html`;
     e.respondWith((async () => {
-      const cached = await caches.match('./index.html', { ignoreSearch: true });
-      if (cached) return cached;
+      if (isApp) {
+        const cached = await caches.match('./index.html', { ignoreSearch: true });
+        if (cached) return cached;
+      }
       try { return await fetch(req); }
-      catch (_) { return new Response('オフラインです', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }); }
+      catch (_) {
+        const hit = await caches.match(req, { ignoreSearch: true });
+        if (hit) return hit;
+        return new Response('オフラインです', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      }
     })());
     return;
   }
