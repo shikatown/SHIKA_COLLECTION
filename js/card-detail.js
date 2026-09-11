@@ -19,13 +19,19 @@ export function renderCardDetail(view, params) {
   const openSpot = !owned && c.gps.enabled;   // 未取得でも観光情報は見せるスポット
   if (!owned && !openSpot) return renderLocked(view, c);
 
-  const hero = el('div', { class: 'detail__hero' });
+  // 現地訪問の欄が付くカードは、その高さぶんカードを控えめにして1画面に収める
+  const hero = el('div', { class: `detail__hero${c.gps.enabled ? ' detail__hero--compact' : ''}` });
   // 取得済みは画面の端まで大きく。未取得は空き枠なので、控えめな大きさにとどめる。
   const wrap = el('div', { class: `detail__cardwrap${owned ? '' : ' detail__cardwrap--slot'}` });
   if (owned) {
-    const face = cardFace(c);   // 画面幅いっぱいに出すので原寸を使う
+    const face = cardFace(c);   // 大きく出すので原寸を使う
     face.style.cursor = 'pointer';
-    face.addEventListener('click', () => openViewer(c.id));
+    // カードに印刷されたボタンは本物のリンクにする。それ以外を押すとカードを大きく見る。
+    linkCardButton(face, c);
+    face.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;   // ボタンのリンクはそのまま開かせる
+      openViewer(c.id);
+    });
     wrap.append(face);
   } else {
     wrap.append(lockedCard(c));
@@ -50,7 +56,7 @@ export function renderCardDetail(view, params) {
   hero.append(meta);
   view.append(hero);
 
-  const body = el('div', { class: 'detail', style: { marginTop: '18px' } });
+  const body = el('div', { class: 'detail', style: { marginTop: '12px' } });
 
   // 説明文はカードの中に印刷されている。大きく出しているので、ここでは繰り返さない。
 
@@ -77,8 +83,10 @@ export function renderCardDetail(view, params) {
     body.append(ph);
   }
 
-  if (c.category === 'spot' || c.gps.lat != null) body.append(spotSection(c));
-  if (c.purchase.enabled) body.append(purchaseSection(c));
+  if (c.purchase.enabled) {
+    body.append(el('p', { class: 'note', style: { marginTop: '0' }, text: '※季節や入荷状況などにより、取り扱いがない場合があります。' }));
+  }
+  if (c.gps.enabled) body.append(spotSection(c));
   if (c.externalLinks.length) {
     body.append(el('h3', { text: 'もっと知る' }));
     const lk = el('div', { class: 'linklist' });
@@ -123,62 +131,57 @@ function favButton(c) {
   return btn;
 }
 
-function spotSection(c) {
-  const sec = el('div');
-  sec.append(el('h3', { text: '場所' }));
-  const p = el('div', { class: 'panel' });
-
-  if (c.gps.lat != null) {
-    const d = distanceText(c.gps.lat, c.gps.lng);
-    p.append(el('div', {
-      style: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '10px' },
-    }, [
-      el('span', { text: '現在地からの目安' }),
-      el('span', { class: 'muted', text: hasFix() ? d : '現在地は未取得' }),
-    ]));
+/** カードに印刷されたボタンが指す先。地図や販売店の検索はここ1か所で決める。 */
+export function cardActionUrl(c) {
+  if (c.category === 'spot' && c.gps.lat != null) return mapsSearchUrl(`${c.gps.lat},${c.gps.lng}`);
+  if (c.purchase.enabled) {
+    const shop = c.purchase.shops.find((s) => safeUrl(s.url));
+    if (shop) return safeUrl(shop.url);
+    const word = c.purchase.searchWord || `${(app.config && app.config.townName) || '志賀町'} ${c.name}`;
+    return mapsSearchUrl(word);
   }
-
-  if (c.gps.enabled) {
-    const visited = isVisited(c.id);
-    p.append(el('div', {
-      style: { fontSize: '13px', marginBottom: '10px' },
-      text: visited
-        ? `✓ 現地訪問済み ／ 再訪 +${coinCfg().spotRevisit} SHIKA COIN（1日1回）`
-        : `現地訪問 未達成 ／ 初回訪問 +${coinCfg().spotFirst} SHIKA COIN`,
-    }));
-    p.append(el('button', {
-      class: 'btn btn--primary btn--block', attrs: { type: 'button' }, text: '現在地を確認する',
-      on: { click: () => go('#/map?checkin=1') },
-    }));
-  }
-
-  if (c.gps.lat != null) {
-    const url = mapsSearchUrl(`${c.gps.lat},${c.gps.lng}`);
-    const a = externalLink('Google Maps で行く', url);
-    if (a) { a.style.marginTop = '8px'; p.append(a); }
-  }
-  sec.append(p);
-  return sec;
+  if (c.gps.lat != null) return mapsSearchUrl(`${c.gps.lat},${c.gps.lng}`);
+  const first = c.externalLinks.find((l) => safeUrl(l.url));
+  return first ? safeUrl(first.url) : '';
 }
 
-function purchaseSection(c) {
-  const sec = el('div');
-  sec.append(el('h3', { text: '買える場所' }));
-  const p = el('div', { class: 'panel' });
+/** カードの絵に描かれたボタンの上に、透明なリンクを重ねる。
+    絵は作り直さずに、押せる場所だけを足す。 */
+function linkCardButton(face, c) {
+  const btn = face.querySelector('.cardart__btn');
+  if (!btn) return;                       // 文化カードのようにボタンが無い意匠
+  const url = cardActionUrl(c);
+  if (!url) return;
+  btn.classList.add('is-live');
+  btn.append(el('a', {
+    class: 'cardart__hit',
+    attrs: {
+      href: url, target: '_blank', rel: 'noopener noreferrer',
+      'aria-label': (btn.textContent || '').replace('→', '').trim(),
+    },
+  }));
+}
 
-  if (c.purchase.shops.length) {
-    const lk = el('div', { class: 'linklist' });
-    for (const s of c.purchase.shops) {
-      const a = externalLink(s.name || '確認済みの販売店', s.url);
-      if (a) lk.append(a);
-    }
-    p.append(lk);
-  } else {
-    const word = c.purchase.searchWord || `${(app.config && app.config.townName) || '志賀町'} ${c.name}`;
-    const a = externalLink('買える場所を探す', mapsSearchUrl(word), 'btn btn--primary btn--block');
-    if (a) p.append(a);
-  }
-  p.append(el('p', { class: 'note', text: '※季節や入荷状況などにより、取り扱いがない場合があります。' }));
-  sec.append(p);
-  return sec;
+/** 現地訪問（SHIKA COIN がもらえる行動）だけを残した欄。地図へ飛ぶのはカードのボタンが担う。
+    1画面に収めたいので、見出しは付けず、状況と距離は1行にまとめる。 */
+function spotSection(c) {
+  const p = el('div', { class: 'panel panel--tight' });
+  const visited = isVisited(c.id);
+
+  p.append(el('div', { class: 'spotline' }, [
+    el('span', {
+      text: visited
+        ? `✓ 訪問済み ／ 再訪 +${coinCfg().spotRevisit} COIN`
+        : `未訪問 ／ 初回訪問 +${coinCfg().spotFirst} SHIKA COIN`,
+    }),
+    el('span', {
+      class: 'muted',
+      text: c.gps.lat == null ? '' : (hasFix() ? distanceText(c.gps.lat, c.gps.lng) : '現在地は未取得'),
+    }),
+  ]));
+  p.append(el('button', {
+    class: 'btn btn--primary btn--block', attrs: { type: 'button' }, text: '現在地を確認する',
+    on: { click: () => go('#/map?checkin=1') },
+  }));
+  return p;
 }

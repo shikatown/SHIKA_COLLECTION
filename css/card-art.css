@@ -108,6 +108,15 @@
 .cardart__btn span{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis }
 .cardart__btn i{ font-style:normal; font-size:3.6cqw; font-weight:600; flex:none; margin-left:.5em }
 
+/* カード詳細では、この印刷されたボタンが本物のリンクになる（js/card-detail.js）。
+   印刷どおりの高さだと指には細いので、当たり判定だけ上下に広げる。 */
+.cardart__btn.is-live{ cursor:pointer }
+.cardart__btn.is-live:active{ filter:brightness(.93) }
+.cardart__hit{
+  position:absolute; left:0; right:0; top:-55%; bottom:-55%;
+  display:block; border-radius:99px;
+}
+
 /* ⑧ ロゴ */
 .cardart__logo{
   position:absolute; left:50%; top:88.11%;

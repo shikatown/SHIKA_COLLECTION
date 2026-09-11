@@ -88,7 +88,7 @@ a{color:var(--accent)}
 }
 
 /* ===== ビュー ===== */
-.view{ padding:16px 16px 24px; outline:none; }
+.view{ padding:16px 16px 18px; outline:none; }
 .view h2{font-size:17px;margin:0 0 10px;letter-spacing:.02em}
 .view h3{font-size:14px;margin:22px 0 8px;color:var(--ink-2);letter-spacing:.03em}
 .muted{color:var(--ink-3);font-size:12.5px}
@@ -328,9 +328,16 @@ a{color:var(--accent)}
 .detail__hero{display:block}
 .detail__cardwrap{
   /* .view の左右余白（16px）を少しだけ戻して、端との間に10pxほど残す */
-  margin:0 -6px 14px;
+  margin:0 -6px 10px;
 }
-.detail__cardwrap .card{border-radius:10px;box-shadow:0 6px 18px rgba(34,32,29,.10)}
+.detail__cardwrap .card{
+  border-radius:10px;box-shadow:0 6px 18px rgba(34,32,29,.10);
+  /* カード詳細はスクロールさせない。下に置く情報のぶんを引いた高さに収める。
+     カードは 4:5 なので、使える高さ × 0.8 が幅の上限になる。 */
+  max-width:calc((100dvh - 390px) * .8);
+  margin-inline:auto;
+}
+.detail__hero--compact .detail__cardwrap .card{ max-width:calc((100dvh - 430px) * .8) }
 /* 未取得はまだ空き枠なので、端まで広げない */
 .detail__cardwrap--slot{width:58%;margin:0 auto 16px}
 .detail__cardwrap--slot .card{border-radius:9px;box-shadow:none}
@@ -341,7 +348,10 @@ a{color:var(--accent)}
 }
 .detail__name{font-size:19px;font-weight:800;margin:7px 0 2px;line-height:1.35}
 .detail__sub{font-size:11.5px;color:var(--ink-3)}
-.detail__acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.detail__acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+/* 現地訪問の欄。1画面に収めるため、余白は詰める */
+.panel--tight{padding:10px 12px;margin-top:10px}
+.spotline{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;margin-bottom:8px}
 .detail__acts > *{flex:1;min-width:8em}
 .detail p{font-size:13.5px;margin:0 0 10px}
 .deflist{display:grid;gap:8px;font-size:13px}
