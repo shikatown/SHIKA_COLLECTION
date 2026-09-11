@@ -257,6 +257,12 @@ a{color:var(--accent)}
   34% { opacity:.95; transform:scale(1.03) }
   100%{ opacity:0;  transform:scale(.97) }
 }
+/* 演出のあいだだけは全部を描いておく。高さが確定していないと、寄せた先がずれる */
+.grid--snapping .cell{ content-visibility:visible }
+/* 枚数が多いとき（10連など）は、1枚あたりを少し短くして全部を見せきる */
+.grid--quicksnap .cell--snap.is-snapped .cell__drop{ animation-duration:.66s }
+.grid--quicksnap .cell--snap.is-snapped .cell__drop::after{ animation-duration:.58s; animation-delay:.52s }
+.grid--quicksnap .cell--snap.is-snapped .cell__box::after{ animation-duration:.44s; animation-delay:.4s }
 
 /* ===== カード見た目（画像未設定時のフォールバック） ===== */
 .card{
