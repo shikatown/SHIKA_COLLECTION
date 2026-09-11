@@ -4,7 +4,7 @@
    ・振動なし／ジャイロ不使用 */
 
 import { app, isOwned } from './state.js';
-import { el, clear, cardFace, cardBack, vibrate, reduceMotion } from './ui.js';
+import { el, clear, cardFace, cardBack, vibrate } from './ui.js';
 import { commit } from './state.js';
 
 const MAX_X = 26;          // 上下の傾き上限（度）
@@ -84,7 +84,8 @@ function render(view) {
 
   const front = el('div', { class: 'card3d__side card3d__side--front' });
   front.append(cardFace(c));
-  front.append(el('div', { class: 'card3d__sheen card3d__sheen--auto' }));
+  front.append(el('div', { class: 'card3d__sheen' }));
+  front.append(el('div', { class: 'card3d__glint' }));   // 左から右へ走る光（CSSで繰り返す）
 
   const back = el('div', { class: 'card3d__side card3d__side--back' });
   back.append(cardBack());
@@ -98,22 +99,6 @@ function render(view) {
   requestAnimationFrame(() => {
     setTimeout(() => apply(view.card, view.shadow, { x: 0, y: 0 }), 30);
   });
-  startAutoSheen(view.card);
-}
-
-let sheenTimer = null;
-function startAutoSheen(card) {
-  clearInterval(sheenTimer);
-  if (reduceMotion()) return;
-  let on = false;
-  const run = () => {
-    const layer = card.querySelector('.card3d__side--front .card3d__sheen');
-    if (!layer) return;
-    on = !on;
-    layer.style.setProperty('--sheen', on ? '100%' : '0%');
-  };
-  setTimeout(run, 400);
-  sheenTimer = setInterval(run, 7000);
 }
 
 /* ===== 操作 ===== */

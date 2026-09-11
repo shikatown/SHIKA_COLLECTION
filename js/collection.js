@@ -3,7 +3,7 @@
    カード画像だけ伏せる（現地へ行くきっかけを残すため）。 */
 
 import { app, isOwned, CATEGORIES, CATEGORY_LABEL, publishedCards, categoryStats, commit } from './state.js';
-import { el, clear, cardFace, lockedCard, vibrate, reduceMotion } from './ui.js';
+import { el, clear, cardFace, cardBack, lockedCard, vibrate, reduceMotion, sleep } from './ui.js';
 import { categoryProgress, coinCfg } from './rewards.js';
 import { go } from './router.js';
 
@@ -75,88 +75,125 @@ export function renderCollection(view, params) {
   for (const c of list) grid.append(cell(c, fresh.includes(c.id) ? n++ : -1));
   view.append(grid);
 
-  if (fresh.length) snapIn(grid, fresh.length);
+  if (fresh.length) snapIn(grid, [...grid.querySelectorAll('.cell--snap')]);
 }
 
 /** 枠にはまる演出。見せ終わったら控えを消して、次に開いたときは静かにする。 */
-function snapIn(grid, count) {
-  const cells = [...grid.querySelectorAll('.cell--snap')];
+/** 枠にはまる演出。
+    1枚ずつ「画面のまん中に大きく出す → くるっと回る → 枠にパチーンとはまる」。
+    はまったカードには NEW を付けて、何が手に入ったか画面を離れるまで分かるようにする。
+    見せ終わったら控えを消して、次に開いたときは静かにする。 */
+async function snapIn(grid, cells) {
   const done = () => commit((s) => { s.unseenCardIds = []; });
-  if (reduceMotion() || !cells.length) { done(); return; }
+  const finish = (cellEl) => {
+    cellEl.classList.add('is-snapped');
+    const card = cellEl.querySelector('.cell__drop > .card') || cellEl.querySelector('.card');
+    if (card && !card.querySelector('.card__new')) card.append(el('div', { class: 'card__new', text: 'NEW' }));
+  };
 
-  // 1枚ずつ、その枠まで画面を寄せてからはめる。10連でも全部を見てもらう。
+  if (reduceMotion()) { for (const c of cells) finish(c); done(); return; }
+
   /* 演出のあいだは画面外を省く描画（content-visibility）を止める。
      省いたままだと高さが仮置きのままで、寄せた先が後からずれる。 */
   grid.classList.add('grid--snapping');
   const many = cells.length > 6;
-  if (many) grid.classList.add('grid--quicksnap');
-  const START = 480;
-  const STEP = many ? 800 : 1150;   // 1枚あたりの持ち時間
-  const GLIDE = 340;                // 寄せるのにかける時間
-  const SNAP = 400;                 // 寄せ終わってから、はまり始めるまで
-  const LAND = many ? 660 : 920;    // 落ちて止まるまで（css の snapIn と同じ長さ）
+  const T = many
+    ? { glide: 300, spin: 620, hold: 60, fly: 360, rest: 120 }
+    : { glide: 340, spin: 860, hold: 140, fly: 440, rest: 260 };
 
+  // 画面のどこかを触られたら、残りはまとめて終わらせる（長く待たせない）
+  let skip = false;
+  const askSkip = () => { skip = true; };
   // 手で動かされたら、追いかけるのはやめる（勝手に戻されると操作できない）
   let follow = true;
   const stopFollow = () => { follow = false; };
   for (const ev of ['wheel', 'touchstart', 'keydown']) {
-    window.addEventListener(ev, stopFollow, { once: true, passive: true });
+    window.addEventListener(ev, stopFollow, { passive: true });
   }
+  const release = () => {
+    for (const ev of ['wheel', 'touchstart', 'keydown']) window.removeEventListener(ev, stopFollow);
+  };
 
-  /* その枠を画面のまん中へ寄せる。
-     `scrollIntoView({behavior:'smooth'})` は効かない環境があり、
-     requestAnimationFrame も止まることがあるので、時間で進めるタイマーで動かす。 */
   const targetY = (node) => {
     const r = node.getBoundingClientRect();
     const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
     return Math.max(0, Math.min(max, window.scrollY + r.top + r.height / 2 - window.innerHeight / 2));
   };
-  /* 端末が遅いとタイマーがまとめて遅れて届く。
-     そのとき古い順番の寄せが動くと、次のカードを見ているのに引き戻されてしまう。
-     いま見せている順番（turn）と違う指示は捨てる。 */
-  let turn = -1;
-  const glideTo = (node, i) => {
+  /* その枠を画面のまん中へ寄せる。
+     `scrollIntoView({behavior:'smooth'})` は効かない環境があり、
+     requestAnimationFrame も止まることがあるので、時間で進めるタイマーで動かす。 */
+  const glideTo = (node) => new Promise((resolve) => {
     const from = window.scrollY;
     const to = targetY(node);
-    if (Math.abs(to - from) < 2) return;
+    if (!follow || Math.abs(to - from) < 2) { resolve(); return; }
     const t0 = performance.now();
     const step = () => {
-      if (!follow || turn !== i) return;
-      const k = Math.min(1, (performance.now() - t0) / GLIDE);
+      if (!follow) { resolve(); return; }
+      const k = Math.min(1, (performance.now() - t0) / T.glide);
       window.scrollTo(0, from + (to - from) * (1 - Math.pow(1 - k, 3)));
       if (k < 1) setTimeout(step, 16);
+      else resolve();
     };
     step();
-  };
-  /* 画面外のカードは高さが仮置き（content-visibility）なので、
-     近づいて実際に描かれた瞬間に前後がずれる。1回合わせただけでは足りないので、
-     はめる前後に数回だけ合わせ直して落ち着かせる。 */
-  const settleOn = (node, i) => {
-    const fix = () => {
-      if (!follow || turn !== i) return;
-      const to = targetY(node);
-      if (Math.abs(to - window.scrollY) > 24) window.scrollTo(0, to);
-    };
-    fix();
-    setTimeout(fix, 90);
-    setTimeout(fix, 220);
+  });
+  // 画面外の枠は高さが仮置きなので、飛ばす直前にもう一度だけ合わせ直す
+  const settleOn = (node) => {
+    if (!follow) return;
+    const to = targetY(node);
+    if (Math.abs(to - window.scrollY) > 24) window.scrollTo(0, to);
   };
 
+  /** 1枚ぶん。中央で回してから、その枠へ飛ばす。 */
+  const flyInto = async (cellEl, card, last) => {
+    const box = cellEl.querySelector('.cell__box');
+    const dim = el('div', { class: 'snapdim' });
+    const fly = el('div', { class: 'snapfly' });
+    const core = el('div', { class: 'snapfly__c' });
+    core.append(el('div', { class: 'snapfly__s snapfly__s--back' }, [cardBack()]));
+    core.append(el('div', { class: 'snapfly__s snapfly__s--front' }, [cardFace(card)]));
+    fly.append(core);
+    fly.style.setProperty('--tspin', `${T.spin}ms`);
+    fly.style.setProperty('--tfly', `${T.fly}ms`);
+    dim.addEventListener('pointerdown', askSkip);
+    document.body.append(dim, fly);
+
+    // 中央に大きく出して、くるっと回す
+    fly.classList.add('is-in');
+    await sleep(T.spin + T.hold);
+
+    // 枠の位置へ飛ばす
+    settleOn(cellEl);
+    const to = box.getBoundingClientRect();
+    const from = fly.getBoundingClientRect();
+    fly.style.setProperty('--dx', `${Math.round(to.left + to.width / 2 - (from.left + from.width / 2))}px`);
+    fly.style.setProperty('--dy', `${Math.round(to.top + to.height / 2 - (from.top + from.height / 2))}px`);
+    fly.style.setProperty('--k', (to.width / from.width).toFixed(4));
+    dim.classList.add('is-out');
+    fly.classList.add('is-fly');
+    await sleep(T.fly);
+
+    // 着地
+    finish(cellEl);
+    vibrate(last ? [16, 34, 24] : 12);
+    fly.remove();
+    dim.remove();
+  };
+
+  await sleep(360);
   for (const [i, cellEl] of cells.entries()) {
-    const at = START + i * STEP;
-    setTimeout(() => { turn = i; if (follow) glideTo(cellEl, i); }, at);
-    setTimeout(() => {
-      if (follow) settleOn(cellEl, i);
-      cellEl.classList.add('is-snapped');
-      // 手ごたえは「はまった瞬間」に返す
-      setTimeout(() => vibrate(i === cells.length - 1 ? [16, 34, 24] : 12), LAND);
-    }, at + SNAP);
+    if (skip) break;
+    const card = app.cardsById.get(cellEl.dataset.id);
+    if (!card) { finish(cellEl); continue; }
+    await glideTo(cellEl);
+    await flyInto(cellEl, card, i === cells.length - 1);
+    await sleep(T.rest);
   }
-  setTimeout(() => {
-    grid.classList.remove('grid--quicksnap', 'grid--snapping');
-    for (const ev of ['wheel', 'touchstart', 'keydown']) window.removeEventListener(ev, stopFollow);
-    done();
-  }, START + cells.length * STEP + SNAP + LAND + 600);
+  // 飛ばしたぶんは、そのまま枠に収める
+  for (const c of cells) finish(c);
+  for (const n of document.querySelectorAll('.snapfly, .snapdim')) n.remove();
+  grid.classList.remove('grid--snapping');
+  release();
+  done();
 }
 
 function filtered() {
@@ -184,7 +221,8 @@ function cell(c, order = -1) {
   const openSpot = !owned && c.gps.enabled;      // 観光情報だけ公開するスポット
   const snap = owned && order >= 0;
   const btn = el('button', {
-    class: `cell${snap ? ' cell--snap' : ''}`, attrs: { type: 'button' },
+    class: `cell${snap ? ' cell--snap' : ''}`,
+    attrs: { type: 'button', 'data-id': c.id },
     style: snap ? { '--i': order } : null,
   });
 

@@ -214,21 +214,62 @@ a{color:var(--accent)}
 .slot__no{ font-size:24cqw;font-weight:800;line-height:1;letter-spacing:.01em }
 .slot__cat{ font-size:8cqw;font-weight:700;letter-spacing:.14em;opacity:.72 }
 
-/* ===== 新しいカードが枠にはまる演出 ===== */
+/* ===== 新しいカードが枠にはまる演出 =====
+   動きの本体は、画面のまん中に大きく出して回す .snapfly（下）。
+   枠の側は、飛んできたカードを受け止めて「パチーン」と収まるだけ。 */
 .cell__box{ position:relative }
 .cell__drop{ position:absolute;inset:0;border-radius:9px;overflow:hidden }
 .cell--snap:not(.is-snapped) .cell__drop{ opacity:0 }
-/* ゆっくり降りてきて、最後にきちんと止まる */
 .cell--snap.is-snapped .cell__drop{
-  animation:snapIn .92s cubic-bezier(.18,.9,.2,1) both;
+  animation:snapLand .26s cubic-bezier(.2,1.7,.4,1) both;
 }
-@keyframes snapIn{
-  0%  { opacity:0; transform:scale(2.1)  translateY(-20%) rotate(-11deg) }
-  30% { opacity:1; transform:scale(1.42) translateY(-7%)  rotate(-5deg) }
-  62% { opacity:1; transform:scale(.95)  translateY(0)    rotate(1.4deg) }
-  78% { opacity:1; transform:scale(1.04) rotate(-.7deg) }
-  90% { opacity:1; transform:scale(.99)  rotate(.25deg) }
-  100%{ opacity:1; transform:scale(1)    rotate(0deg) }
+@keyframes snapLand{
+  0%  { opacity:1; transform:scale(1.16) }
+  55% { opacity:1; transform:scale(.97) }
+  100%{ opacity:1; transform:scale(1) }
+}
+
+/* 画面のまん中で回してから、枠へ飛んでいくカード */
+.snapdim{
+  position:fixed;inset:0;z-index:64;
+  background:radial-gradient(60% 44% at 50% 46%, rgba(28,25,22,.30), rgba(28,25,22,.52));
+  animation:snapDimIn .28s ease both;
+}
+.snapdim.is-out{ animation:snapDimOut .34s ease both }
+@keyframes snapDimIn{ from{ opacity:0 } to{ opacity:1 } }
+@keyframes snapDimOut{ from{ opacity:1 } to{ opacity:0 } }
+
+/* 外枠は動かさず、位置と奥行き（perspective）だけを決める。
+   動くのは中の .snapfly__c。こうすると飛び先の測り方が単純になる。 */
+.snapfly{
+  position:fixed;left:50%;top:46%;z-index:65;
+  width:min(62vw,44vh,260px);aspect-ratio:4/5;
+  transform:translate(-50%,-50%);
+  perspective:1200px;pointer-events:none;
+}
+.snapfly__c{
+  position:absolute;inset:0;transform-style:preserve-3d;opacity:0;
+  will-change:transform,opacity;
+}
+.snapfly__s{ position:absolute;inset:0;border-radius:10px;overflow:hidden;backface-visibility:hidden }
+.snapfly__s--front{ transform:rotateY(180deg) }
+.snapfly__s .card{ position:absolute;inset:0;width:100%;height:100%;border-radius:10px;box-shadow:none }
+
+/* 小さく出てきて、くるっと1回半まわって表を向く */
+.snapfly.is-in .snapfly__c{ animation:snapSpin var(--tspin,.86s) cubic-bezier(.2,.85,.25,1) both }
+@keyframes snapSpin{
+  0%  { opacity:0; transform:scale(.34) rotateY(0deg) }
+  22% { opacity:1 }
+  70% { transform:scale(1.06) rotateY(470deg) }
+  100%{ opacity:1; transform:scale(1) rotateY(540deg) }
+}
+/* 枠へ吸い込まれる。--dx / --dy / --k は js/collection.js が測って入れる */
+.snapfly.is-fly .snapfly__c{ animation:snapFly var(--tfly,.44s) cubic-bezier(.5,-0.16,.3,1) forwards }
+@keyframes snapFly{
+  0%  { opacity:1; transform:translate(0,0) scale(1) rotateY(540deg) }
+  62% { opacity:1; transform:translate(calc(var(--dx) * .82), calc(var(--dy) * .82))
+                             scale(calc(var(--k) * 1.5)) rotateY(540deg) }
+  100%{ opacity:1; transform:translate(var(--dx), var(--dy)) scale(var(--k)) rotateY(540deg) }
 }
 /* はまったあと、そのカードだけ左から右へ光が走る */
 /* 細く鋭い光。幅が広いと、ゆっくり通る靄のように見えてしまう */
@@ -240,7 +281,7 @@ a{color:var(--accent)}
     rgba(255,255,255,.5) 66%, transparent);
   transform:translateX(0) skewX(-16deg);
 }
-.cell--snap.is-snapped .cell__drop::after{ animation:snapSheen .34s ease-out .62s both }
+.cell--snap.is-snapped .cell__drop::after{ animation:snapSheen .7s ease-out .12s both }
 @keyframes snapSheen{
   0%  { opacity:0; transform:translateX(0) skewX(-16deg) }
   10% { opacity:1 }
@@ -252,7 +293,7 @@ a{color:var(--accent)}
   content:'';position:absolute;inset:-7%;border-radius:13px;pointer-events:none;
   border:2px solid var(--accent);opacity:0;
 }
-.cell--snap.is-snapped .cell__box::after{ animation:snapRing .6s ease-out .56s both }
+.cell--snap.is-snapped .cell__box::after{ animation:snapRing .46s ease-out 0s both }
 @keyframes snapRing{
   0%  { opacity:0;  transform:scale(1.5) }
   34% { opacity:.95; transform:scale(1.03) }
@@ -260,10 +301,7 @@ a{color:var(--accent)}
 }
 /* 演出のあいだだけは全部を描いておく。高さが確定していないと、寄せた先がずれる */
 .grid--snapping .cell{ content-visibility:visible }
-/* 枚数が多いとき（10連など）は、1枚あたりを少し短くして全部を見せきる */
-.grid--quicksnap .cell--snap.is-snapped .cell__drop{ animation-duration:.66s }
-.grid--quicksnap .cell--snap.is-snapped .cell__drop::after{ animation-duration:.3s; animation-delay:.46s }
-.grid--quicksnap .cell--snap.is-snapped .cell__box::after{ animation-duration:.44s; animation-delay:.4s }
+
 
 /* ===== カード見た目（画像未設定時のフォールバック） ===== */
 .card{

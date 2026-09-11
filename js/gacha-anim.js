@@ -334,8 +334,9 @@ export function createGachaStage(host) {
     const flip = track(tt, [[T.merge, 0], [T.merge + 200, 300, outQuint], [T.face, 450, outCubic], [T.land, 540, outQuint]]);
     reveal.style.transform =
       `translate(-50%,-50%) translateY(${rty.toFixed(1)}px) scale(${rsc.toFixed(3)}) rotateY(${flip.toFixed(1)}deg)`;
-    sheen.style.opacity = track(tt, [[T.land, 0], [T.land + 170, 0.9], [T.land + 560, 0]]).toFixed(3);
-    sheen.style.transform = `translateX(${track(tt, [[T.land, -170], [T.land + 560, 170, outCubic]]).toFixed(1)}%)`;
+    // 左から右へ0.7秒。カード一覧・3Dビューアの光と同じ速さにそろえてある
+    sheen.style.opacity = track(tt, [[T.land, 0], [T.land + 90, 0.9], [T.land + 640, 0.9], [T.land + 700, 0]]).toFixed(3);
+    sheen.style.transform = `translateX(${track(tt, [[T.land, -170], [T.land + 700, 170]]).toFixed(1)}%)`;
 
     root.style.setProperty('--gs-accent', color);
   }
@@ -413,8 +414,8 @@ export function createGachaStage(host) {
       }
       // 2枚目以降は円舞と三分を省き、合一の直前から始める。余韻も待たない。
       t = quick ? T.split - 200 : 0;
-      speed = quick ? 2.4 : 1;
-      endT = hold ? T.end : T.ui + 260;
+      speed = quick ? 1.2 : 1;   // 2枚目以降も速すぎない程度に
+      endT = hold ? T.end : T.ui + 500;   // 光（T.land+700）が途中で切れない長さ
       if (quick) { fired.p0 = fired.p1 = fired.p2 = 1; }
       running = true;
       last = performance.now();
