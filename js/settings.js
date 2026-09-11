@@ -8,6 +8,7 @@ import { coinCfg, titles, categoryProgress, duplicateGaugeInfo } from './rewards
 import { SINGLE_COST, TEN_COST } from './gacha.js';
 import { go } from './router.js';
 import { isAdmin, attachSecret } from './admin.js';
+import { clearImageCache } from './update.js';
 
 export function renderMore(view) {
   clear(view);
@@ -62,6 +63,26 @@ export function renderSettings(view) {
     text: storage.isPersistent()
       ? 'カードとコインはこの端末の中だけに保存されます。ブラウザのデータを消すと失われます。'
       : 'このブラウザでは保存領域を使えないため、進行が残りません（プライベートモードなど）。',
+  }));
+
+  view.append(el('h3', { text: '表示がおかしいとき' }));
+  const fix = el('div', { class: 'list' });
+  fix.append(actionRow('写真を読み込み直す', async () => {
+    const ok = await confirm2(
+      '写真を読み込み直しますか',
+      ['端末に控えてある写真をいったん捨てて、次に見たときに取り直します。',
+       '集めたカードやコインは消えません。'],
+      '読み込み直す',
+    );
+    if (!ok) return;
+    clearImageCache();
+    toast('写真を読み込み直します');
+    setTimeout(() => location.reload(), 600);
+  }));
+  view.append(fix);
+  view.append(el('p', {
+    class: 'muted', style: { fontSize: '11.5px', marginTop: '8px' },
+    text: 'カードの写真が別のカードのものに見えるときに使ってください。通信が少し発生します。',
   }));
 
   view.append(el('h3', { text: 'このアプリについて' }));

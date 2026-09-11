@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.12.1';
+const APP_VERSION = '1.13.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -57,12 +57,20 @@ self.addEventListener('activate', (e) => {
       if (k.startsWith('shika-shell-') && k !== SHELL_CACHE) return caches.delete(k);
       return null;
     }));
+    /* 画像もいったん捨てる。
+       カード番号を振り直すと、同じファイル名（例 039.jpeg）の中身だけが別の写真に変わる。
+       名前が同じなので、控えが残っていると前のカードの写真が出てしまう。
+       本体を更新したときは、少し通信しても正しい写真を取り直す方を選ぶ。 */
+    await caches.delete(ASSET_CACHE);
     await self.clients.claim();
   })());
 });
 
 self.addEventListener('message', (e) => {
-  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+  if (!e.data) return;
+  if (e.data.type === 'SKIP_WAITING') self.skipWaiting();
+  // データ（cards.json）が新しくなったときも、写真の控えを捨てる
+  if (e.data.type === 'CLEAR_IMAGES') e.waitUntil(caches.delete(ASSET_CACHE));
 });
 
 self.addEventListener('fetch', (e) => {

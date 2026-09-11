@@ -51,12 +51,26 @@ async function promptUpdate(worker) {
   if (ok) worker.postMessage({ type: 'SKIP_WAITING' });
 }
 
+/** 写真の控えを捨てるよう Service Worker に頼む。次に見たときに取り直す。 */
+export function clearImageCache() {
+  const sw = navigator.serviceWorker;
+  if (sw && sw.controller) sw.controller.postMessage({ type: 'CLEAR_IMAGES' });
+  // Service Worker が動いていない場合は、こちらから直接消す
+  else if (self.caches) caches.delete('shika-assets').catch(() => {});
+}
+
 /** 公開データの更新確認。新しく増えたカードがあれば起動時に1回だけ知らせる。 */
 export async function checkDataUpdate(dataVersion) {
   const ids = publishedCards().map((c) => c.id);
   const known = app.state.knownCardIds;
   const isFirst = known.length === 0;
   const added = ids.filter((id) => !known.includes(id));
+
+  /* データが新しくなったら、写真の控えを捨てる。
+     カード番号を振り直すと、同じファイル名のまま中身だけが別の写真に変わるため、
+     控えが残っていると前のカードの写真が出てしまう。 */
+  const wasVersion = app.state.dataVersion;
+  if (dataVersion && wasVersion && dataVersion !== wasVersion) clearImageCache();
 
   commit((s) => {
     s.knownCardIds = ids;
