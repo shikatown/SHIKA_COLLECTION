@@ -58,14 +58,14 @@ body.is-drawing{ overflow:hidden }
 .gs__veil{
   position:absolute;inset:0;opacity:0;pointer-events:none;
   background:
-    radial-gradient(62% 44% at 50% 44%, color-mix(in srgb, var(--gs-accent,#E8873A) 20%, transparent) 0%, transparent 74%),
-    radial-gradient(132% 100% at 50% 48%, transparent 30%, rgba(206,192,164,.58) 100%);
+    radial-gradient(62% 52% at 50% 50%, color-mix(in srgb, var(--gs-accent,#E8873A) 20%, transparent) 0%, transparent 74%),
+    radial-gradient(132% 100% at 50% 50%, transparent 30%, rgba(206,192,164,.58) 100%);
 }
 .gs__fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 /* 背景の紋。ゆっくり回り続ける */
 .gs__sigil{
-  position:absolute;left:50%;top:44%;width:86%;aspect-ratio:1;translate:-50% -50%;
+  position:absolute;left:50%;top:50%;width:98%;aspect-ratio:1;translate:-50% -50%;
   opacity:.30;pointer-events:none;transform:rotateX(64deg);
   animation:gsSigil 52s linear infinite;
 }
@@ -76,8 +76,8 @@ body.is-drawing{ overflow:hidden }
 /* 円舞する裏面 */
 .gs__deck{position:absolute;inset:0;transform-style:preserve-3d}
 .gs__orb{
-  position:absolute;left:50%;top:44%;
-  width:clamp(52px,16.5vw,96px);aspect-ratio:4/5;
+  position:absolute;left:50%;top:50%;
+  width:clamp(58px,18vw,108px);aspect-ratio:4/5;
   border-radius:6px;overflow:hidden;opacity:0;
   will-change:transform,opacity;backface-visibility:visible;
 }
@@ -89,7 +89,7 @@ body.is-drawing{ overflow:hidden }
 
 /* 抜刀するカード */
 .gs__reveal{
-  position:absolute;left:50%;top:44%;
+  position:absolute;left:50%;top:50%;
   width:var(--gs-card);aspect-ratio:4/5;
   transform-style:preserve-3d;opacity:0;will-change:transform;
 }
@@ -107,18 +107,18 @@ body.is-drawing{ overflow:hidden }
 /* 着弾の光 */
 .gs__flash{
   position:absolute;inset:0;opacity:0;pointer-events:none;
-  background:radial-gradient(circle at 50% 44%, #fff 0%, #fff 12%,
+  background:radial-gradient(circle at 50% 50%, #fff 0%, #fff 12%,
     color-mix(in srgb, var(--gs-accent,#E8873A) 88%, #fff) 30%,
     color-mix(in srgb, var(--gs-accent,#E8873A) 34%, transparent) 54%, transparent 74%);
 }
 .gs__wave{
-  position:absolute;left:50%;top:44%;width:110px;height:110px;
+  position:absolute;left:50%;top:50%;width:min(40vw,22vh);height:min(40vw,22vh);
   transform:translate(-50%,-50%);
   border-radius:50%;border:2px solid currentColor;opacity:0;pointer-events:none;
 }
-.gs__rays{position:absolute;left:50%;top:44%;width:0;height:0;pointer-events:none;opacity:0}
+.gs__rays{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;opacity:0}
 .gs__ray{
-  position:absolute;left:-1.5px;top:0;width:3px;height:200px;transform-origin:50% 0;
+  position:absolute;left:-1.5px;top:0;width:3px;height:min(72vw,40vh);transform-origin:50% 0;
   background:linear-gradient(180deg,var(--gs-accent,#E8873A),transparent);
 }
 
@@ -133,7 +133,7 @@ body.is-drawing{ overflow:hidden }
   position:absolute;left:0;right:0;z-index:5;
   /* カードの下端（中心44% ＋ 高さの半分）のすぐ下に置く。
      カードの大きさが変わっても離れすぎず、重なりもしない。 */
-  top:calc(44% + var(--gs-card) * .625 + 22px);
+  top:calc(50% + var(--gs-card) * .625 + 22px);
   display:grid;justify-items:center;gap:10px;padding:0 24px;
   pointer-events:none;
 }

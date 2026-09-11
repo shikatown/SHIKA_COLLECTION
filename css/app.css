@@ -216,26 +216,45 @@ a{color:var(--accent)}
 
 /* ===== 新しいカードが枠にはまる演出 ===== */
 .cell__box{ position:relative }
-.cell__drop{ position:absolute;inset:0 }
+.cell__drop{ position:absolute;inset:0;border-radius:9px;overflow:hidden }
 .cell--snap:not(.is-snapped) .cell__drop{ opacity:0 }
+/* ゆっくり降りてきて、最後にきちんと止まる */
 .cell--snap.is-snapped .cell__drop{
-  animation:snapIn .44s cubic-bezier(.2,1.5,.36,1) both;
+  animation:snapIn .92s cubic-bezier(.18,.9,.2,1) both;
 }
 @keyframes snapIn{
-  0%  { opacity:0; transform:scale(1.85) translateY(-14%) rotate(-9deg) }
-  55% { opacity:1; transform:scale(.94)  translateY(0)    rotate(1.6deg) }
-  76% { opacity:1; transform:scale(1.05) rotate(-.8deg) }
+  0%  { opacity:0; transform:scale(2.1)  translateY(-20%) rotate(-11deg) }
+  30% { opacity:1; transform:scale(1.42) translateY(-7%)  rotate(-5deg) }
+  62% { opacity:1; transform:scale(.95)  translateY(0)    rotate(1.4deg) }
+  78% { opacity:1; transform:scale(1.04) rotate(-.7deg) }
+  90% { opacity:1; transform:scale(.99)  rotate(.25deg) }
   100%{ opacity:1; transform:scale(1)    rotate(0deg) }
+}
+/* はまったあと、そのカードだけ左から右へ光が走る */
+.cell__drop::after{
+  content:'';position:absolute;top:-22%;bottom:-22%;left:-64%;width:46%;
+  z-index:2;pointer-events:none;opacity:0;
+  background:linear-gradient(100deg,
+    transparent, rgba(255,255,255,.35) 26%, rgba(255,255,255,.92) 50%,
+    rgba(255,255,255,.35) 74%, transparent);
+  transform:translateX(0) skewX(-14deg);
+}
+.cell--snap.is-snapped .cell__drop::after{ animation:snapSheen .82s ease-in-out .74s both }
+@keyframes snapSheen{
+  0%  { opacity:0; transform:translateX(0) skewX(-14deg) }
+  14% { opacity:1 }
+  86% { opacity:1 }
+  100%{ opacity:0; transform:translateX(370%) skewX(-14deg) }
 }
 /* はまった瞬間に枠が一度だけ光る */
 .cell--snap .cell__box::after{
   content:'';position:absolute;inset:-7%;border-radius:13px;pointer-events:none;
   border:2px solid var(--accent);opacity:0;
 }
-.cell--snap.is-snapped .cell__box::after{ animation:snapRing .48s ease-out .2s both }
+.cell--snap.is-snapped .cell__box::after{ animation:snapRing .6s ease-out .56s both }
 @keyframes snapRing{
-  0%  { opacity:0;  transform:scale(1.45) }
-  32% { opacity:.95; transform:scale(1.03) }
+  0%  { opacity:0;  transform:scale(1.5) }
+  34% { opacity:.95; transform:scale(1.03) }
   100%{ opacity:0;  transform:scale(.97) }
 }
 
@@ -308,10 +327,10 @@ a{color:var(--accent)}
 /* カードが主役。画面の端まで大きく出して、名前や操作はその下に置く。 */
 .detail__hero{display:block}
 .detail__cardwrap{
-  /* .view の左右余白（16px）を打ち消して、画面の端まで届かせる */
-  margin:-16px -16px 14px;
+  /* .view の左右余白（16px）を少しだけ戻して、端との間に10pxほど残す */
+  margin:0 -6px 14px;
 }
-.detail__cardwrap .card{border-radius:0;box-shadow:0 6px 18px rgba(34,32,29,.10)}
+.detail__cardwrap .card{border-radius:10px;box-shadow:0 6px 18px rgba(34,32,29,.10)}
 /* 未取得はまだ空き枠なので、端まで広げない */
 .detail__cardwrap--slot{width:58%;margin:0 auto 16px}
 .detail__cardwrap--slot .card{border-radius:9px;box-shadow:none}

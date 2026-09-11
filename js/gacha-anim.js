@@ -145,12 +145,15 @@ export function createGachaStage(host) {
     return (lo / arc.M) * 6.283185;
   }
 
+  /* 舞台は画面全体。3つの束が上半分に固まらないよう、縦に大きく開く。
+     この 0.50 は css/animations.css の `top:50%`（カード・紋・光）と同じ値。
+     片方だけ変えると中心がずれる。 */
   const cx = () => W / 2;
-  const cy = () => H * 0.44;
+  const cy = () => H * 0.50;
   const anchors = () => [
-    { x: 0, y: -H * 0.198 },              // 上：グルメ
-    { x: -W * 0.212, y: H * 0.092 },      // 左下：スポット
-    { x: W * 0.212, y: H * 0.092 },       // 右下：文化
+    { x: 0, y: -H * 0.33 },               // 上：グルメ
+    { x: -W * 0.255, y: H * 0.225 },      // 左下：スポット
+    { x: W * 0.255, y: H * 0.225 },       // 右下：文化
   ];
   const turn = (tt) => track(tt, [[T.sink, 0], [T.ring, 6.283 * 1.2, outCubic], [T.split, 6.283 * 1.55, inOut]]);
 
@@ -199,7 +202,7 @@ export function createGachaStage(host) {
   function drawFx(dt, trailAlpha, color, running) {
     ctx.clearRect(0, 0, W, H);
     // 常時ただよう金の粒
-    const ax = W / 2, ay = H * 0.44, rad = Math.min(W, H) * 0.42, boost = running ? 1.3 : 1;
+    const ax = W / 2, ay = H * 0.50, rad = Math.min(W, H) * 0.42, boost = running ? 1.3 : 1;
     for (const a of ambient) {
       a.ph += a.sp * dt; a.y += a.dy * dt;
       if (a.y < -10) { a.y = H + 10; a.x = Math.random() * W; }
@@ -256,7 +259,7 @@ export function createGachaStage(host) {
 
   /* ===== 1フレーム分の配置 ===== */
   function render(tt, color) {
-    const Rx = W * 0.43, Ry = H * 0.215;
+    const Rx = W * 0.43, Ry = H * 0.30;
     if (!arc || arc.rx !== Rx || arc.ry !== Ry) buildArc(Rx, Ry);
     const AN = anchors();
     const vortex = track(tt, [[T.split, 0], [T.merge, 200 * Math.PI / 180, inQuart]]);

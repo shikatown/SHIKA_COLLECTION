@@ -86,13 +86,17 @@ function snapIn(grid, count) {
 
   // いちばん上のカードが見えていないと、演出に気づけない
   cells[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const START = 620;      // スクロールが落ち着くまで待つ
+  const STEP = count > 5 ? 360 : 520;   // 1枚ずつ。枚数が多いときは少し詰める
+  const LAND = 900;       // 落ちて止まるまで（css の snapIn と同じ長さ）
   for (const [i, cellEl] of cells.entries()) {
     setTimeout(() => {
       cellEl.classList.add('is-snapped');
-      vibrate(i === cells.length - 1 ? [14, 30, 20] : 9);
-    }, 260 + i * 150);
+      // 手ごたえは「はまった瞬間」に返す
+      setTimeout(() => vibrate(i === cells.length - 1 ? [16, 34, 24] : 12), LAND);
+    }, START + i * STEP);
   }
-  setTimeout(done, 600 + count * 150);
+  setTimeout(done, START + count * STEP + LAND + 700);
 }
 
 function filtered() {

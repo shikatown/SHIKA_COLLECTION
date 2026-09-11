@@ -143,7 +143,7 @@ function setupRoutes() {
 }
 
 const TITLES = {
-  '/home': '志賀町をあつめよう',
+  '/home': 'SHIKA COLLECTION',
   '/gacha': 'ガチャ',
   '/collection': 'カード',
   '/card/:id': 'カード詳細',
@@ -161,7 +161,7 @@ const TAB_OF = {
 };
 
 function onRouteChange(route) {
-  document.getElementById('appTitle').textContent = TITLES[route.path] || '志賀町をあつめよう';
+  document.getElementById('appTitle').textContent = TITLES[route.path] || 'SHIKA COLLECTION';
   document.getElementById('btnBack').hidden = route.path === '/home';
   const tab = TAB_OF[route.path];
   for (const a of document.querySelectorAll('.tab')) {
