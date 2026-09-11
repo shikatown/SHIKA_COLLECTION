@@ -3,7 +3,7 @@
 
 import { app, isOwned, isVisited, commit, CATEGORY_LABEL } from './state.js';
 import {
-  el, clear, cardFace, lockedCard, toast, externalLink, mapsSearchUrl, safeUrl, resolvePhoto,
+  el, clear, cardFace, lockedCard, toast, externalLink, mapsSearchUrl, mapsRouteUrl, safeUrl, resolvePhoto,
 } from './ui.js';
 import { openViewer } from './card-3d.js';
 import { coinCfg } from './rewards.js';
@@ -179,9 +179,16 @@ function spotSection(c) {
       text: c.gps.lat == null ? '' : (hasFix() ? distanceText(c.gps.lat, c.gps.lng) : '現在地は未取得'),
     }),
   ]));
-  p.append(el('button', {
-    class: 'btn btn--primary btn--block', attrs: { type: 'button' }, text: '現在地を確認する',
+  // チェックインと経路検索は横並びにして、1画面に収まる高さを保つ
+  const acts = el('div', { class: 'spotacts' });
+  acts.append(el('button', {
+    class: 'btn btn--primary', attrs: { type: 'button' }, text: 'チェックイン',
     on: { click: () => go('#/map?checkin=1') },
   }));
+  if (c.gps.lat != null) {
+    const a = externalLink('経路検索（Googleマップ）', mapsRouteUrl(c.gps.lat, c.gps.lng), 'btn');
+    if (a) acts.append(a);
+  }
+  p.append(acts);
   return p;
 }

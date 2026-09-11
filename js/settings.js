@@ -7,6 +7,7 @@ import * as backup from './backup.js';
 import { coinCfg, titles, categoryProgress, duplicateGaugeInfo } from './rewards.js';
 import { SINGLE_COST, TEN_COST } from './gacha.js';
 import { go } from './router.js';
+import { isAdmin, attachSecret } from './admin.js';
 
 export function renderMore(view) {
   clear(view);
@@ -19,11 +20,15 @@ export function renderMore(view) {
   list.append(link('プライバシーについて', '#/privacy'));
   view.append(list);
 
+  if (isAdmin()) view.append(link('カード点検（管理モード）', '#/admin'));
+
   const v = app.version;
-  view.append(el('p', {
+  const ver = el('p', {
     class: 'muted center', style: { marginTop: '18px', fontSize: '11.5px' },
     text: v ? `アプリ ${v.appVersion || '-'} ／ データ ${v.dataVersion || '-'}` : '',
-  }));
+  });
+  attachSecret(ver);     // 7回続けてタップすると管理モードに入れる
+  view.append(ver);
 }
 
 function link(label, href) {

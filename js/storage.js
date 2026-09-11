@@ -46,6 +46,7 @@ export function defaultState() {
       pwaPromptShown: false,
       backupPromptShown: false,
       spotHintShown: false,
+      admin: false,          // 管理者の確認用モード（公開前の点検だけに使う）
     },
     knownCardIds: [],        // 「新カード追加」通知の判定用
     unseenCardIds: [],       // 取得したが、まだ一覧で枠にはめる演出を見せていないカード

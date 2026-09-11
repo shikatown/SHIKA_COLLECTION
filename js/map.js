@@ -3,7 +3,7 @@
    経路・所要時間・ナビは Google Maps へ外部リンクで渡す。 */
 
 import { app, isVisited, isOwned, gpsCards, mapCards, commit } from './state.js';
-import { el, clear, toast, dialog, confirm2, externalLink, mapsSearchUrl, cardFace, vibrate } from './ui.js';
+import { el, clear, toast, dialog, confirm2, externalLink, mapsSearchUrl, mapsRouteUrl, cardFace, vibrate } from './ui.js';
 import * as geo from './geo.js';
 import { coinCfg } from './rewards.js';
 import { sfx, unlock } from './sound.js';
@@ -276,7 +276,7 @@ export function renderMap(view, params) {
 
   const btn = el('button', {
     class: 'btn btn--primary btn--block btn--lg', attrs: { type: 'button' },
-    text: geo.hasFix() ? '現在地を更新' : '現在地を確認',
+    text: geo.hasFix() ? 'チェックイン（現在地を更新）' : 'チェックイン',
     style: { marginTop: '4px' },
     on: { click: () => runCheckIn(view, status, btn) },
   });
@@ -323,6 +323,14 @@ function spotRow(c, visited, dist = null, highlight = false) {
   if (!c.gps.enabled) sub.push('チェックイン対象外');
   t.append(el('div', { class: 'spotrow__d', text: sub.join(' / ') }));
   row.append(t);
+  if (c.gps.lat != null) {
+    const a = externalLink('経路', mapsRouteUrl(c.gps.lat, c.gps.lng), 'spotrow__go');
+    if (a) {
+      a.title = '経路検索（Googleマップ）';
+      a.addEventListener('click', (e) => e.stopPropagation());   // 行のタップに吸われないように
+      row.append(a);
+    }
+  }
   row.addEventListener('click', () => go(`#/card/${c.id}`));
   return row;
 }
@@ -342,7 +350,7 @@ async function runCheckIn(view, status, btn) {
         '現地チェックインの判定に現在地を使用します。',
         '位置情報は保存・送信しません。判定した結果（訪問済み）だけを端末内に残します。',
       ],
-      actions: [{ label: 'やめる', value: false }, { label: '現在地を確認する', value: true, primary: true }],
+      actions: [{ label: 'やめる', value: false }, { label: 'チェックイン', value: true, primary: true }],
     });
     if (!ok) return;
     commit((s) => { s.flags.spotHintShown = true; });

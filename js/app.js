@@ -11,6 +11,7 @@ import { renderCollection } from './collection.js';
 import { renderCardDetail } from './card-detail.js';
 import { renderMap } from './map.js';
 import { renderSettings, renderHelp, renderPrivacy, renderMore, renderRecords } from './settings.js';
+import { renderAdmin, isAdmin } from './admin.js';
 import { startOfflineWatch } from './offline.js';
 import { registerSW, checkDataUpdate, maybeSuggestInstall } from './update.js';
 import { maybeSuggestBackup } from './backup.js';
@@ -135,6 +136,7 @@ function setupRoutes() {
   router.define('/help', renderHelp);
   router.define('/privacy', renderPrivacy);
   router.define('/records', renderRecords);
+  router.define('/admin', renderAdmin);
   router.setNotFound((view) => {
     clear(view);
     view.append(el('p', { class: 'empty', text: 'ページが見つかりません。' }));
@@ -153,11 +155,13 @@ const TITLES = {
   '/help': '遊び方',
   '/privacy': 'プライバシー',
   '/records': '集めた記録',
+  '/admin': 'カード点検',
 };
 const TAB_OF = {
   '/home': 'home', '/gacha': 'gacha', '/collection': 'collection',
   '/card/:id': 'collection', '/map': 'map', '/more': 'more',
   '/settings': 'more', '/help': 'more', '/privacy': 'more', '/records': 'more',
+  '/admin': 'more',
 };
 
 function onRouteChange(route) {
@@ -177,6 +181,10 @@ function updateChrome() {
   cards.querySelector('b').textContent = String(owned);
   cards.querySelector('i').textContent = String(total);
   document.getElementById('statCoins').querySelector('b').textContent = String(app.state.coins);
+
+  // 管理モードのあいだは、どの画面でも分かるように帯を出す
+  const bar = document.getElementById('adminBar');
+  if (bar) bar.hidden = !isAdmin();
 }
 
 /* ===== ホーム ===== */

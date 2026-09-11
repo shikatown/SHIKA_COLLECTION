@@ -179,9 +179,11 @@ export function safeUrl(raw) {
 export function mapsSearchUrl(word) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(word)}`;
 }
-export function mapsDirUrl(lat, lng, label) {
+/** Googleマップの経路検索。出発地は渡さない（端末の現在地が使われる）。
+    座標をアプリ側に保存も送信もしない方針なので、行き先だけをURLに載せる。 */
+export function mapsRouteUrl(lat, lng) {
   const q = `${lat},${lng}`;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}${label ? `&query_place_id=` : ''}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}&travelmode=driving`;
 }
 export function externalLink(label, url, cls = 'btn btn--block') {
   const safe = safeUrl(url);

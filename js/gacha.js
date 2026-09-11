@@ -10,6 +10,7 @@ import { go } from './router.js';
 import { openViewer } from './card-3d.js';
 import { photoUrl } from './card-render.js';
 import { createGachaStage } from './gacha-anim.js';
+import { isAdmin } from './admin.js';
 
 export const SINGLE_COST = 1;
 export const TEN_COST = 10;
@@ -60,7 +61,7 @@ function rollFirstTen() {
 
 /** 押した瞬間にすべて確定させる。戻り値は演出用の確定データ。 */
 export function commitDraw(kind) {
-  const free = kind === 'free10';
+  const free = kind === 'free10' || isAdmin();   // 管理モードはコインを使わない
   const count = kind === 'single' ? 1 : 10;
   const cost = free ? 0 : (kind === 'single' ? SINGLE_COST : TEN_COST);
 
@@ -71,7 +72,7 @@ export function commitDraw(kind) {
 
   commit((s) => {
     if (cost) s.coins -= cost;
-    if (free) s.flags.firstFreeTenDone = true;
+    if (kind === 'free10') s.flags.firstFreeTenDone = true;
   });
 
   const bonus = applyDraw(results);
@@ -144,14 +145,18 @@ export function renderGacha(view) {
     class: 'btn btn--lg btn--primary', attrs: { type: 'button' },
     on: { click: () => start('ten', view) },
   }, [el('span', { text: '10連で引く' }), el('span', { class: 'btn__sub', text: `／ ${TEN_COST} COIN` })]);
-  if (s.coins < SINGLE_COST) b1.disabled = true;
-  if (s.coins < TEN_COST) b10.disabled = true;
+  const freeNow = isAdmin();
+  if (!freeNow && s.coins < SINGLE_COST) b1.disabled = true;
+  if (!freeNow && s.coins < TEN_COST) b10.disabled = true;
+  if (freeNow) {
+    for (const b of [b1, b10]) b.querySelector('.btn__sub').textContent = '／ 管理モード（コイン不要）';
+  }
   acts.append(b1, b10);
   head.append(acts);
   view.append(head);
 
-  if (s.coins < SINGLE_COST) view.append(shortOfCoins());
-  else if (s.coins < TEN_COST) view.append(shortOfCoins(true));
+  if (!freeNow && s.coins < SINGLE_COST) view.append(shortOfCoins());
+  else if (!freeNow && s.coins < TEN_COST) view.append(shortOfCoins(true));
 }
 
 function pendingBanner(view, pending) {
