@@ -308,7 +308,8 @@ export async function playSequence(view, payload) {
     });
 
     if (i === 0 && total > 1 && !skipped) skipBtn.hidden = false;
-    if (!skipped && i < total - 1) await sleep(reduceMotion() ? 60 : 260);
+    // 引いたカードをしばらく眺められるように、次へ行くまで間を置く
+    if (!skipped && i < total - 1) await sleep(reduceMotion() ? 60 : 2200);
   }
 
   stage.destroy();

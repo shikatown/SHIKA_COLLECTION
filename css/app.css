@@ -253,25 +253,28 @@ a{color:var(--accent)}
   position:absolute;inset:0;transform-style:preserve-3d;opacity:0;
   will-change:transform,opacity;
 }
+/* 表を rotateY(0) 側に置く。こうすると、万一アニメーションが効かなくても
+   表が見える（裏で止まらない）。 */
 .snapfly__s{ position:absolute;inset:0;border-radius:10px;overflow:hidden;backface-visibility:hidden }
-.snapfly__s--front{ transform:rotateY(180deg) }
+.snapfly__s--back{ transform:rotateY(180deg) }
 .snapfly__s .card{ position:absolute;inset:0;width:100%;height:100%;border-radius:10px;box-shadow:none }
 
 /* 小さく出てきて、くるっと1回半まわって表を向く */
 .snapfly.is-in .snapfly__c{ animation:snapSpin var(--tspin,.86s) cubic-bezier(.2,.85,.25,1) both }
 @keyframes snapSpin{
-  0%  { opacity:0; transform:scale(.34) rotateY(0deg) }
+  0%  { opacity:0; transform:scale(.34) rotateY(180deg) }   /* 裏から出て */
   22% { opacity:1 }
-  70% { transform:scale(1.06) rotateY(470deg) }
-  100%{ opacity:1; transform:scale(1) rotateY(540deg) }
+  70% { transform:scale(1.06) rotateY(650deg) }
+  100%{ opacity:1; transform:scale(1) rotateY(720deg) }     /* 1回半まわって表で止まる */
 }
 /* 枠へ吸い込まれる。--dx / --dy / --k は js/collection.js が測って入れる */
 .snapfly.is-fly .snapfly__c{ animation:snapFly var(--tfly,.44s) cubic-bezier(.5,-0.16,.3,1) forwards }
+/* 枠へ飛ぶあいだは表を向けたまま。獲得したカードの絵を見せながらはめる。 */
 @keyframes snapFly{
-  0%  { opacity:1; transform:translate(0,0) scale(1) rotateY(540deg) }
+  0%  { opacity:1; transform:translate(0,0) scale(1) rotateY(720deg) }
   62% { opacity:1; transform:translate(calc(var(--dx) * .82), calc(var(--dy) * .82))
-                             scale(calc(var(--k) * 1.5)) rotateY(540deg) }
-  100%{ opacity:1; transform:translate(var(--dx), var(--dy)) scale(var(--k)) rotateY(540deg) }
+                             scale(calc(var(--k) * 1.5)) rotateY(720deg) }
+  100%{ opacity:1; transform:translate(var(--dx), var(--dy)) scale(var(--k)) rotateY(720deg) }
 }
 /* はまったあと、そのカードだけ左から右へ光が走る */
 /* 細く鋭い光。幅が広いと、ゆっくり通る靄のように見えてしまう */
@@ -376,9 +379,25 @@ a{color:var(--accent)}
 .detail--swipe{ touch-action:pan-y }
 .detail__hero{display:block}
 .detail__cardwrap{
-  /* .view の左右余白（16px）を少しだけ戻して、端との間に10pxほど残す */
-  margin:0 -6px 10px;
+  /* 画面幅いっぱいの箱にして、その中でカードを10px内側に置く。
+     前後のカードはこの箱の外にはみ出すので、ここで切って画面を横に伸ばさない。 */
+  margin:0 -16px 10px;
+  padding:4px 10px;
+  overflow:hidden;
 }
+/* 前後のカードを左右に控えさせる。払っているあいだだけ見える。 */
+.cardtrack{ position:relative }
+.cardtrack.is-sliding{ will-change:transform }
+.cardtrack.is-easing{ transition:transform .24s cubic-bezier(.25,.9,.3,1) }
+.cardtrack__now{ position:relative }
+.cardtrack__side{
+  position:absolute;top:0;width:100%;
+  pointer-events:none;display:none;
+}
+.cardtrack.is-sliding .cardtrack__side,
+.cardtrack.is-easing .cardtrack__side{ display:block }
+.cardtrack__side--prev{ right:calc(100% + 14px) }
+.cardtrack__side--next{ left:calc(100% + 14px) }
 .detail__cardwrap .card{
   border-radius:10px;box-shadow:0 6px 18px rgba(34,32,29,.10);
   /* カード詳細はスクロールさせない。下に置く情報のぶんを引いた高さに収める。
@@ -388,7 +407,7 @@ a{color:var(--accent)}
 }
 .detail__hero--compact .detail__cardwrap .card{ max-width:calc((100dvh - 430px) * .8) }
 /* 未取得はまだ空き枠なので、端まで広げない */
-.detail__cardwrap--slot{width:58%;margin:0 auto 16px}
+.detail__cardwrap--slot{width:58%;margin:0 auto 16px;padding:0;overflow:visible}
 .detail__cardwrap--slot .card{border-radius:9px;box-shadow:none}
 .detail__meta{min-width:0}
 .detail__cat{

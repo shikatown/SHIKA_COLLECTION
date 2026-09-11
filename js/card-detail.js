@@ -36,7 +36,7 @@ export function renderCardDetail(view, params) {
       if (justSwiped()) return;            // 左右に払っただけのときは開かない
       openViewer(c.id);
     });
-    wrap.append(face);
+    wrap.append(track(c, face));
   } else {
     wrap.append(lockedCard(c));
     wrap.append(el('p', { class: 'muted', style: { fontSize: '11px', textAlign: 'center', marginTop: '8px' }, text: 'カード画像は取得後のお楽しみ' }));
@@ -137,6 +137,27 @@ function favButton(c) {
 
 /* ===== 前後のカードへ（左右に払う） ===== */
 
+/** カードの左右に、前後のカードを控えさせる。
+    払っているあいだ、指について動いて隣が見える。 */
+function track(c, face) {
+  const t = el('div', { class: 'cardtrack' });
+  const list = ordered();
+  const at = list.findIndex((x) => x.id === c.id);
+  const side = (card, where) => {
+    const w = el('div', { class: `cardtrack__side cardtrack__side--${where}` });
+    // 隣はちらりと見えるだけなので、小さい写真で十分
+    w.append(isOwned(card.id) ? cardFace(card, { small: true }) : lockedCard(card, { small: true }));
+    return w;
+  };
+  if (at >= 0 && list.length > 1) {
+    const prev = list[(at - 1 + list.length) % list.length];
+    const next = list[(at + 1) % list.length];
+    t.append(side(prev, 'prev'), side(next, 'next'));
+  }
+  t.append(el('div', { class: 'cardtrack__now' }, [face]));
+  return t;
+}
+
 /** カード一覧と同じ並び（ジャンル順 → 番号順） */
 function ordered() {
   const rank = Object.fromEntries(CATEGORIES.map((x, i) => [x.key, i]));
@@ -156,36 +177,74 @@ function attachSwipe(view) {
   if (swipeReady) return;
   swipeReady = true;
   let start = null;
+  /* 画面の左右の端は受け付けない。
+     端からの横払いは、スマホ本来の「戻る」操作に使われているため。 */
+  const EDGE = 32;
 
   const nowId = () => {
     const m = /^#\/card\/([^?]+)/.exec(location.hash || '');
     return m ? decodeURIComponent(m[1]) : '';
   };
+  const nowTrack = () => view.querySelector('.cardtrack');
+
+  const settle = (t, x, ms) => {
+    if (!t) return;
+    t.classList.add('is-easing');
+    t.style.transform = x ? `translateX(${x}px)` : '';
+    setTimeout(() => {
+      if (!t.isConnected) return;
+      t.classList.remove('is-easing', 'is-sliding');
+      if (!x) t.style.transform = '';
+    }, ms);
+  };
 
   view.addEventListener('pointerdown', (e) => {
-    if (!nowId()) { start = null; return; }              // カード詳細のときだけ
+    start = null;
+    if (!nowId()) return;                                 // カード詳細のときだけ
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    start = { x: e.clientX, y: e.clientY };
+    if (e.clientX < EDGE || e.clientX > window.innerWidth - EDGE) return;
+    start = { x: e.clientX, y: e.clientY, on: false };
+  });
+  view.addEventListener('pointermove', (e) => {
+    if (!start) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    if (!start.on) {
+      if (Math.abs(dx) < 12) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.2) { start = null; return; }   // 縦に動かしている
+      start.on = true;
+      const t = nowTrack();
+      if (t) t.classList.add('is-sliding');
+    }
+    const t = nowTrack();
+    if (t) t.style.transform = `translateX(${dx}px)`;
   });
   view.addEventListener('pointerup', (e) => {
     const s0 = start;
     start = null;
     const id = nowId();
+    const t = nowTrack();
     if (!s0 || !id) return;
     const dx = e.clientX - s0.x;
     const dy = e.clientY - s0.y;
     /* 横に大きく、縦にはあまり動いていないときだけ「払った」とみなす。
        速さは見ない。ゆっくり横へ動かしても、意図した操作として受け付ける。 */
-    if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) { settle(t, 0, 260); return; }
     const list = ordered();
     const at = list.findIndex((x) => x.id === id);
-    if (at < 0 || list.length < 2) return;
+    if (at < 0 || list.length < 2) { settle(t, 0, 260); return; }
     swipedAt = Date.now();
     const n = (at + (dx < 0 ? 1 : -1) + list.length) % list.length;   // 端まで来たら反対側へ
     vibrate(8);
-    go(`#/card/${list[n].id}`);
+    // 隣が中央に来るところまで送ってから、その画面に切り替える
+    const span = (t ? t.getBoundingClientRect().width : window.innerWidth) + 14;
+    settle(t, dx < 0 ? -span : span, 220);
+    setTimeout(() => go(`#/card/${list[n].id}`), 190);
   });
-  view.addEventListener('pointercancel', () => { start = null; });
+  view.addEventListener('pointercancel', () => {
+    if (start && start.on) settle(nowTrack(), 0, 200);
+    start = null;
+  });
 }
 
 /** はじめてカード詳細を開いたときだけ、左右に払えることを知らせる */
