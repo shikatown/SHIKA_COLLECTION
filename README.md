@@ -52,7 +52,7 @@ python -m http.server 8000
 | やりたいこと | 触るファイル | 手順 |
 |---|---|---|
 | 文言・リンク・カードの追加 | `data/cards.json` | Excel を編集 → `tools/excel-to-json.html` にドロップ → 「cards.json を保存」 |
-| 写真の差し替え | `assets/photos/` | Excel の「詳細写真１」に画像を貼る → 同ツールの「写真を書き出す」→ photos.zip を展開して上書き |
+| 写真の差し替え | `assets/photos/` | Excel の「詳細写真１」に画像を貼る → 同ツールの「写真を書き出す」→ photos.zip を展開して上書き（中の `thumb/` も一緒に） |
 | カードの枠・アイコン・ロゴ | `assets/frames/` | ジャンル共通の部品。差し替えるとカード全体の見た目が変わります |
 | カード裏面 | `assets/cards/_back.png` | 置き換えるだけでガチャ演出と3Dビューアの裏面が変わります |
 | ボタンの文言 | `data/config.json` | `cardButtons` でジャンルごとに設定。カード個別はExcelの「カードボタン文言」列 |
@@ -81,7 +81,9 @@ data/cards.json             カードデータ（Excelから生成）
 data/config.json            イベント・コイン・地図の設定
 data/version.json           バージョン情報
 assets/photos/              カードの写真 52枚（Excelから書き出したもの）
+assets/photos/thumb/        一覧表示用の小さい写真（無くても動くが一覧が重くなる）
 assets/frames/              ジャンル別の台紙・カテゴリアイコン・SHIKAロゴ
+assets/frames/thumb/        一覧表示用の小さい台紙・アイコン・ロゴ
 assets/cards/               カード裏面（_back.png）と、完成画像で上書きする場合
 assets/details/             詳細画面の写真
 assets/pwa/                 ホーム画面用アイコン

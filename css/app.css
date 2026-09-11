@@ -178,7 +178,13 @@ a{color:var(--accent)}
 
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .grid--2{grid-template-columns:repeat(2,1fr);gap:12px}
-.cell{ border:0;background:transparent;padding:0;cursor:pointer;text-align:left;display:block; }
+.cell{
+  border:0;background:transparent;padding:0;cursor:pointer;text-align:left;display:block;
+  /* 画面外のカードは描画も画像の展開もしない。53枚の一覧が一気に重くならないようにする。
+     高さだけを仮置きする。幅まで指定すると列幅を押し広げて3列目がはみ出す。 */
+  content-visibility:auto;
+  contain-intrinsic-height:auto 170px;
+}
 .cell__name{
   font-size:10.5px;line-height:1.35;margin-top:5px;color:var(--ink-2);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
@@ -191,8 +197,9 @@ a{color:var(--accent)}
   background:#efeae0;box-shadow:var(--shadow-1);
   container-type:size;                       /* 文字サイズをカードの実寸に合わせる */
 }
-/* 完成カード画像を表示するときは、画像の意匠を邪魔しない */
-.card--img{background:transparent;box-shadow:none}
+/* 完成カード画像を表示するときは、画像の意匠を邪魔しない。
+   組み立てカードは .cardart 側がコンテナなので、.card 側のコンテナは外す（一覧の描画が軽くなる） */
+.card--img{background:transparent;box-shadow:none;container-type:normal}
 /* 完成画像で上書きする場合の1枚絵。組み立てカード（.cardart 内の画像）には効かせない */
 .card > img{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
 .card__face{

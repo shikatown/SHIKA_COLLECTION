@@ -22,12 +22,12 @@ export function renderCardDetail(view, params) {
   const hero = el('div', { class: 'detail__hero' });
   const wrap = el('div', { class: 'detail__cardwrap' });
   if (owned) {
-    const face = cardFace(c);
+    const face = cardFace(c, { small: true });   // 表示幅は約150px。原寸を待たせない
     face.style.cursor = 'pointer';
     face.addEventListener('click', () => openViewer(c.id));
     wrap.append(face);
   } else {
-    wrap.append(lockedCard(c));
+    wrap.append(lockedCard(c, { small: true }));
     wrap.append(el('p', { class: 'muted', style: { fontSize: '10.5px', marginTop: '6px' }, text: 'カード画像は取得後のお楽しみ' }));
   }
   hero.append(wrap);
@@ -94,7 +94,7 @@ export function renderCardDetail(view, params) {
 function renderLocked(view, c) {
   const box = el('div', { class: 'panel', style: { textAlign: 'center' } });
   const w = el('div', { style: { width: '46%', margin: '0 auto 14px' } });
-  w.append(lockedCard(c));
+  w.append(lockedCard(c, { small: true }));
   box.append(w);
   box.append(el('h2', { style: { fontSize: '16px', margin: '0 0 4px' }, text: '???' }));
   box.append(el('p', { class: 'muted', style: { margin: '0 0 14px' }, text: `${CATEGORY_LABEL[c.category] || ''}のカード` }));

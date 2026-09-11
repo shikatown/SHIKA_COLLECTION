@@ -66,7 +66,8 @@
     <ol class="steps">
       <li>Excel（アイテム_志賀町ガチャ管理列追加.xlsx）を下の枠にドロップする</li>
       <li>「cards.json を保存」を押す → リポジトリの <code>data/cards.json</code> に上書き</li>
-      <li>写真を入れ替えた場合は「写真を書き出す」も押す → <code>assets/photos/</code> に展開して上書き</li>
+      <li>写真を入れ替えた場合は「写真を書き出す」も押す → <code>assets/photos/</code> に展開して上書き
+          （一覧用の小さい写真 <code>thumb/</code> も一緒に作られます）</li>
     </ol>
   </div>
 
@@ -93,7 +94,9 @@
     </div>
     <pre id="previewBox" hidden></pre>
     <p class="note" style="margin-top:12px">
-      photos.zip を展開して <code>assets/photos/</code> に入れてください。ファイル名はカードIDになります。
+      photos.zip を展開して <code>assets/photos/</code> に入れてください。ファイル名はカードIDになります。<br>
+      中の <code>thumb/</code> フォルダは一覧表示用の小さい写真です。これも一緒に入れてください
+      （無くても動きますが、カード一覧が重くなります）。
     </p>
   </div>
 
@@ -706,9 +709,51 @@ document.getElementById('save').addEventListener('click', () => {
   download(new Blob([JSON.stringify(output, null, 1)], { type: 'application/json' }), 'cards.json');
 });
 
-document.getElementById('savePhotos').addEventListener('click', () => {
+/** 一覧表示用の小さい写真を作る。原寸はそのまま同梱する。 */
+async function makeThumb(bytes, name) {
+  const url = URL.createObjectURL(new Blob([bytes]));
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const w = Math.min(360, img.naturalWidth);
+    const h = Math.round(img.naturalHeight * w / img.naturalWidth);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.imageSmoothingQuality = 'high';
+    x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);   // 透過PNG対策
+    x.drawImage(img, 0, 0, w, h);
+    const data = c.toDataURL('image/jpeg', 0.82).split(',')[1];
+    c.width = c.height = 1;
+    const bin = atob(data);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return { name: 'thumb/' + name.replace(/\.[^.]+$/, '.jpg'), data: out };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+document.getElementById('savePhotos').addEventListener('click', async () => {
   if (!photos.length) return;
-  download(makeZip(photos), 'photos.zip');
+  const btn = document.getElementById('savePhotos');
+  const label = btn.textContent;
+  btn.disabled = true;
+  try {
+    const files = photos.slice();
+    for (let i = 0; i < photos.length; i++) {
+      btn.textContent = `一覧用の写真を作成中… ${i + 1}/${photos.length}`;
+      files.push(await makeThumb(photos[i].data, photos[i].name));
+    }
+    download(makeZip(files), 'photos.zip');
+  } catch (e) {
+    alert('一覧用の写真を作れませんでした: ' + (e.message || e));
+    download(makeZip(photos), 'photos.zip');
+  } finally {
+    btn.textContent = label;
+    btn.disabled = false;
+  }
 });
 
 document.getElementById('preview').addEventListener('click', () => {

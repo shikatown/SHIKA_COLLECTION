@@ -120,13 +120,9 @@
 .cardart--locked .cardart__btn{ filter:saturate(.3) brightness(.72) }
 .cardart--locked .cardart__num{ background:#3a4250 }
 
-/* 小さく表示するときは読めない要素を省く */
-@container (max-width: 190px){
-  .cardart__desc{ display:none }
-  .cardart__btn{ display:none }
-  .cardart__title{ font-size:7.4cqw }
-  .cardart__title--mid{ font-size:6cqw }
-  .cardart__title--long{ font-size:4.6cqw }
-  .cardart__badge span{ display:none }
-  .cardart__badge{ padding:0 .2em }
+/* 小さく表示しても、カードは1枚の絵として欠けないようにする。
+   文字は cqw なので、そのまま比率どおりに縮む。 */
+@container (max-width: 150px){
+  /* 小さいときは2行に。高さも2行分にしないと3行目が半分覗く */
+  .cardart__desc{ -webkit-line-clamp:2; height:2.52em }
 }

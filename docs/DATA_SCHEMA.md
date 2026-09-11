@@ -48,8 +48,8 @@
 
 | 層 | 中身 | どこから |
 |---|---|---|
-| ① 写真 | 産品・風景の写真 | `assets/photos/<photo>` |
-| ② 台紙 | 外枠・背景・区切り線・所在地ピル・罫線 | `assets/frames/<category>.png`（写真部分は透過） |
+| ① 写真 | 産品・風景の写真 | `assets/photos/<photo>`（一覧では `assets/photos/thumb/` の縮小版） |
+| ② 台紙 | 外枠・背景・区切り線・所在地ピル・罫線 | `assets/frames/<category>.png`（写真部分は透過。一覧では `thumb/` の縮小版） |
 | ③ バッジ | 紺のピル＋アイコン＋カテゴリ名 | `assets/frames/icon-<category>.png` ＋ アプリ側で描画 |
 | ④ 番号 | `#01 / 53` | `id` と公開枚数から生成 |
 | ⑤ 名前 | カード名 | `name` |
@@ -58,6 +58,11 @@
 | ⑧ ロゴ | SHIKA COLLECTION | `assets/frames/logo.png` |
 
 設計サイズは **1080×1350（縦横比 4:5）**。位置は `css/card-art.css` に割合で書いてある。
+
+カード一覧のように小さく並べるときは、`assets/photos/thumb/` と `assets/frames/thumb/` の
+縮小版を使う。原寸を53枚ぶん展開すると描画が重くなるため。
+詳細画面・3Dビューア・ガチャ演出では原寸をそのまま使う。
+縮小版が無い場合は原寸に切り替わるので、表示が欠けることはない。
 
 ### 解決ルール（アプリ側）
 

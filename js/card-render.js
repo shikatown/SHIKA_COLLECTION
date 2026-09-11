@@ -12,6 +12,10 @@
      ⑦ ボタン    cards.json の cardButton（無ければ config.json のジャンル既定）
      ⑧ ロゴ      assets/frames/logo.png
 
+   一覧のように小さく並べるときは、assets/photos/thumb と assets/frames/thumb の
+   縮小版を使う（原寸を53枚ぶん展開すると描画が重くなるため）。
+   詳細・3Dビューア・ガチャ演出では原寸をそのまま使う。
+
    位置とサイズは 1080×1350 の設計座標から計算した割合で css/card-art.css に書いてある。
    文言・写真・アイコン・ロゴを差し替えるのに画像を作り直す必要はない。 */
 
@@ -39,6 +43,12 @@ export function photoUrl(file) {
   return `./assets/photos/${file}`;
 }
 
+/** 一覧用の小さい写真。原寸は詳細・3Dビューア・ガチャ演出で使い続ける。 */
+export function thumbUrl(file) {
+  if (!file || /^https?:\/\//i.test(file) || file.startsWith('./') || file.startsWith('assets/')) return '';
+  return `./assets/photos/thumb/${file.replace(/\.[^.]+$/, '.jpg')}`;
+}
+
 /** カード下部のボタン文言。カード個別 → ジャンル既定 → 無し の順で決まる */
 function buttonLabel(card, genre) {
   if (card.cardButton) return card.cardButton;
@@ -48,9 +58,10 @@ function buttonLabel(card, genre) {
 
 /**
  * @param {object} card cards.json のカード
- * @param {{total?:number, locked?:boolean}} opts total=公開枚数（#01/53 の分母）
+ * @param {{total?:number, locked?:boolean, thumb?:boolean}} opts
+ *   total=公開枚数（#01/53 の分母）、thumb=一覧用の小さい写真を使う
  */
-export function renderCardArt(card, { total = 0, locked = false } = {}) {
+export function renderCardArt(card, { total = 0, locked = false, thumb = false } = {}) {
   const genre = GENRES.has(card.category) ? card.category : 'gourmet';
   const root = el('div', { class: `cardart cardart--${genre}${locked ? ' cardart--locked' : ''}` });
 
@@ -60,14 +71,18 @@ export function renderCardArt(card, { total = 0, locked = false } = {}) {
     photo.classList.add('is-locked');
     photo.append(el('span', { text: '?' }));
   } else if (card.photo) {
+    const full = photoUrl(card.photo);
+    const small = thumb ? thumbUrl(card.photo) : '';
     const img = el('img', {
-      attrs: { src: photoUrl(card.photo), alt: '', loading: 'lazy', decoding: 'async' },
+      attrs: { src: small || full, alt: '', loading: 'lazy', decoding: 'async' },
     });
+    let triedFull = !small;
     img.addEventListener('error', () => {
+      if (!triedFull) { triedFull = true; img.src = full; return; }   // 小さい写真が無ければ原寸で
       img.remove();
       photo.classList.add('is-empty');
       photo.append(el('span', { text: '写真準備中' }));
-    }, { once: true });
+    });
     photo.append(img);
   } else {
     photo.classList.add('is-empty');
@@ -76,15 +91,16 @@ export function renderCardArt(card, { total = 0, locked = false } = {}) {
   root.append(photo);
 
   // ② 台紙（写真の上に重ねる。写真の窓が透過になっている）
+  const frames = thumb ? './assets/frames/thumb' : './assets/frames';
   root.append(el('img', {
     class: 'cardart__plate',
-    attrs: { src: `./assets/frames/${genre}.png`, alt: '', decoding: 'async' },
+    attrs: { src: `${frames}/${genre}.png`, alt: '', loading: 'lazy', decoding: 'async' },
   }));
 
   // ③ カテゴリバッジ
   const badge = el('div', { class: 'cardart__badge' });
   badge.append(el('img', {
-    attrs: { src: `./assets/frames/icon-${genre}.png`, alt: '', decoding: 'async' },
+    attrs: { src: `${frames}/icon-${genre}.png`, alt: '', loading: 'lazy', decoding: 'async' },
   }));
   badge.append(el('span', { text: CATEGORY_LABEL[genre] || '' }));
   root.append(badge);
@@ -118,7 +134,7 @@ export function renderCardArt(card, { total = 0, locked = false } = {}) {
   // ⑧ ロゴ
   root.append(el('img', {
     class: 'cardart__logo',
-    attrs: { src: './assets/frames/logo.png', alt: 'SHIKA COLLECTION', decoding: 'async' },
+    attrs: { src: `${frames}/logo.png`, alt: 'SHIKA COLLECTION', loading: 'lazy', decoding: 'async' },
   }));
 
   return root;

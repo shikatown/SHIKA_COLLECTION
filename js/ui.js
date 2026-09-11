@@ -78,7 +78,7 @@ export function cardFace(cardData, { small = false } = {}) {
     wrap.append(img);
   } else if (cardData.category) {
     wrap.classList.add('card--img');
-    wrap.append(renderCardArt(cardData, { total: publishedCards().length }));
+    wrap.append(renderCardArt(cardData, { total: publishedCards().length, thumb: small }));
   } else {
     fallback();
   }
@@ -103,7 +103,7 @@ function placeholderFace(c) {
 export function lockedCard(cardData, { small = false } = {}) {
   if (cardData.category) {
     const wrap = el('div', { class: `card card--img${small ? ' card--sm' : ''}` });
-    wrap.append(renderCardArt(cardData, { total: publishedCards().length, locked: true }));
+    wrap.append(renderCardArt(cardData, { total: publishedCards().length, locked: true, thumb: small }));
     return wrap;
   }
   const wrap = el('div', { class: `card card--locked${small ? ' card--sm' : ''}` });
