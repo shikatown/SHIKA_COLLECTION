@@ -49,9 +49,14 @@ export function thumbUrl(file) {
   return `./assets/photos/thumb/${file.replace(/\.[^.]+$/, '.jpg')}`;
 }
 
-/** カード下部のボタン文言。カード個別 → ジャンル既定 → 無し の順で決まる */
+/** カード下部のボタン文言。カード個別 → ジャンル既定 → 無し の順で決まる。
+    ジャンル既定は「行き先がある」ことが前提の文言なので、行き先が無い行には出さない。
+    （例：郷土料理で購入検索が空欄なら「取扱店を検索する」は押しても何も起きない）
+    行き先の決め方は js/card-detail.js の cardActionUrl() と合わせてある。 */
 function buttonLabel(card, genre) {
   if (card.cardButton) return card.cardButton;
+  if (genre === 'gourmet' && !(card.purchase && card.purchase.enabled)) return '';
+  if (genre === 'spot' && !(card.gps && card.gps.lat != null)) return '';
   const map = (app.config && app.config.cardButtons) || {};
   return map[genre] || '';
 }

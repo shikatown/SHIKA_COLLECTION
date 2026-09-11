@@ -1,6 +1,6 @@
 {
- "dataVersion": "20260911-3",
- "generatedAt": "2026-09-10T15:13:37",
+ "dataVersion": "20260911-4",
+ "generatedAt": "2026-09-11T06:19:28",
  "cards": [
   {
    "id": "001",
@@ -912,7 +912,7 @@
    "cardText": "",
    "cardButton": "",
    "cardImage": "",
-   "description": "",
+   "description": "木の型を使い、酢飯に紅鮭を挟んだ押しずし。かつては、船乗りが保存食として蓄えた塩漬けの紅鮭を使って作られていました。祭りや正月、家の建前などの祝い事に振る舞われています。",
    "season": "",
    "highlight": "",
    "detailPhotos": [],
@@ -924,7 +924,7 @@
     "radius": null
    },
    "purchase": {
-    "enabled": true,
+    "enabled": false,
     "searchWord": "志賀町 まつり寿司（押し寿司）",
     "shops": []
    },
@@ -1121,10 +1121,10 @@
    "detailPhotos": [],
    "sakeSnack": false,
    "gps": {
-    "enabled": false,
+    "enabled": true,
     "lat": 37.104712,
     "lng": 136.772147,
-    "radius": null
+    "radius": 200
    },
    "purchase": {
     "enabled": false,
@@ -1150,10 +1150,10 @@
    "detailPhotos": [],
    "sakeSnack": false,
    "gps": {
-    "enabled": false,
+    "enabled": true,
     "lat": 37.206952,
     "lng": 136.724368,
-    "radius": null
+    "radius": 200
    },
    "purchase": {
     "enabled": false,
@@ -1208,7 +1208,7 @@
    "detailPhotos": [],
    "sakeSnack": false,
    "gps": {
-    "enabled": false,
+    "enabled": true,
     "lat": 37.083221,
     "lng": 136.726773,
     "radius": 200
@@ -1295,7 +1295,7 @@
    "detailPhotos": [],
    "sakeSnack": false,
    "gps": {
-    "enabled": false,
+    "enabled": true,
     "lat": 37.007666,
     "lng": 136.759428,
     "radius": 200
@@ -1353,7 +1353,7 @@
    "detailPhotos": [],
    "sakeSnack": false,
    "gps": {
-    "enabled": false,
+    "enabled": true,
     "lat": 36.986798,
     "lng": 136.76637,
     "radius": 200
@@ -1382,7 +1382,7 @@
    "detailPhotos": [],
    "sakeSnack": false,
    "gps": {
-    "enabled": false,
+    "enabled": true,
     "lat": 36.983187,
     "lng": 136.772988,
     "radius": 200
@@ -1425,7 +1425,7 @@
   },
   {
    "id": "050",
-   "name": "冨来八朔祭礼",
+   "name": "冨木八朔祭礼",
    "reading": "",
    "category": "culture",
    "subCategory": "祭りと文化",
@@ -1459,7 +1459,7 @@
    "category": "culture",
    "subCategory": "祭りと文化",
    "published": true,
-   "photo": "051.jpg",
+   "photo": "051.jpeg",
    "cardText": "",
    "cardButton": "",
    "cardImage": "",
