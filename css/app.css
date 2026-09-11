@@ -183,11 +183,13 @@ a{color:var(--accent)}
   /* 画面外のカードは描画も画像の展開もしない。53枚の一覧が一気に重くならないようにする。
      高さだけを仮置きする。幅まで指定すると列幅を押し広げて3列目がはみ出す。 */
   content-visibility:auto;
-  contain-intrinsic-height:auto 170px;
+  contain-intrinsic-height:auto 188px;   /* 実測に合わせる。ずれると画面外の行の高さが狂う */
 }
 .cell__name{
   display:flex;gap:4px;align-items:baseline;
   font-size:10.5px;line-height:1.35;margin-top:5px;color:var(--ink-2);
+  /* 名前が1行でも2行でもマスの高さをそろえる（2行ぶんを先に確保する） */
+  height:2.7em;
 }
 .cell__name > span{
   min-width:0;
@@ -370,6 +372,8 @@ a{color:var(--accent)}
 
 /* ===== 詳細 ===== */
 /* カードが主役。画面の端まで大きく出して、名前や操作はその下に置く。 */
+/* 左右に払って前後のカードへ。縦の動きはこれまでどおりブラウザに任せる */
+.detail--swipe{ touch-action:pan-y }
 .detail__hero{display:block}
 .detail__cardwrap{
   /* .view の左右余白（16px）を少しだけ戻して、端との間に10pxほど残す */

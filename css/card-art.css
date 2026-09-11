@@ -48,6 +48,16 @@
   pointer-events:none; user-select:none;
 }
 
+/* 縮小版の上に原寸を重ねる層。読み終わってからそっと現す。
+   src を付け替えると一瞬抜けてちらつくため、重ねて不透明度だけ変える。 */
+.cardart__layer{ width:100%; height:100%; object-fit:contain; display:block }
+.cardart__layer--hi{
+  position:absolute; inset:0; opacity:0;
+  transition:opacity .22s linear;
+}
+.cardart__layer--hi.is-on{ opacity:1 }
+.cardart__photo .cardart__layer--hi{ object-fit:cover }
+
 /* ③ カテゴリバッジ（紺のピル＋アイコン＋カテゴリ名） */
 .cardart__badge{
   position:absolute; left:7.593%; top:5.481%; height:4.815%;
@@ -121,7 +131,7 @@
 .cardart__logo{
   position:absolute; left:50%; top:88.11%;
   transform:translate(-50%,-50%);
-  width:24%; height:11.5%; object-fit:contain;
+  width:24%; height:11.5%;
   pointer-events:none; user-select:none;
 }
 

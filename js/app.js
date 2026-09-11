@@ -167,6 +167,8 @@ const TAB_OF = {
 function onRouteChange(route) {
   document.getElementById('appTitle').textContent = TITLES[route.path] || 'SHIKA COLLECTION';
   document.getElementById('btnBack').hidden = route.path === '/home';
+  // 左右に払って前後のカードへ移れるのは、カード詳細のときだけ
+  document.getElementById('view').classList.toggle('detail--swipe', route.path === '/card/:id');
   const tab = TAB_OF[route.path];
   for (const a of document.querySelectorAll('.tab')) {
     a.classList.toggle('is-active', a.dataset.tab === tab);

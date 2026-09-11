@@ -49,6 +49,20 @@ export function thumbUrl(file) {
   return `./assets/photos/thumb/${file.replace(/\.[^.]+$/, '.jpg')}`;
 }
 
+/** 原寸を上に重ねて、読み終わってからそっと現す層。
+    差し替え（src の付け替え）だと一瞬抜けてちらつくので、重ねて不透明度だけ変える。 */
+function layerHi(src) {
+  const hi = el('img', {
+    class: 'cardart__layer cardart__layer--hi',
+    attrs: { src, alt: '', decoding: 'async' },
+  });
+  const show = () => hi.classList.add('is-on');
+  if (hi.complete && hi.naturalWidth) show();
+  else hi.addEventListener('load', show, { once: true });
+  hi.addEventListener('error', () => hi.remove(), { once: true });
+  return hi;
+}
+
 /** カード下部のボタン文言。カード個別 → ジャンル既定 → 無し の順で決まる。
     ジャンル既定は「行き先がある」ことが前提の文言なので、行き先が無い行には出さない。
     （例：郷土料理で購入検索が空欄なら「取扱店を検索する」は押しても何も起きない）
@@ -88,15 +102,9 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
       photo.classList.add('is-empty');
       photo.append(el('span', { text: '写真準備中' }));
     });
-    // 大きく出すときは、まず小さい写真を見せてから原寸に差し替える。
-    // 待ち時間のあいだ黒いままにしないため。
-    if (!thumb && small) {
-      const hi = new Image();
-      hi.decoding = 'async';
-      hi.addEventListener('load', () => { triedFull = true; img.src = full; });
-      hi.src = full;
-    }
     photo.append(img);
+    // 大きく出すときは、小さい写真の上に原寸を重ねて、そっと現す（差し替えるとちらつく）
+    if (!thumb && small) photo.append(layerHi(full));
   } else {
     photo.classList.add('is-empty');
     photo.append(el('span', { text: '写真準備中' }));
@@ -112,15 +120,12 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
       attrs: { src: `./assets/frames/thumb/${file}`, alt: '', loading: 'lazy', decoding: 'async' },
     });
     img.addEventListener('error', () => { img.src = `./assets/frames/${file}`; }, { once: true });
-    if (!thumb) {
-      const hi = new Image();
-      hi.decoding = 'async';
-      hi.addEventListener('load', () => { img.src = `./assets/frames/${file}`; });
-      hi.src = `./assets/frames/${file}`;
-    }
     return img;
   };
-  root.append(framePart(`${genre}.png`, 'cardart__plate'));
+  const plate = el('div', { class: 'cardart__plate' });
+  plate.append(framePart(`${genre}.png`, 'cardart__layer'));
+  if (!thumb) plate.append(layerHi(`./assets/frames/${genre}.png`));
+  root.append(plate);
 
   // ③ カテゴリバッジ
   const badge = el('div', { class: 'cardart__badge' });
@@ -155,8 +160,11 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
   }
 
   // ⑧ ロゴ
-  const logo = framePart('logo.png', 'cardart__logo');
-  logo.alt = 'SHIKA COLLECTION';
+  const logo = el('div', { class: 'cardart__logo' });
+  const logoImg = framePart('logo.png', 'cardart__layer');
+  logoImg.alt = 'SHIKA COLLECTION';
+  logo.append(logoImg);
+  if (!thumb) logo.append(layerHi('./assets/frames/logo.png'));
   root.append(logo);
 
   return root;

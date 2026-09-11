@@ -46,6 +46,7 @@ export function defaultState() {
       pwaPromptShown: false,
       backupPromptShown: false,
       spotHintShown: false,
+      swipeHintShown: false,   // カード詳細で左右に払える案内
       admin: false,          // 管理者の確認用モード（公開前の点検だけに使う）
     },
     knownCardIds: [],        // 「新カード追加」通知の判定用

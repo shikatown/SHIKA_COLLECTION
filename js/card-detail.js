@@ -1,9 +1,9 @@
 /* card-detail.js — カード詳細。カード画像と情報UIは分離して扱う。
    不確かな情報は補わない：Excelに入っている内容だけを表示する。 */
 
-import { app, isOwned, isVisited, commit, CATEGORY_LABEL } from './state.js';
+import { app, isOwned, isVisited, commit, CATEGORY_LABEL, CATEGORIES, publishedCards } from './state.js';
 import {
-  el, clear, cardFace, lockedCard, toast, externalLink, mapsSearchUrl, safeUrl, resolvePhoto,
+  el, clear, cardFace, lockedCard, toast, externalLink, mapsSearchUrl, safeUrl, resolvePhoto, vibrate,
 } from './ui.js';
 import { openViewer } from './card-3d.js';
 import { coinCfg } from './rewards.js';
@@ -14,6 +14,9 @@ export function renderCardDetail(view, params) {
   clear(view);
   const c = app.cardsById.get(String(params.id));
   if (!c) { view.append(el('p', { class: 'empty', text: 'カードが見つかりません。' })); return; }
+
+  attachSwipe(view);         // 左右に払うと前後のカードへ（受け付けは1回だけ付ける）
+  maybeHintSwipe();
 
   const owned = isOwned(c.id);
   const openSpot = !owned && c.gps.enabled;   // 未取得でも観光情報は見せるスポット
@@ -30,6 +33,7 @@ export function renderCardDetail(view, params) {
     linkCardButton(face, c);
     face.addEventListener('click', (e) => {
       if (e.target.closest('a')) return;   // ボタンのリンクはそのまま開かせる
+      if (justSwiped()) return;            // 左右に払っただけのときは開かない
       openViewer(c.id);
     });
     wrap.append(face);
@@ -129,6 +133,66 @@ function favButton(c) {
     toast(nowOn ? '「気になる」に入れました' : '「気になる」から外しました');
   });
   return btn;
+}
+
+/* ===== 前後のカードへ（左右に払う） ===== */
+
+/** カード一覧と同じ並び（ジャンル順 → 番号順） */
+function ordered() {
+  const rank = Object.fromEntries(CATEGORIES.map((x, i) => [x.key, i]));
+  return publishedCards().slice()
+    .sort((a, b) => (rank[a.category] - rank[b.category]) || a.id.localeCompare(b.id, 'ja'));
+}
+
+/** 直前に払ったかどうか。払ったときの指離しでカードを開いてしまわないようにする。 */
+let swipedAt = 0;
+export function justSwiped() { return Date.now() - swipedAt < 400; }
+
+/* 受け付けは #view に1回だけ付ける。
+   カード詳細を開くたびに付けると、開いた回数ぶん重なって何枚も飛んでしまう。
+   いま見ているカードは、そのつどアドレスから読む。 */
+let swipeReady = false;
+function attachSwipe(view) {
+  if (swipeReady) return;
+  swipeReady = true;
+  let start = null;
+
+  const nowId = () => {
+    const m = /^#\/card\/([^?]+)/.exec(location.hash || '');
+    return m ? decodeURIComponent(m[1]) : '';
+  };
+
+  view.addEventListener('pointerdown', (e) => {
+    if (!nowId()) { start = null; return; }              // カード詳細のときだけ
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    start = { x: e.clientX, y: e.clientY };
+  });
+  view.addEventListener('pointerup', (e) => {
+    const s0 = start;
+    start = null;
+    const id = nowId();
+    if (!s0 || !id) return;
+    const dx = e.clientX - s0.x;
+    const dy = e.clientY - s0.y;
+    /* 横に大きく、縦にはあまり動いていないときだけ「払った」とみなす。
+       速さは見ない。ゆっくり横へ動かしても、意図した操作として受け付ける。 */
+    if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    const list = ordered();
+    const at = list.findIndex((x) => x.id === id);
+    if (at < 0 || list.length < 2) return;
+    swipedAt = Date.now();
+    const n = (at + (dx < 0 ? 1 : -1) + list.length) % list.length;   // 端まで来たら反対側へ
+    vibrate(8);
+    go(`#/card/${list[n].id}`);
+  });
+  view.addEventListener('pointercancel', () => { start = null; });
+}
+
+/** はじめてカード詳細を開いたときだけ、左右に払えることを知らせる */
+function maybeHintSwipe() {
+  if (app.state.flags.swipeHintShown) return;
+  commit((s) => { s.flags.swipeHintShown = true; });
+  setTimeout(() => toast('左右に払うと、前後のカードに移ります'), 800);
 }
 
 /** カードに印刷されたボタンが指す先。地図や販売店の検索はここ1か所で決める。 */
