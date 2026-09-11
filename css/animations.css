@@ -35,11 +35,22 @@
    円舞 → 三分 → 合一 → 抜刀。位置と動きは js/gacha-anim.js が毎フレーム書く。
    ここでは重なり順と見た目だけを定義する。 */
 .gachastage{
-  position:relative;width:100%;height:min(62vh,440px);
-  border-radius:16px;overflow:hidden;
-  background:radial-gradient(118% 88% at 50% 38%,#fff 0%,#fdfaf3 52%,#f2ece0 100%);
-  border:1px solid var(--line);
+  /* 演出のあいだは画面全体を使う。ヘッダーやタブの上にかぶせる */
+  position:fixed;inset:0;z-index:60;
+  width:100%;height:100%;
+  overflow:hidden;
+  background:radial-gradient(118% 72% at 50% 42%,#fff 0%,#fdfaf3 52%,#f2ece0 100%);
   perspective:1100px;
+  /* 抜き出すカードの大きさ。幅と高さの両方で頭打ちにする。
+     NEW とカード名の位置もこの値から決めるので、変えるのはここ1か所だけ。 */
+  --gs-card:min(74vw,46vh,340px);
+}
+/* 演出中は背後がスクロールしないようにする */
+body.is-drawing{ overflow:hidden }
+/* 準備中の案内も演出面の中に置く */
+.gachastage__loading{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  text-align:center;margin:0;z-index:5;
 }
 .gs{position:absolute;inset:0}
 .gs__cam{position:absolute;inset:0;will-change:transform}
@@ -66,7 +77,7 @@
 .gs__deck{position:absolute;inset:0;transform-style:preserve-3d}
 .gs__orb{
   position:absolute;left:50%;top:44%;
-  width:clamp(46px,15.5%,72px);aspect-ratio:4/5;
+  width:clamp(52px,16.5vw,96px);aspect-ratio:4/5;
   border-radius:6px;overflow:hidden;opacity:0;
   will-change:transform,opacity;backface-visibility:visible;
 }
@@ -79,7 +90,7 @@
 /* 抜刀するカード */
 .gs__reveal{
   position:absolute;left:50%;top:44%;
-  width:clamp(150px,50%,206px);aspect-ratio:4/5;
+  width:var(--gs-card);aspect-ratio:4/5;
   transform-style:preserve-3d;opacity:0;will-change:transform;
 }
 .gs__face{
@@ -113,32 +124,41 @@
 
 /* ===== ガチャ画面のUI（演出とは別。ここは従来どおり） ===== */
 .gacha__counter{
-  position:absolute;top:6px;left:0;right:0;text-align:center;z-index:5;
+  position:absolute;left:0;right:0;z-index:5;text-align:center;
+  top:calc(12px + env(safe-area-inset-top));
   font-size:12px;color:var(--ink-3);letter-spacing:.08em;
 }
-/* popIn は transform を上書きしてしまうので、中央寄せ込みの専用キーフレームを使う */
-@keyframes newTagIn{
-  0%{ opacity:0; transform:translateX(-50%) scale(.86) }
-  60%{ opacity:1; transform:translateX(-50%) scale(1.04) }
-  100%{ opacity:1; transform:translateX(-50%) scale(1) }
+/* NEW とカード名は画面下寄りにまとめる。カードの大きさが変わっても重ならない */
+.gacha__caption{
+  position:absolute;left:0;right:0;z-index:5;
+  /* カードの下端（中心44% ＋ 高さの半分）のすぐ下に置く。
+     カードの大きさが変わっても離れすぎず、重なりもしない。 */
+  top:calc(44% + var(--gs-card) * .625 + 22px);
+  display:grid;justify-items:center;gap:10px;padding:0 24px;
+  pointer-events:none;
 }
 .gacha__newtag{
-  position:absolute;left:50%;bottom:11%;z-index:5;
   background:var(--danger);color:#fff;font-weight:800;font-size:12px;letter-spacing:.2em;
-  padding:3px 12px;border-radius:999px;animation:newTagIn .3s ease both;
+  padding:4px 14px;border-radius:999px;animation:popIn .3s ease both;
 }
 .gacha__name{
-  margin-top:14px;font-size:16px;font-weight:800;text-align:center;
+  margin:0;font-size:20px;font-weight:800;text-align:center;line-height:1.3;
   animation:riseUp .35s ease both;
 }
 .gacha__acts{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 .gacha__skip{
-  position:absolute;right:6px;top:2px;z-index:6;background:rgba(255,255,255,.7);border:0;
-  color:var(--ink-3);font-size:12px;cursor:pointer;padding:6px 10px;border-radius:999px;
+  position:absolute;z-index:6;background:rgba(255,255,255,.7);border:0;
+  right:calc(10px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));
+  color:var(--ink-3);font-size:12px;cursor:pointer;padding:8px 14px;border-radius:999px;
 }
 
 /* 結果一覧 */
+.result__head{margin-bottom:12px}
+.result__head--solo{text-align:center;margin-bottom:20px}
 .result__grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+/* 1枚だけのときは、左上に寄せず中央に大きく置く */
+.result__solo{display:grid;justify-items:center}
+.result__solo .cell{width:min(66vw,260px);content-visibility:visible}
 .result__cell{position:relative;animation:popIn .26s ease both}
 .result__cell:nth-child(n){animation-delay:calc(var(--i,0) * 40ms)}
 .bonusbox{
@@ -156,6 +176,8 @@
   text-align:center;font-size:13px;color:var(--ink-2);margin-top:16px;
   animation:riseUp .4s ease both;
 }
+/* 大きい1枚のときは、カードから離して下に置く */
+.reveal-msg--low{ margin-top:34px }
 
 @media (prefers-reduced-motion: reduce){
   *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}

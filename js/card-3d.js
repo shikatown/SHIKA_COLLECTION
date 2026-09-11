@@ -194,7 +194,7 @@ function apply(card, shadow, rot) {
   const t = Math.abs(Math.sin((rot.y * Math.PI) / 180));
   shadow.style.opacity = String(0.75 - t * 0.35);
   shadow.style.transform =
-    `translate(calc(-50% + ${(rot.y % 180) * 0.12}px), calc(min(74vw,300px) * 0.66)) scaleX(${(1 - t * 0.3).toFixed(3)})`;
+    `translate(calc(-50% + ${(rot.y % 180) * 0.12}px), calc(var(--c3w) * 0.66)) scaleX(${(1 - t * 0.3).toFixed(3)})`;
 }
 
 /* ===== 初回だけの操作案内 ===== */

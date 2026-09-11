@@ -5,7 +5,7 @@
      カード内側      x  57–1022 ,  y   57–1293
      写真            x  57–1022 ,  y   57– 679
      カテゴリバッジ  x  82–     ,  y   74– 138
-     番号ピル        x 878– 993 ,  y   88– 140
+     番号ピル        x  –993   ,  y   74– 139   （幅は中身しだい／右端をそろえる）
      所在地ピル      x  95–     ,  y  748– 782   （台紙に含む）
      名前            x  95– 990 ,  y  790– 878
      罫線                         ,  y      884   （台紙に含む）
@@ -59,15 +59,19 @@
 .cardart__badge img{ height:94%; width:auto; display:block }
 .cardart__badge span{ font-size:3.1cqw; font-weight:800; letter-spacing:.04em }
 
-/* ④ 番号 */
+/* ④ 番号
+   カテゴリバッジと縦のサイズ・上端をそろえる（高さ 4.815% = 6.019cqw）。
+   幅は中身にあわせて伸ばし、右端を x=993 に固定する。
+   こうすると文字数が増えてもピルの外に出ない。 */
 .cardart__num{
-  position:absolute; left:81.296%; top:6.519%; width:10.741%; height:3.926%;
+  position:absolute; right:8.056%; top:5.481%; height:4.815%;
+  max-width:28%; padding:0 .62em;
   background:#0b3a6b; border-radius:99px;
-  display:flex; align-items:baseline; justify-content:center; gap:.22em;
-  color:#fff; line-height:1; letter-spacing:.01em; white-space:nowrap;
+  color:#fff; text-align:center; white-space:nowrap; overflow:hidden;
+  font-size:3.1cqw; line-height:6.019cqw; letter-spacing:.01em;
 }
-.cardart__num b{ font-size:3.1cqw; font-weight:800 }
-.cardart__num span{ font-size:2.1cqw; font-weight:600; opacity:.82 }
+.cardart__num b{ font-weight:800 }
+.cardart__num span{ font-size:.677em; font-weight:600; opacity:.82; margin-left:.26em }
 
 /* ⑤ 名前 */
 .cardart__title{

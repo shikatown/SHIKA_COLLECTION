@@ -247,20 +247,26 @@ export async function playSequence(view, payload) {
   const ids = payload.results.map((r) => r.id);
   clear(view);
 
+  // 演出のあいだは画面全体を使う（画面いっぱいの固定レイヤー）
   const stageBox = el('div', { class: 'gachastage' });
   const counter = el('div', { class: 'gacha__counter' });
   const skipBtn = el('button', { class: 'gacha__skip', attrs: { type: 'button' }, text: 'SKIP' });
   skipBtn.hidden = true;
-  stageBox.append(counter, skipBtn);
+  const caption = el('div', { class: 'gacha__caption' });   // NEW とカード名の置き場
+  stageBox.append(counter, skipBtn, caption);
   view.append(stageBox);
+  document.body.classList.add('is-drawing');
 
-  const loading = el('p', { class: 'muted center', text: 'カードを準備しています…' });
-  view.append(loading);
+  const loading = el('p', { class: 'muted gachastage__loading', text: 'カードを準備しています…' });
+  stageBox.append(loading);
   await preload(ids);
   loading.remove();
 
   const stage = createGachaStage(stageBox);
   let skipped = false;
+  // 途中で画面を離れても、背後のスクロールを止めたままにしない
+  const release = () => document.body.classList.remove('is-drawing');
+  window.addEventListener('hashchange', release, { once: true });
   const skipAll = () => { skipped = true; stage.skip(); };
   skipBtn.addEventListener('click', (e) => { e.stopPropagation(); skipAll(); });
   // 舞台をタップすると、その1枚の演出だけ最後まで飛ばす
@@ -273,10 +279,7 @@ export async function playSequence(view, payload) {
     if (!card) continue;
     counter.textContent = total > 1 ? `${i + 1} / ${total}` : '';
 
-    const oldName = view.querySelector('.gacha__name');
-    if (oldName) oldName.remove();
-    const oldTag = stageBox.querySelector('.gacha__newtag');
-    if (oldTag) oldTag.remove();
+    clear(caption);
 
     if (skipped) {
       // 残りは演出せず、最後の1枚だけ最終状態で見せる
@@ -291,10 +294,10 @@ export async function playSequence(view, payload) {
         if (beat === 'impact') {
           if (r.isNew) { sfx.neu(); vibrate([18, 40, 26]); }
           else { sfx.normal(); vibrate(10); }
-          if (r.isNew) stageBox.append(el('div', { class: 'gacha__newtag', text: 'NEW' }));
+          if (r.isNew) caption.append(el('div', { class: 'gacha__newtag', text: 'NEW' }));
         }
         if (beat === 'name') {
-          view.append(el('p', { class: 'gacha__name', text: card.name }));
+          caption.append(el('p', { class: 'gacha__name', text: card.name }));
         }
       },
     });
@@ -304,6 +307,8 @@ export async function playSequence(view, payload) {
   }
 
   stage.destroy();
+  window.removeEventListener('hashchange', release);
+  release();
   showResults(view, payload);
 }
 
@@ -313,7 +318,10 @@ export function showResults(view, payload) {
   clear(view);
   const newCount = payload.results.filter((r) => r.isNew).length;
 
-  const head = el('div', { style: { marginBottom: '12px' } });
+  // 1枚だけのときは、中央ぞろえで大きく見せる
+  const solo = payload.results.length === 1;
+
+  const head = el('div', { class: solo ? 'result__head result__head--solo' : 'result__head' });
   head.append(el('h2', { text: payload.kind === 'single' ? 'ガチャ結果' : '10連の結果' }));
   head.append(el('p', {
     class: 'muted',
@@ -322,12 +330,15 @@ export function showResults(view, payload) {
   }));
   view.append(head);
 
-  const grid = el('div', { class: payload.results.length > 4 ? 'result__grid' : 'grid grid--2' });
+  const grid = el('div', {
+    class: solo ? 'result__solo' : (payload.results.length > 4 ? 'result__grid' : 'grid grid--2'),
+  });
   payload.results.forEach((r, i) => {
     const c = app.cardsById.get(r.id);
     if (!c) return;
     const cell = el('button', { class: 'cell result__cell', attrs: { type: 'button' }, style: { '--i': i } });
-    const face = cardFace(c, { small: true });
+    // 大きく出す1枚だけは原寸を使う（縮小版だとぼやける）
+    const face = cardFace(c, { small: !solo });
     if (r.isNew) face.append(el('div', { class: 'card__new', text: 'NEW' }));
     cell.append(face);
     cell.addEventListener('click', () => openViewer(c.id, payload.results.map((x) => x.id)));
@@ -352,7 +363,9 @@ export function showResults(view, payload) {
     sfx.coin();
   }
 
-  view.append(el('p', { class: 'reveal-msg', text: '気になるカードをタップしてみよう。' }));
+  const msg = el('p', { class: 'reveal-msg', text: '気になるカードをタップしてみよう。' });
+  if (solo) msg.classList.add('reveal-msg--low');   // 1枚のときは説明文を下げる
+  view.append(msg);
 
   const acts = el('div', { class: 'gacha__acts' });
   acts.append(el('button', {

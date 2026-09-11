@@ -29,10 +29,12 @@
   pointer-events:none;
 }
 
-.stage3d{ perspective:1400px; width:min(74vw, 300px); }
+/* カードの大きさはここ1か所で決める。高さでも頭打ちにして、
+   低い画面でも上下の帯やボタンにぶつからないようにする。 */
+.stage3d{ --c3w:min(88vw, 54vh, 420px); perspective:1400px; width:var(--c3w); }
 .stage3d__shadow{
-  position:absolute;left:50%;top:50%;width:min(70vw,280px);height:26px;
-  transform:translate(-50%, calc(min(74vw,300px) * 0.66));
+  position:absolute;left:50%;top:50%;width:calc(var(--c3w) * .93);height:26px;
+  transform:translate(-50%, calc(var(--c3w) * 0.66));
   background:radial-gradient(ellipse at center, rgba(0,0,0,.55), rgba(0,0,0,0) 70%);
   filter:blur(2px);pointer-events:none;transition:transform .1s linear, opacity .1s linear;
 }
