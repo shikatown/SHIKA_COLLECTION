@@ -179,7 +179,7 @@ async function snapIn(grid, cells) {
     dim.remove();
   };
 
-  await sleep(360);
+  await sleep(620);   // 画面の位置を戻す処理（router.js）が落ち着くまで待つ
   for (const [i, cellEl] of cells.entries()) {
     if (skip) break;
     const card = app.cardsById.get(cellEl.dataset.id);

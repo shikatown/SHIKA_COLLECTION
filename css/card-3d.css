@@ -72,9 +72,9 @@
     rgba(255,255,255,0) 72%);
   background-size:260% 100%;
   background-position:var(--sheen, 50%) 0;
-  opacity:.85;
+  opacity:0;              /* 傾けたときだけ js/card-3d.js が濃くする */
 }
-.card3d__side--back .card3d__sheen{ opacity:.35 }
+
 /* きらっと走る光。左端から右端まで0.7秒、少し間を置いてまた左から。
    指で回したときの光（--sheen）とは別の層にして、互いに邪魔しないようにする。 */
 .card3d__glint{

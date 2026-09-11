@@ -95,7 +95,7 @@ function render(view) {
 
   // 開いた直後だけ軽く傾けてから正面へ、光沢を1往復
   view.card.classList.add('is-easing');
-  apply(view.card, view.shadow, { x: -8, y: -16 });
+  apply(view.card, view.shadow, { ...REST });
   requestAnimationFrame(() => {
     setTimeout(() => apply(view.card, view.shadow, { x: 0, y: 0 }), 30);
   });
@@ -168,13 +168,27 @@ function attachInteraction(card, shadow) {
 
 function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
 
+/** 置いてあるときの向き。ここでは光沢を出さない（真ん中に光のもやが残って見えるため） */
+const REST = { x: -8, y: -16 };
+
 function apply(card, shadow, rot) {
   card.style.transform = `rotateX(${rot.x.toFixed(2)}deg) rotateY(${rot.y.toFixed(2)}deg)`;
   const yr = ((rot.y % 360) + 360) % 360;
   const facing = yr < 90 || yr > 270;
-  // 光沢の位置を角度に追従させる
+  /* 光沢の位置と濃さを角度に追従させる。
+     正面で止まっているときは消しておく（真ん中に光のもやが残って見えるため）。
+     きらっと走る光は別の層（.card3d__glint）が受け持つ。 */
+  for (const n of card.querySelectorAll('.card3d__sheen')) n.style.opacity = '0';
   const layer = card.querySelector(facing ? '.card3d__side--front .card3d__sheen' : '.card3d__side--back .card3d__sheen');
-  if (layer) layer.style.setProperty('--sheen', `${clamp(50 + rot.y * 0.6 + rot.x * 0.4, 0, 100)}%`);
+  if (layer) {
+    layer.style.setProperty('--sheen', `${clamp(50 + rot.y * 0.6 + rot.x * 0.4, 0, 100)}%`);
+    /* しっかり傾けたときだけ光らせる。
+       正面（0,0）でも、置いてあるときの向き（REST）でも出さない。
+       ここを弱くしないと、真ん中に光のもやが乗ったままに見える。 */
+    const moved = Math.abs(rot.y) * 0.9 + Math.abs(rot.x) * 1.3;
+    const tilt = clamp((moved - 26) / 34, 0, 1);
+    layer.style.opacity = (tilt * (facing ? 0.8 : 0.35)).toFixed(3);
+  }
   // 影は傾きに応じて伸び縮み
   const t = Math.abs(Math.sin((rot.y * Math.PI) / 180));
   shadow.style.opacity = String(0.75 - t * 0.35);

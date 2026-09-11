@@ -58,13 +58,33 @@ export function back() {
   else go('#/home');
 }
 
+/* 画面ごとの縦位置を覚えておく。
+   カードを見て戻ったとき、一覧のいちばん上ではなく元の場所に戻すため。
+   はじめて開く画面は覚えがないので、いちばん上から始まる。 */
+const scrollMemo = new Map();
+let lastHash = '';
+
+function rememberScroll() {
+  if (lastHash) scrollMemo.set(lastHash, window.scrollY);
+}
+/** 戻したい位置へ。中身の高さが決まるまで数回やり直す（画像の読み込みで伸びるため） */
+function restoreScroll(y) {
+  const put = () => {
+    const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo(0, Math.min(y, max));
+  };
+  put();
+  if (y > 0) { setTimeout(put, 60); setTimeout(put, 220); setTimeout(put, 500); }
+}
+
 export function handle() {
   const { segs, params } = parse(location.hash);
   const m = match(segs);
   const view = document.getElementById('view');
   if (!view) return;
+  rememberScroll();
+  lastHash = location.hash;
   view.scrollTop = 0;
-  window.scrollTo(0, 0);
   if (m) {
     current = { path: m.pattern, params: { ...params, ...m.params } };
     m.render(view, current.params);
@@ -72,6 +92,7 @@ export function handle() {
     current = { path: '404', params };
     notFound(view, params);
   }
+  restoreScroll(scrollMemo.get(location.hash) || 0);
   if (onChange) onChange(current);
 }
 
