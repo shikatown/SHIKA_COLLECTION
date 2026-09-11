@@ -72,7 +72,7 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
     photo.append(el('span', { text: '?' }));
   } else if (card.photo) {
     const full = photoUrl(card.photo);
-    const small = thumb ? thumbUrl(card.photo) : '';
+    const small = thumbUrl(card.photo);
     const img = el('img', {
       attrs: { src: small || full, alt: '', loading: 'lazy', decoding: 'async' },
     });
@@ -83,6 +83,14 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
       photo.classList.add('is-empty');
       photo.append(el('span', { text: '写真準備中' }));
     });
+    // 大きく出すときは、まず小さい写真を見せてから原寸に差し替える。
+    // 待ち時間のあいだ黒いままにしないため。
+    if (!thumb && small) {
+      const hi = new Image();
+      hi.decoding = 'async';
+      hi.addEventListener('load', () => { triedFull = true; img.src = full; });
+      hi.src = full;
+    }
     photo.append(img);
   } else {
     photo.classList.add('is-empty');
@@ -91,17 +99,27 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
   root.append(photo);
 
   // ② 台紙（写真の上に重ねる。写真の窓が透過になっている）
-  const frames = thumb ? './assets/frames/thumb' : './assets/frames';
-  root.append(el('img', {
-    class: 'cardart__plate',
-    attrs: { src: `${frames}/${genre}.png`, alt: '', loading: 'lazy', decoding: 'async' },
-  }));
+  /* 部品はまず縮小版を出してから原寸に差し替える。
+     原寸は1枚1〜2MBあり、待つあいだ枠が抜けて見えてしまうため。 */
+  const framePart = (file, className) => {
+    const img = el('img', {
+      class: className,
+      attrs: { src: `./assets/frames/thumb/${file}`, alt: '', loading: 'lazy', decoding: 'async' },
+    });
+    img.addEventListener('error', () => { img.src = `./assets/frames/${file}`; }, { once: true });
+    if (!thumb) {
+      const hi = new Image();
+      hi.decoding = 'async';
+      hi.addEventListener('load', () => { img.src = `./assets/frames/${file}`; });
+      hi.src = `./assets/frames/${file}`;
+    }
+    return img;
+  };
+  root.append(framePart(`${genre}.png`, 'cardart__plate'));
 
   // ③ カテゴリバッジ
   const badge = el('div', { class: 'cardart__badge' });
-  badge.append(el('img', {
-    attrs: { src: `${frames}/icon-${genre}.png`, alt: '', loading: 'lazy', decoding: 'async' },
-  }));
+  badge.append(framePart(`icon-${genre}.png`, ''));
   badge.append(el('span', { text: CATEGORY_LABEL[genre] || '' }));
   root.append(badge);
 
@@ -132,10 +150,9 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
   }
 
   // ⑧ ロゴ
-  root.append(el('img', {
-    class: 'cardart__logo',
-    attrs: { src: `${frames}/logo.png`, alt: 'SHIKA COLLECTION', loading: 'lazy', decoding: 'async' },
-  }));
+  const logo = framePart('logo.png', 'cardart__logo');
+  logo.alt = 'SHIKA COLLECTION';
+  root.append(logo);
 
   return root;
 }

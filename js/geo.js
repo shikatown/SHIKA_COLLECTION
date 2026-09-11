@@ -129,6 +129,7 @@ export function checkIn() {
         if (!s.ownedCardIds.includes(card.id)) {
           s.ownedCardIds.push(card.id);
           s.obtainedAt[card.id] = new Date().toISOString();
+          if (!s.unseenCardIds.includes(card.id)) s.unseenCardIds.push(card.id);
           newCard = true;
           if (card.sakeSnack && !s.rewardClaims.sakeSnack.includes(card.id)) {
             s.rewardClaims.sakeSnack.push(card.id);

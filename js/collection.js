@@ -2,8 +2,8 @@
    未取得はシルエット＋???。ただし「まち巡り」対象スポットは観光情報を公開し、
    カード画像だけ伏せる（現地へ行くきっかけを残すため）。 */
 
-import { app, isOwned, CATEGORIES, CATEGORY_LABEL, publishedCards, categoryStats } from './state.js';
-import { el, clear, cardFace, lockedCard } from './ui.js';
+import { app, isOwned, CATEGORIES, CATEGORY_LABEL, publishedCards, categoryStats, commit } from './state.js';
+import { el, clear, cardFace, lockedCard, vibrate, reduceMotion } from './ui.js';
 import { categoryProgress, coinCfg } from './rewards.js';
 import { go } from './router.js';
 
@@ -67,9 +67,32 @@ export function renderCollection(view, params) {
     return;
   }
 
+  // 取得したばかりのカードは、この一覧で枠にはめて見せる
+  const fresh = app.state.unseenCardIds.filter((id) => list.some((c) => c.id === id));
+
   const grid = el('div', { class: 'grid' });
-  for (const c of list) grid.append(cell(c));
+  let n = 0;
+  for (const c of list) grid.append(cell(c, fresh.includes(c.id) ? n++ : -1));
   view.append(grid);
+
+  if (fresh.length) snapIn(grid, fresh.length);
+}
+
+/** 枠にはまる演出。見せ終わったら控えを消して、次に開いたときは静かにする。 */
+function snapIn(grid, count) {
+  const cells = [...grid.querySelectorAll('.cell--snap')];
+  const done = () => commit((s) => { s.unseenCardIds = []; });
+  if (reduceMotion() || !cells.length) { done(); return; }
+
+  // いちばん上のカードが見えていないと、演出に気づけない
+  cells[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  for (const [i, cellEl] of cells.entries()) {
+    setTimeout(() => {
+      cellEl.classList.add('is-snapped');
+      vibrate(i === cells.length - 1 ? [14, 30, 20] : 9);
+    }, 260 + i * 150);
+  }
+  setTimeout(done, 600 + count * 150);
 }
 
 function filtered() {
@@ -87,15 +110,37 @@ function filtered() {
   return all.filter((c) => c.category === currentTab);
 }
 
-function cell(c) {
+/**
+ * 一覧の1マス。
+ * @param {object} c カード
+ * @param {number} order 枠にはめる演出の順番。-1 なら演出しない
+ */
+function cell(c, order = -1) {
   const owned = isOwned(c.id);
   const openSpot = !owned && c.gps.enabled;      // 観光情報だけ公開するスポット
-  const btn = el('button', { class: 'cell', attrs: { type: 'button' } });
-  btn.append(owned ? cardFace(c, { small: true }) : lockedCard(c, { small: true }));
-  btn.append(el('div', {
-    class: `cell__name${owned ? '' : ' cell__name--locked'}`,
+  const snap = owned && order >= 0;
+  const btn = el('button', {
+    class: `cell${snap ? ' cell--snap' : ''}`, attrs: { type: 'button' },
+    style: snap ? { '--i': order } : null,
+  });
+
+  if (snap) {
+    // 空の枠を下に敷いておき、その上にカードがはまる
+    const box = el('div', { class: 'cell__box' });
+    box.append(lockedCard(c, { small: true }));
+    box.append(el('div', { class: 'cell__drop' }, [cardFace(c, { small: true })]));
+    btn.append(box);
+  } else {
+    btn.append(owned ? cardFace(c, { small: true }) : lockedCard(c, { small: true }));
+  }
+
+  const label = el('div', { class: `cell__name${owned ? '' : ' cell__name--locked'}` });
+  label.append(el('b', { class: 'cell__no', text: `#${String(Number(c.id) || 0).padStart(2, '0')}` }));
+  label.append(el('span', {
     text: owned || openSpot ? c.name : (CATEGORY_LABEL[c.category] || '???'),
   }));
+  btn.append(label);
+
   btn.addEventListener('click', () => go(`#/card/${c.id}`));
   return btn;
 }

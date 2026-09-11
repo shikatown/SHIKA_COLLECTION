@@ -11,7 +11,11 @@ export function el(tag, opts = {}, children = []) {
     else if (v != null && v !== false) n.setAttribute(k, String(v));
   }
   if (opts.on) for (const [k, v] of Object.entries(opts.on)) n.addEventListener(k, v);
-  if (opts.style) Object.assign(n.style, opts.style);
+  // カスタムプロパティ（--i など）は setProperty でないと入らない
+  if (opts.style) for (const [k, v] of Object.entries(opts.style)) {
+    if (k.startsWith('--')) n.style.setProperty(k, String(v));
+    else n.style[k] = v;
+  }
   for (const c of [].concat(children)) if (c) n.append(c);
   return n;
 }

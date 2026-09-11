@@ -20,15 +20,16 @@ export function renderCardDetail(view, params) {
   if (!owned && !openSpot) return renderLocked(view, c);
 
   const hero = el('div', { class: 'detail__hero' });
-  const wrap = el('div', { class: 'detail__cardwrap' });
+  // 取得済みは画面の端まで大きく。未取得は空き枠なので、控えめな大きさにとどめる。
+  const wrap = el('div', { class: `detail__cardwrap${owned ? '' : ' detail__cardwrap--slot'}` });
   if (owned) {
-    const face = cardFace(c, { small: true });   // 表示幅は約150px。原寸を待たせない
+    const face = cardFace(c);   // 画面幅いっぱいに出すので原寸を使う
     face.style.cursor = 'pointer';
     face.addEventListener('click', () => openViewer(c.id));
     wrap.append(face);
   } else {
-    wrap.append(lockedCard(c, { small: true }));
-    wrap.append(el('p', { class: 'muted', style: { fontSize: '10.5px', marginTop: '6px' }, text: 'カード画像は取得後のお楽しみ' }));
+    wrap.append(lockedCard(c));
+    wrap.append(el('p', { class: 'muted', style: { fontSize: '11px', textAlign: 'center', marginTop: '8px' }, text: 'カード画像は取得後のお楽しみ' }));
   }
   hero.append(wrap);
 
@@ -51,7 +52,7 @@ export function renderCardDetail(view, params) {
 
   const body = el('div', { class: 'detail', style: { marginTop: '18px' } });
 
-  if (c.description) body.append(el('p', { text: c.description }));
+  // 説明文はカードの中に印刷されている。大きく出しているので、ここでは繰り返さない。
 
   const rows = [];
   if (c.season) rows.push(['旬・時期', c.season]);
@@ -93,8 +94,8 @@ export function renderCardDetail(view, params) {
 
 function renderLocked(view, c) {
   const box = el('div', { class: 'panel', style: { textAlign: 'center' } });
-  const w = el('div', { style: { width: '46%', margin: '0 auto 14px' } });
-  w.append(lockedCard(c, { small: true }));
+  const w = el('div', { style: { width: '62%', margin: '0 auto 14px' } });
+  w.append(lockedCard(c));
   box.append(w);
   box.append(el('h2', { style: { fontSize: '16px', margin: '0 0 4px' }, text: '???' }));
   box.append(el('p', { class: 'muted', style: { margin: '0 0 14px' }, text: `${CATEGORY_LABEL[c.category] || ''}のカード` }));

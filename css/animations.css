@@ -43,7 +43,7 @@
   perspective:1100px;
   /* 抜き出すカードの大きさ。幅と高さの両方で頭打ちにする。
      NEW とカード名の位置もこの値から決めるので、変えるのはここ1か所だけ。 */
-  --gs-card:min(74vw,46vh,340px);
+  --gs-card:min(86vw,52vh,400px);
 }
 /* 演出中は背後がスクロールしないようにする */
 body.is-drawing{ overflow:hidden }

@@ -44,6 +44,7 @@ export function applyDraw(results) {
       owned.add(r.id);
       s.ownedCardIds.push(r.id);
       s.obtainedAt[r.id] = new Date().toISOString();
+      if (!s.unseenCardIds.includes(r.id)) s.unseenCardIds.push(r.id);   // 一覧で枠にはめて見せる
       const c = app.cardsById.get(r.id);
       if (c && c.sakeSnack && !s.rewardClaims.sakeSnack.includes(r.id)) {
         if (!eventSakeDisabled()) { s.rewardClaims.sakeSnack.push(r.id); newSake.push(c); }

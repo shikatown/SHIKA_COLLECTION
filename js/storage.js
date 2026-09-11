@@ -48,6 +48,7 @@ export function defaultState() {
       spotHintShown: false,
     },
     knownCardIds: [],        // 「新カード追加」通知の判定用
+    unseenCardIds: [],       // 取得したが、まだ一覧で枠にはめる演出を見せていないカード
     dataVersion: '',
     pendingResult: null,     // 未確認のガチャ結果（確定済み）
   };
@@ -73,6 +74,7 @@ export function normalize(raw) {
   out.lastEventBonusDate = typeof raw.lastEventBonusDate === 'string' ? raw.lastEventBonusDate : '';
   out.dataVersion = typeof raw.dataVersion === 'string' ? raw.dataVersion : '';
   out.knownCardIds = arr(raw.knownCardIds);
+  out.unseenCardIds = Array.from(new Set(arr(raw.unseenCardIds)));
 
   const visits = obj(raw.visits);
   out.visits = {};

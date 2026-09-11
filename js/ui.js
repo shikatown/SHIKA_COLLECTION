@@ -99,15 +99,16 @@ function placeholderFace(c) {
   return face;
 }
 
-/** 未取得カード。カテゴリ（枠の意匠）だけ見せ、写真・名前・説明は伏せる。 */
+/** 未取得カードの置き場。番号を先に振っておき、あとからカードがはまる枠にする。
+    アルバムの台紙と同じ考え方で、揃っていない番号がひと目で分かる。 */
 export function lockedCard(cardData, { small = false } = {}) {
-  if (cardData.category) {
-    const wrap = el('div', { class: `card card--img${small ? ' card--sm' : ''}` });
-    wrap.append(renderCardArt(cardData, { total: publishedCards().length, locked: true, thumb: small }));
-    return wrap;
-  }
-  const wrap = el('div', { class: `card card--locked${small ? ' card--sm' : ''}` });
-  wrap.append(placeholderFace({ ...cardData, name: '???', subCategory: '', cardImage: '' }));
+  const no = String(Number(cardData.id) || 0).padStart(2, '0');
+  const cat = cardData.category || '';
+  const wrap = el('div', {
+    class: `card card--slot${cat ? ` card--slot-${cat}` : ''}${small ? ' card--sm' : ''}`,
+  });
+  wrap.append(el('span', { class: 'slot__no', text: `#${no}` }));
+  wrap.append(el('span', { class: 'slot__cat', text: CATEGORY_LABEL[cat] || '???' }));
   return wrap;
 }
 
