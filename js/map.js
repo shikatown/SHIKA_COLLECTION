@@ -287,18 +287,34 @@ export function renderMap(view, params) {
   });
   view.append(btn);
 
-  view.append(listSection('未訪問', gpsCards().filter((c) => !isVisited(c.id))));
-  view.append(listSection('訪問済み', gpsCards().filter((c) => isVisited(c.id))));
+  /* スポットの一覧は、あとから作り直せるように囲んでおく。
+     チェックインで現在地が分かると、近い順に並べ替えるため。 */
+  const lists = el('div', { class: 'spotlists' });
+  view.append(lists);
+  fillSpotLists(lists);
+
+  if (params && params.checkin) setTimeout(() => runCheckIn(view, status, btn), 60);
+}
+
+/** スポットの一覧を作り直す。現在地が分かっていれば近い順に並ぶ。 */
+function fillSpotLists(lists) {
+  clear(lists);
+  lists.append(listSection('未訪問', gpsCards().filter((c) => !isVisited(c.id))));
+  lists.append(listSection('訪問済み', gpsCards().filter((c) => isVisited(c.id))));
 
   const other = mapCards().filter((c) => !c.gps.enabled);
   if (other.length) {
-    view.append(el('h3', { text: '地図に載っている場所（チェックイン対象外）' }));
+    lists.append(el('h3', { text: '地図に載っている場所（チェックイン対象外）' }));
     const p = el('div', { class: 'panel' });
     for (const c of other) p.append(spotRow(c, false));
-    view.append(p);
+    lists.append(p);
   }
+}
 
-  if (params && params.checkin) setTimeout(() => runCheckIn(view, status, btn), 60);
+/** いま出ているスポットの一覧を作り直す。 */
+function refreshSpotLists(view) {
+  const lists = view.querySelector('.spotlists');
+  if (lists) fillSpotLists(lists);
 }
 
 function listSection(title, list) {
@@ -390,6 +406,7 @@ async function runCheckIn(view, status, btn) {
       body: ['屋外など、空が見える場所で再度お試しください。'],
       actions: [{ label: '閉じる', value: null, primary: true }],
     });
+    refreshSpotLists(view);
     return;
   }
 
@@ -406,6 +423,7 @@ async function runCheckIn(view, status, btn) {
       actions: [{ label: '閉じる', value: null, primary: true }],
     });
     showNearest(view, res.nearest);
+    refreshSpotLists(view);   // 現在地が分かったので、近い順に並べ直す
     return;
   }
 

@@ -189,11 +189,17 @@ a{color:var(--accent)}
 .hero__logoimg--hi{opacity:0;transition:opacity .2s linear}
 .hero__logoimg--hi.is-on{opacity:1}
 .hero__title{font-size:21px;margin:0 0 12px;letter-spacing:.06em;font-weight:800}
-.home__main{display:grid;gap:10px;margin-top:6px}
+/* ホームのボタンは3つ。遊び方と設定は歯車へ移したので、
+   残った場所の真ん中に置いて、下が空きすぎないようにする。 */
+.home{
+  display:flex;flex-direction:column;
+  min-height:calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom));
+}
+.home__main{display:grid;gap:12px;margin:auto 0}
 .bigbtn{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-  padding:14px;cursor:pointer;box-shadow:var(--shadow-1);text-decoration:none;color:inherit;
+  padding:17px 15px;cursor:pointer;box-shadow:var(--shadow-1);text-decoration:none;color:inherit;
   transition:transform .08s ease;
 }
 .bigbtn:active{transform:scale(.99)}
@@ -204,8 +210,7 @@ a{color:var(--accent)}
 .bigbtn__ico svg{width:22px;height:22px}
 .bigbtn__t{font-size:15px;font-weight:700;display:block}
 .bigbtn__sub{font-size:11.5px;color:var(--ink-3);display:block}
-.home__sub{display:flex;gap:8px;margin-top:14px}
-.home__sub .btn{flex:1}
+/* .home__sub（遊び方・設定）は廃止。右上の歯車から行く。 */
 
 .progressline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2)}
 .bar{flex:1;height:6px;border-radius:99px;background:var(--line-2);overflow:hidden}
@@ -602,7 +607,9 @@ a{color:var(--accent)}
 .coin--lg .coin__n{font-size:30px;line-height:1.1}
 .coin--lg .coin__u{font-size:12px}
 /* 上のおびのコインは、文字の高さに合わせて少し小さく */
-.stat .coinico{width:16px;height:16px;margin:-2px 0}
+.stat .coinico{width:19px;height:19px;margin:-3px 0}
+.stat--coin{padding:3px 10px 3px 5px;gap:5px}
+.stat--coin b{font-size:14px;font-variant-numeric:tabular-nums}
 
 /* 集めた記録の、ためたコイン */
 .coinbox{display:flex;align-items:center;gap:14px}
@@ -613,14 +620,16 @@ a{color:var(--accent)}
    上からコイン・カードの裏・ボタン2つを積む。
    カードの裏は、ボタンが入る残りの高さいっぱいまで大きくする。 */
 .gachahome{
-  display:flex;flex-direction:column;align-items:center;gap:12px;
-  /* 画面の高さから、上のおび・タブ・この画面の余白を引いた分 */
-  min-height:calc(100dvh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  /* 画面の高さから、上のおび・タブ・この画面の余白を引いた分。
+     svh（アドレスバーが出ている状態の高さ）で測るので、
+     ボタンが画面の外に押し出されることがない。 */
+  height:calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom));
 }
-.gachahome__coin{display:flex;align-items:center;gap:12px;flex:none}
-.gachahome__coin .coinico--lg{width:88px;height:88px}
+.gachahome__coin{display:flex;align-items:center;gap:10px;flex:none}
+.gachahome__coin .coinico--lg{width:60px;height:60px}
 .gachahome__n{
-  font-size:40px;font-weight:800;color:var(--coin);line-height:1;
+  font-size:32px;font-weight:800;color:var(--coin);line-height:1;
   font-variant-numeric:tabular-nums;
 }
 /* 残りの高さをぜんぶ使う。カードは縦横の比を保ったまま、入るだけ大きく。
@@ -628,9 +637,14 @@ a{color:var(--accent)}
    場所を目いっぱい取ったうえで、中の絵を「はみ出さない最大」で置く。 */
 .gachahome__card{
   flex:1 1 auto;min-height:0;width:100%;position:relative;
+  /* 念のための上限。ここを超えて大きくならないので、ボタンは必ず見える。 */
+  max-height:46svh;
 }
 .gachahome__card .card{
   position:absolute;inset:0;width:auto;height:auto;
+  /* .card の 4:5 を外す。残っていると高さが横幅から決まってしまい、
+     上限（max-height）を超えて大きくなる。 */
+  aspect-ratio:auto;
   background:none;box-shadow:none;border-radius:0;overflow:visible;
   container-type:normal;
 }
@@ -662,15 +676,48 @@ a{color:var(--accent)}
 }
 
 /* 文字を図形で書いたボタン（js/wordart.js） */
-.btn--art{flex-direction:column;gap:3px;padding-top:11px;padding-bottom:11px}
-.wa{height:21px;width:auto;display:block}
+.btn--art{flex-direction:column;gap:1px;padding:8px 14px 8px}
+/* 枠の高さ21.4のうち、文字そのものは12.2ぶん。見た目で20px前後になるよう決めている。 */
+.wa{height:36px;width:auto;max-width:100%;display:block}
 .wa path{fill:none;stroke-linecap:round;stroke-linejoin:round}
-.wa__s path{stroke:#1c1a17;opacity:.26}
+.wa__s path{stroke:#1c1a17;opacity:.24}
 .wa__o path{stroke:#2b2722}
-.wa__i path{stroke:#fff3dc}
-/* 白いボタンの上では、輪郭だけだと沈むので本体を少し濃くする */
-.btn:not(.btn--primary) .wa__i path{stroke:#fffaf0}
-.btn--art .btn__sub{font-size:10.5px;letter-spacing:.04em}
+.wa__i path{stroke:#fff6e4}
+.btn--primary .wa__i path{stroke:#fff}
+/* 値段は「コインの絵＋数字」。上のコインと同じ見え方にそろえる。 */
+.btn--art .btn__sub{
+  display:flex;align-items:center;gap:4px;
+  font-size:13px;font-weight:800;opacity:1;
+  font-variant-numeric:tabular-nums;
+}
+.btn--art .btn__sub .coinico{width:17px;height:17px}
+.btn:not(.btn--primary) .btn__sub{color:var(--coin)}
+.btn--primary .btn__sub{color:#fff}
+
+/* ===== 称号（ミッション画面） =====
+   4つを 2×2 に並べ、ジャンルの絵がしっかり見える大きさにする。 */
+.titlegrid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+.titlebadge{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 8px;border-radius:14px;
+  background:var(--bg);border:1px solid var(--line-2);
+}
+.titlebadge__ring{
+  width:72px;height:72px;border-radius:50%;
+  display:grid;place-items:center;
+  background:#f1eee7;border:2px solid var(--line);
+}
+.titlebadge__i{width:56px;height:56px;object-fit:contain;display:block;filter:grayscale(1) opacity(.45)}
+.titlebadge__n{font-size:12px;font-weight:800;color:var(--ink-3);text-align:center;line-height:1.3}
+.titlebadge__s{font-size:10.5px;color:var(--ink-3);letter-spacing:.08em}
+/* 達成したものは色がつき、金色のふちがつく */
+.titlebadge.is-on{background:var(--coin-soft);border-color:#efe1c2}
+.titlebadge.is-on .titlebadge__ring{background:#fff;border-color:#e3c789;box-shadow:0 2px 8px rgba(184,134,43,.18)}
+.titlebadge.is-on .titlebadge__i{filter:none}
+.titlebadge.is-on .titlebadge__n{color:var(--ink)}
+.titlebadge.is-on .titlebadge__s{color:var(--coin);font-weight:800}
 
 /* ===== 管理モード（公開前の点検用） ===== */
 .adminbar{

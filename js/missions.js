@@ -173,16 +173,19 @@ export function renderMissions(view) {
    （以前はカード画面のコレクション欄に置いていた） */
 function titlesPanel() {
   const got = titles();
-  const box = el('div', { class: 'panel badgegrid' });
+  const box = el('div', { class: 'panel titlegrid' });
   const all = [
     ...CATEGORIES.map((x) => ({ name: x.master, icon: `./assets/frames/thumb/icon-${x.key}.png` })),
     { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png' },
   ];
   for (const { name, icon } of all) {
     const on = got.includes(name);
-    const b = el('span', { class: `badge${on ? ' badge--on' : ''}` });
-    b.append(el('img', { class: 'badge__i', attrs: { src: icon, alt: '', decoding: 'async' } }));
-    b.append(el('span', { text: on ? name : `${name}（未達成）` }));
+    const b = el('div', { class: `titlebadge${on ? ' is-on' : ''}` });
+    b.append(el('div', { class: 'titlebadge__ring' }, [
+      el('img', { class: 'titlebadge__i', attrs: { src: icon, alt: '', decoding: 'async' } }),
+    ]));
+    b.append(el('div', { class: 'titlebadge__n', text: name }));
+    b.append(el('div', { class: 'titlebadge__s', text: on ? '達成' : '未達成' }));
     box.append(b);
   }
   return box;

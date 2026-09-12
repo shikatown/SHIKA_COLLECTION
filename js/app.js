@@ -241,6 +241,12 @@ function renderHome(view) {
   clear(view);
   const s = app.state;
 
+  /* 遊び方と設定を歯車へ移してボタンが3つになったので、
+     画面の高さいっぱいを使い、残った場所の真ん中にボタンを置く。 */
+  const page = el('div', { class: 'home' });
+  view.append(page);
+  view = page;
+
   const hero = el('div', { class: 'hero' });
   /* ロゴは原寸が1.8MBある。ここは幅230pxほどなので、まず小さい方を出し、
      原寸は上に重ねて読み終わってから現す（差し替えるとちらつく）。 */
@@ -297,10 +303,7 @@ function renderHome(view) {
     }));
   }
 
-  const sub = el('div', { class: 'home__sub' });
-  sub.append(el('a', { class: 'btn', text: '遊び方', attrs: { href: '#/help' } }));
-  sub.append(el('a', { class: 'btn', text: '設定', attrs: { href: '#/settings' } }));
-  view.append(sub);
+  // 遊び方と設定は、右上の歯車（その他）から行けるのでホームには置かない
 }
 
 function bigBtn(href, title, sub, accent, iconSvg) {

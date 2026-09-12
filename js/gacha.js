@@ -151,7 +151,14 @@ export function renderGacha(view) {
   const freeNow = isAdmin();
   if (!freeNow && s.coins < SINGLE_COST) b1.disabled = true;
   if (!freeNow && s.coins < TEN_COST) b10.disabled = true;
-  const cost = (b, n) => { b.querySelector('.btn__sub').textContent = freeNow ? '管理モード（コイン不要）' : `${n} COIN`; };
+  // 値段は「コインの絵＋数字」で出す。上のコインと同じ見え方にそろえる。
+  const cost = (b, n) => {
+    const sub = b.querySelector('.btn__sub');
+    clear(sub);
+    if (freeNow) { sub.append(el('span', { text: '管理モード（コイン不要）' })); return; }
+    sub.append(coinIcon());
+    sub.append(el('b', { text: String(n) }));
+  };
   cost(b1, SINGLE_COST); cost(b10, TEN_COST);
 
   home.append(el('div', { class: 'gachahome__acts' }, [b1, b10]));
