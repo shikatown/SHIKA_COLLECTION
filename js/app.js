@@ -43,6 +43,7 @@ async function boot() {
 
   initState();
   startOfflineWatch();
+  warmHomeImages();       // ホームで使う絵を、起動画面のうちに読んでおく
 
   const intro = playIntro();
 
@@ -70,12 +71,14 @@ async function boot() {
   subscribe(updateChrome);
   router.setOnChange(onRouteChange);
 
-  await intro;
-  document.getElementById('boot').hidden = true;
+  /* 起動画面がまだ出ているうちに、ホーム画面を組み立てておく。
+     先に起動画面を消すと、そのあとで画像を読むことになり一瞬ちらつく。 */
   document.getElementById('app').hidden = false;
-
   router.start();
   updateChrome();
+
+  await intro;
+  document.getElementById('boot').hidden = true;
 
   // 起動後のお知らせ類（順番に1つずつ）
   await offerDaily();
@@ -86,6 +89,19 @@ async function boot() {
 }
 
 /* ===== 起動演出 ===== */
+/** 起動画面のあいだに読んでおく絵。読み終わりは待たない。 */
+function warmHomeImages() {
+  for (const src of [
+    './assets/cards/_back.png',            // 起動画面のカードの裏
+    './assets/frames/thumb/logo.png',      // ホームのロゴ（小）
+    './assets/frames/logo.png',            // ホームのロゴ（原寸）
+  ]) {
+    const i = new Image();
+    i.decoding = 'async';
+    i.src = src;
+  }
+}
+
 function playIntro() {
   const stage = document.getElementById('bootStage');
   const bootEl = document.getElementById('boot');
@@ -195,10 +211,23 @@ function renderHome(view) {
   const s = app.state;
 
   const hero = el('div', { class: 'hero' });
-  hero.append(el('img', {
-    class: 'hero__logo',
-    attrs: { src: './assets/frames/logo.png', alt: 'SHIKA COLLECTION', decoding: 'async' },
+  /* ロゴは原寸が1.8MBある。ここは幅230pxほどなので、まず小さい方を出し、
+     原寸は上に重ねて読み終わってから現す（差し替えるとちらつく）。 */
+  const logo = el('div', { class: 'hero__logo' });
+  logo.append(el('img', {
+    class: 'hero__logoimg',
+    attrs: { src: './assets/frames/thumb/logo.png', alt: 'SHIKA COLLECTION', decoding: 'async' },
   }));
+  const logoHi = el('img', {
+    class: 'hero__logoimg hero__logoimg--hi',
+    attrs: { src: './assets/frames/logo.png', alt: '', decoding: 'async' },
+  });
+  const showHi = () => logoHi.classList.add('is-on');
+  if (logoHi.complete && logoHi.naturalWidth) showHi();
+  else logoHi.addEventListener('load', showHi, { once: true });
+  logoHi.addEventListener('error', () => logoHi.remove(), { once: true });
+  logo.append(logoHi);
+  hero.append(logo);
   hero.append(el('h2', { class: 'hero__title', text: '志賀町を、あつめよう。' }));
   view.append(hero);
 

@@ -112,39 +112,27 @@ export function lockedCard(cardData, { small = false } = {}) {
   return wrap;
 }
 
-// 専用の裏面画像（assets/cards/_back.webp または _back.png）があるかは、起動後に1回だけ確かめる
-let backImagePromise = null;
-function backImageSrc() {
-  if (!backImagePromise) {
-    const candidates = ['./assets/cards/_back.png', './assets/cards/_back.webp'];
-    backImagePromise = (async () => {
-      for (const src of candidates) {
-        const ok = await new Promise((resolve) => {
-          const probe = new Image();
-          probe.onload = () => resolve(true);
-          probe.onerror = () => resolve(false);
-          probe.src = src;
-        });
-        if (ok) return src;
-      }
-      return null;
-    })();
-  }
-  return backImagePromise;
-}
+/* カードの裏面。用意した画像をそのまま出す。
+   以前は先に「描いた裏面」を出してから画像に差し替えていたので、
+   起動直後に青緑色の仮の絵がちらついていた。
+   画像が読めなかったときだけ、描いた裏面に切り替える。 */
+const BACK_SRCS = ['./assets/cards/_back.png', './assets/cards/_back.webp'];
 
 export function cardBack({ small = false } = {}) {
   const wrap = el('div', { class: `card${small ? ' card--sm' : ''}` });
-  const back = el('div', { class: 'cardback' }, [
-    el('div', { class: 'cardback__mark', text: '志賀町\nGACHA' }),
-  ]);
-  back.firstChild.style.whiteSpace = 'pre-line';
-  wrap.append(back);
-  backImageSrc().then((src) => {
-    if (!src || !wrap.isConnected) return;
+  let i = 0;
+  const img = el('img', { attrs: { src: BACK_SRCS[0], alt: '', decoding: 'async' } });
+  img.addEventListener('error', () => {
+    i += 1;
+    if (i < BACK_SRCS.length) { img.src = BACK_SRCS[i]; return; }
     clear(wrap);
-    wrap.append(el('img', { attrs: { src, alt: '' } }));
+    const back = el('div', { class: 'cardback' }, [
+      el('div', { class: 'cardback__mark', text: '志賀町\nGACHA' }),
+    ]);
+    back.firstChild.style.whiteSpace = 'pre-line';
+    wrap.append(back);
   });
+  wrap.append(img);
   return wrap;
 }
 
