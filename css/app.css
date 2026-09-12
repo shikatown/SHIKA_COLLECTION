@@ -536,10 +536,11 @@ a{color:var(--accent)}
 /* アプリバーの歯車。設定やその他はここから行く */
 .appbar__gear{
   flex:none;display:grid;place-items:center;width:34px;height:34px;
-  border-radius:50%;color:var(--ink-2);text-decoration:none;
+  border-radius:50%;text-decoration:none;
 }
-.appbar__gear svg{width:21px;height:21px}
+.appbar__gear svg{width:23px;height:23px;transition:transform .18s ease}
 .appbar__gear:active{background:var(--line-2)}
+.appbar__gear:active svg{transform:rotate(28deg)}
 
 /* タブの数字（受け取れるミッションの件数） */
 .tab{position:relative}
