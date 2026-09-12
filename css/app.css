@@ -121,10 +121,17 @@ a{color:var(--accent)}
 .tab svg{
   width:100%;max-width:84px;height:auto;
   filter:saturate(.6) opacity(.88);
-  transition:filter .16s ease, transform .16s ease;
+  transition:filter .16s ease, transform .26s cubic-bezier(.22,1.4,.5,1);
 }
 .tab.is-active svg{ filter:none; transform:translateY(-2px) scale(1.06) }
-.tab:active svg{ transform:scale(.95) }
+/* 押している間はぴょんと持ち上がり、画面が開いたらもとの位置に戻る。
+   戻す側（is-popped を外す）は js/app.js が画面を描いたあとに行う。 */
+.tab.is-popped svg,
+.tab.is-popped.is-active svg{
+  transform:translateY(-9px) scale(1.16);
+  filter:none;
+  transition:transform .13s cubic-bezier(.34,1.8,.64,1), filter .13s ease;
+}
 /* 文字は端末の書体ではなく、1画ずつの図形として描いてある（index.html）。
    うしろに太い線で輪郭を、手前に細い線で本体を重ねる。
    どの端末でも同じ形・同じ大きさで出る。 */
@@ -582,12 +589,29 @@ a{color:var(--accent)}
 .missionrow:last-child{border-bottom:0}
 .missionrow__b{flex:1;min-width:0}
 .missionrow__n{font-size:13px;font-weight:700;line-height:1.35;margin-bottom:6px}
-.missionrow__d{font-size:11px;color:var(--ink-3);margin-top:5px}
+.missionrow__d{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--ink-3);margin-top:5px}
 .missionrow__go{flex:none;padding:8px 14px;font-size:12.5px}
-.missionrow__coin{flex:none;font-size:12px;font-weight:800;color:var(--coin)}
+.missionrow__coin{display:inline-flex;align-items:center;gap:3px;flex:none;font-size:12px;font-weight:800;color:var(--coin)}
 .missionrow__ok{flex:none;font-size:15px;color:#4a7a4a}
 .missionrow.is-ready{background:var(--coin-soft)}
 .missionrow.is-claimed .missionrow__n{color:var(--ink-3);font-weight:600}
+
+/* ===== SHIKA COIN =====
+   絵は assets/icons/coin*.png。小さく出すところは軽い方を読む。 */
+.coinico{width:15px;height:15px;flex:none;display:block}
+.coinico--lg{width:64px;height:64px}
+.coin{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.coin__n{font-size:13px;color:var(--coin)}
+.coin__u{font-size:11px;color:var(--ink-3)}
+.coin--lg .coin__n{font-size:30px;line-height:1.1}
+.coin--lg .coin__u{font-size:12px}
+/* 上のおびのコインは、文字の高さに合わせて少し小さく */
+.stat .coinico{width:16px;height:16px;margin:-2px 0}
+
+/* 集めた記録の、ためたコイン */
+.coinbox{display:flex;align-items:center;gap:14px}
+.coinbox__n{font-size:32px;font-weight:800;color:var(--coin);line-height:1.05}
+.coinbox__u{font-size:12px;color:var(--ink-3);margin-top:2px}
 
 /* ===== 管理モード（公開前の点検用） ===== */
 .adminbar{

@@ -68,6 +68,7 @@ async function boot() {
   }
 
   setupRoutes();
+  bindTabPop();
   document.getElementById('btnBack').addEventListener('click', () => router.back());
   subscribe(updateChrome);
   router.setOnChange(onRouteChange);
@@ -184,6 +185,27 @@ const TAB_OF = {
   '/more': '', '/settings': '', '/help': '', '/privacy': '', '/records': '', '/admin': '',
 };
 
+/* タブを押した瞬間に、そのタブだけぴょんと持ち上げる。
+   画面が開いたら（onRouteChange の最後で）もとの位置に戻す。
+   押しただけで画面が変わらなかったときのために、少し待って自分でも戻す。 */
+let popTimer = null;
+function popTab(a) {
+  clearTimeout(popTimer);
+  for (const t of document.querySelectorAll('.tab.is-popped')) t.classList.remove('is-popped');
+  a.classList.add('is-popped');
+  popTimer = setTimeout(unpopTabs, 420);
+}
+function unpopTabs() {
+  clearTimeout(popTimer);
+  for (const t of document.querySelectorAll('.tab.is-popped')) t.classList.remove('is-popped');
+}
+function bindTabPop() {
+  for (const a of document.querySelectorAll('.tab')) {
+    a.addEventListener('pointerdown', () => popTab(a));
+    a.addEventListener('pointercancel', unpopTabs);
+  }
+}
+
 function onRouteChange(route) {
   document.getElementById('appTitle').textContent = TITLES[route.path] != null ? TITLES[route.path] : '';
   document.getElementById('btnBack').hidden = route.path === '/home';
@@ -193,6 +215,8 @@ function onRouteChange(route) {
   for (const a of document.querySelectorAll('.tab')) {
     a.classList.toggle('is-active', a.dataset.tab === tab);
   }
+  // 画面が出そろってから戻すと、持ち上がりが最後まで見える
+  requestAnimationFrame(() => requestAnimationFrame(unpopTabs));
   updateChrome();
 }
 

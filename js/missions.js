@@ -8,7 +8,7 @@
    ・受け取った記録は state.rewardClaims.missions（ミッションの id の並び）。 */
 
 import { app, commit, CATEGORIES, categoryStats } from './state.js';
-import { el, clear, toast, vibrate } from './ui.js';
+import { el, clear, toast, vibrate, coinIcon } from './ui.js';
 import { coinCfg } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
@@ -173,12 +173,15 @@ function row(m, view) {
   body.append(el('div', { class: 'missionrow__n', text: m.label }));
   const pct = m.need ? Math.min(100, (m.owned / m.need) * 100) : 0;
   body.append(el('div', { class: 'bar' }, [el('span', { style: { width: `${pct}%` } })]));
-  body.append(el('div', {
-    class: 'missionrow__d',
-    text: m.claimed
-      ? `受け取り済み ／ +${m.coins} SHIKA COIN`
-      : (m.done ? `達成 ／ +${m.coins} SHIKA COIN` : `${m.owned} / ${m.need} ／ あと ${m.need - m.owned}`),
-  }));
+  const d = el('div', { class: 'missionrow__d' });
+  if (m.claimed || m.done) {
+    d.append(el('span', { text: m.claimed ? '受け取り済み ／ ' : '達成 ／ ' }));
+    d.append(coinIcon());
+    d.append(el('span', { text: `+${m.coins} SHIKA COIN` }));
+  } else {
+    d.append(el('span', { text: `${m.owned} / ${m.need} ／ あと ${m.need - m.owned}` }));
+  }
+  body.append(d);
   r.append(body);
 
   if (m.claimed) {
@@ -198,7 +201,9 @@ function row(m, view) {
       },
     }));
   } else {
-    r.append(el('span', { class: 'missionrow__coin', text: `+${m.coins}` }));
+    r.append(el('span', { class: 'missionrow__coin' }, [
+      coinIcon(), el('b', { text: `+${m.coins}` }),
+    ]));
   }
   return r;
 }

@@ -1,7 +1,7 @@
 /* settings.js — 設定・遊び方・プライバシー・リセット。 */
 
 import { app, commit, setState, storage, CATEGORIES } from './state.js';
-import { el, clear, toast, dialog, confirm2 } from './ui.js';
+import { el, clear, toast, dialog, confirm2, coinIcon } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import * as backup from './backup.js';
 import { coinCfg, titles, categoryProgress, duplicateGaugeInfo } from './rewards.js';
@@ -222,7 +222,15 @@ export function renderRecords(view) {
   const stat = (k, v) => el('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', padding: '3px 0' } }, [
     el('span', { text: k }), el('b', { text: String(v) }),
   ]);
-  p.append(stat('SHIKA COIN', s.coins));
+  // ためたコインは、いちばん上に大きく出す
+  view.append(el('div', { class: 'panel coinbox' }, [
+    coinIcon({ big: true }),
+    el('div', { class: 'coinbox__b' }, [
+      el('div', { class: 'coinbox__n', text: String(s.coins) }),
+      el('div', { class: 'coinbox__u', text: 'SHIKA COIN' }),
+    ]),
+  ]));
+
   p.append(stat('集めたカード', `${s.ownedCardIds.length} 枚`));
   p.append(stat('現地訪問', `${Object.values(s.visits).filter((v) => v.firstVisitedAt).length} か所`));
   p.append(stat('気になる', `${s.favorites.length} 件`));

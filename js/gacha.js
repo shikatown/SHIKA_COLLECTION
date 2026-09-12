@@ -4,7 +4,7 @@
 
 import { app, commit, publishedCards, CATEGORIES, CATEGORY_LABEL } from './state.js';
 import { applyDraw, duplicateGaugeInfo, categoryProgress, dailyAvailable, claimDaily, coinCfg } from './rewards.js';
-import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dialog } from './ui.js';
+import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dialog, coinAmount } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
@@ -135,7 +135,7 @@ export function renderGacha(view) {
   const head = el('div', { class: 'panel' });
   head.append(el('div', { class: 'panel__head' }, [
     el('h2', { class: 'panel__title', text: 'ガチャを引く' }),
-    el('span', { class: 'muted', text: `SHIKA COIN ${s.coins}` }),
+    coinAmount(s.coins),
   ]));
   head.append(el('p', { class: 'muted', text: 'すべてのカードが同じ確率で登場します。' }));
 
@@ -362,7 +362,7 @@ export function showResults(view, payload) {
     }
     box.append(el('div', { class: 'bonusbox__total' }, [
       el('span', { text: '合計' }),
-      el('span', { text: `+${payload.bonus.total} SHIKA COIN` }),
+      coinAmount(payload.bonus.total, { sign: true }),
     ]));
     view.append(box);
     sfx.coin();

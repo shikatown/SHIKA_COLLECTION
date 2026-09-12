@@ -136,6 +136,33 @@ export function cardBack({ small = false } = {}) {
   return wrap;
 }
 
+/* ===== SHIKA COIN =====
+   コインの絵は用意した画像を使う。小さく出すところは軽い方（48px）を、
+   記録画面など大きく出すところは 192px の方を読む。 */
+const COIN_SM = './assets/icons/coin-sm.png';
+const COIN_LG = './assets/icons/coin.png';
+
+/** コインの絵だけ。 */
+export function coinIcon({ big = false } = {}) {
+  return el('img', {
+    class: `coinico${big ? ' coinico--lg' : ''}`,
+    attrs: { src: big ? COIN_LG : COIN_SM, alt: '', decoding: 'async' },
+  });
+}
+
+/**
+ * 「（コインの絵）123 SHIKA COIN」のひとまとまり。
+ * @param {number} n 枚数
+ * @param {{big?:boolean, sign?:boolean, label?:boolean}} opt
+ */
+export function coinAmount(n, { big = false, sign = false, label = true } = {}) {
+  const wrap = el('span', { class: `coin${big ? ' coin--lg' : ''}` });
+  wrap.append(coinIcon({ big }));
+  wrap.append(el('b', { class: 'coin__n', text: `${sign && n > 0 ? '+' : ''}${n}` }));
+  if (label) wrap.append(el('span', { class: 'coin__u', text: 'SHIKA COIN' }));
+  return wrap;
+}
+
 export function resolveAsset(p) {
   if (!p) return '';
   if (/^https?:\/\//i.test(p)) return p;
