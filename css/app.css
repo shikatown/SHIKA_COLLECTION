@@ -256,22 +256,29 @@ a{color:var(--accent)}
   perspective:1200px;pointer-events:none;
 }
 .snapfly__c{
-  position:absolute;inset:0;transform-style:preserve-3d;opacity:0;
+  position:absolute;inset:0;opacity:0;
+  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
   will-change:transform,opacity;
 }
 /* 表を rotateY(0) 側に置く。こうすると、万一アニメーションが効かなくても
    表が見える（裏で止まらない）。 */
-.snapfly__s{ position:absolute;inset:0;border-radius:10px;overflow:hidden;backface-visibility:hidden }
+.snapfly__s{
+  position:absolute;inset:0;border-radius:10px;overflow:hidden;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+}
 .snapfly__s--back{ transform:rotateY(180deg) }
 .snapfly__s .card{ position:absolute;inset:0;width:100%;height:100%;border-radius:10px;box-shadow:none }
 
 /* 小さく出てきて、くるっと1回半まわって表を向く */
 .snapfly.is-in .snapfly__c{ animation:snapSpin var(--tspin,.86s) cubic-bezier(.2,.85,.25,1) both }
+/* 裏のまま出てきて、いったん見せてから、1回半まわって表で止まる。
+   出てくる途中に回し始めると、裏が見えないうちに表になってしまう。 */
 @keyframes snapSpin{
-  0%  { opacity:0; transform:scale(.34) rotateY(180deg) }   /* 裏から出て */
-  22% { opacity:1 }
-  70% { transform:scale(1.06) rotateY(650deg) }
-  100%{ opacity:1; transform:scale(1) rotateY(720deg) }     /* 1回半まわって表で止まる */
+  0%  { opacity:0; transform:scale(.4)  rotateY(180deg) }
+  12% { opacity:1; transform:scale(.78) rotateY(180deg) }
+  30% { opacity:1; transform:scale(1)   rotateY(180deg) }   /* ここまで裏 */
+  72% { opacity:1; transform:scale(1.06) rotateY(520deg) }
+  100%{ opacity:1; transform:scale(1)   rotateY(720deg) }   /* 表で止まる */
 }
 /* 枠へ吸い込まれる。--dx / --dy / --k は js/collection.js が測って入れる */
 .snapfly.is-fly .snapfly__c{ animation:snapFly var(--tfly,.44s) cubic-bezier(.5,-0.16,.3,1) forwards }
@@ -489,6 +496,39 @@ a{color:var(--accent)}
   font-size:11.5px;font-weight:700;color:var(--accent);
   border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--surface);
 }
+
+/* アプリバーの歯車。設定やその他はここから行く */
+.appbar__gear{
+  flex:none;display:grid;place-items:center;width:34px;height:34px;
+  border-radius:50%;color:var(--ink-2);text-decoration:none;
+}
+.appbar__gear svg{width:21px;height:21px}
+.appbar__gear:active{background:var(--line-2)}
+
+/* タブの数字（受け取れるミッションの件数） */
+.tab{position:relative}
+.tab__badge{
+  position:absolute;top:2px;left:50%;margin-left:4px;
+  min-width:16px;height:16px;padding:0 4px;border-radius:999px;
+  background:var(--danger);color:#fff;
+  font-size:10px;font-weight:800;line-height:16px;text-align:center;
+}
+
+/* ===== ミッション ===== */
+.missionlist{padding:0}
+.missionrow{
+  display:flex;gap:10px;align-items:center;
+  padding:11px 12px;border-bottom:1px solid var(--line-2);
+}
+.missionrow:last-child{border-bottom:0}
+.missionrow__b{flex:1;min-width:0}
+.missionrow__n{font-size:13px;font-weight:700;line-height:1.35;margin-bottom:6px}
+.missionrow__d{font-size:11px;color:var(--ink-3);margin-top:5px}
+.missionrow__go{flex:none;padding:8px 14px;font-size:12.5px}
+.missionrow__coin{flex:none;font-size:12px;font-weight:800;color:var(--coin)}
+.missionrow__ok{flex:none;font-size:15px;color:#4a7a4a}
+.missionrow.is-ready{background:var(--coin-soft)}
+.missionrow.is-claimed .missionrow__n{color:var(--ink-3);font-weight:600}
 
 /* ===== 管理モード（公開前の点検用） ===== */
 .adminbar{

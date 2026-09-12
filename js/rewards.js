@@ -2,7 +2,7 @@
    ・デイリー           1日1回 +1
    ・酒のアテ           初取得時のみ +1（Excelの明示フラグのみ。自動推論しない）
    ・かぶり             全カード共通ゲージ 5枚ごと +1（繰り越しあり）
-   ・カテゴリ収集       同カテゴリ5種類ごと +2（自動付与・受取ボタンなし）
+   ・カテゴリ収集       ミッション画面で受け取る（js/missions.js）
    ・現地訪問           初訪問 +3 / 再訪 1日1回 +1 / 町初訪問 +5（1回限り） */
 
 import { app, commit, todayKey, CATEGORIES, CATEGORY_LABEL, categoryStats, eventActive } from './state.js';
@@ -70,20 +70,8 @@ export function applyDraw(results) {
       }
     }
 
-    // カテゴリ収集（5種類ごと）
-    for (const { key, label } of CATEGORIES) {
-      const ownedCount = app.cards.filter(
-        (c) => c.published && c.category === key && s.ownedCardIds.includes(c.id)
-      ).length;
-      const steps = Math.floor(ownedCount / 5);
-      const done = s.rewardClaims.category[key] || 0;
-      if (steps > done) {
-        const coins = (steps - done) * cfg.categoryPer5;
-        s.rewardClaims.category[key] = steps;
-        s.coins += coins; total += coins;
-        items.push({ label: `${label} ${steps * 5}種類達成`, coins });
-      }
-    }
+    /* ジャンル収集のコインは、ここでは渡さない。
+       ミッション画面で「受け取る」を押して受け取る（js/missions.js）。 */
   });
 
   return { items, total };

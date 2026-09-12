@@ -91,11 +91,11 @@ body.is-drawing{ overflow:hidden }
 .gs__reveal{
   position:absolute;left:50%;top:50%;
   width:var(--gs-card);aspect-ratio:4/5;
-  transform-style:preserve-3d;opacity:0;will-change:transform;
+  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;opacity:0;will-change:transform;
 }
 .gs__face{
   position:absolute;inset:0;border-radius:11px;overflow:hidden;
-  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
 }
 .gs__face--front{transform:rotateY(180deg)}
 .gs__face .card{position:absolute;inset:0;width:100%;height:100%;border-radius:11px;box-shadow:none}

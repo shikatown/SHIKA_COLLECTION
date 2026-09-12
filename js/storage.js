@@ -37,7 +37,8 @@ export function defaultState() {
     lastEventBonusDate: '',
     rewardClaims: {
       sakeSnack: [],         // 初取得ボーナスを渡したカードID
-      category: {},          // category -> 付与済み回数
+      category: {},          // category -> 付与済み回数（v1.18より前の自動付与の記録）
+      missions: [],          // 受け取ったミッションの id
     },
     settings: { sound: false, vibration: true },
     flags: {
@@ -89,8 +90,16 @@ export function normalize(raw) {
   }
 
   const rc = obj(raw.rewardClaims);
-  out.rewardClaims = { sakeSnack: arr(rc.sakeSnack), category: {} };
+  out.rewardClaims = { sakeSnack: arr(rc.sakeSnack), category: {}, missions: arr(rc.missions) };
   for (const [k, v] of Object.entries(obj(rc.category))) out.rewardClaims.category[k] = num(v, 0);
+  /* v1.18 より前は、ジャンル5種類ごとのコインを自動で渡していた。
+     その回数を受け取り済みのミッションとして引き継ぎ、二重に渡さないようにする。 */
+  if (!rc.missions) {
+    for (const [k, steps] of Object.entries(out.rewardClaims.category)) {
+      for (let i = 1; i <= steps; i += 1) out.rewardClaims.missions.push(`cat:${k}:${i * 5}`);
+    }
+  }
+  out.rewardClaims.missions = Array.from(new Set(out.rewardClaims.missions));
 
   const st = obj(raw.settings);
   out.settings = { sound: st.sound === true, vibration: st.vibration !== false };

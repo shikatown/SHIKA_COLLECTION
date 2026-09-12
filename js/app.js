@@ -12,6 +12,7 @@ import { renderCardDetail } from './card-detail.js';
 import { renderMap } from './map.js';
 import { renderSettings, renderHelp, renderPrivacy, renderMore, renderRecords } from './settings.js';
 import { renderAdmin, isAdmin } from './admin.js';
+import { renderMissions, claimableCount } from './missions.js';
 import { startOfflineWatch } from './offline.js';
 import { registerSW, checkDataUpdate, maybeSuggestInstall } from './update.js';
 import { maybeSuggestBackup } from './backup.js';
@@ -153,6 +154,7 @@ function setupRoutes() {
   router.define('/privacy', renderPrivacy);
   router.define('/records', renderRecords);
   router.define('/admin', renderAdmin);
+  router.define('/missions', renderMissions);
   router.setNotFound((view) => {
     clear(view);
     view.append(el('p', { class: 'empty', text: 'ページが見つかりません。' }));
@@ -161,7 +163,7 @@ function setupRoutes() {
 }
 
 const TITLES = {
-  '/home': 'SHIKA COLLECTION',
+  '/home': '',            // ホームはロゴが大きく出るので、上の見出しは置かない
   '/gacha': 'ガチャ',
   '/collection': 'カード',
   '/card/:id': 'カード詳細',
@@ -172,16 +174,18 @@ const TITLES = {
   '/privacy': 'プライバシー',
   '/records': '集めた記録',
   '/admin': 'カード点検',
+  '/missions': 'ミッション',
 };
 const TAB_OF = {
   '/home': 'home', '/gacha': 'gacha', '/collection': 'collection',
-  '/card/:id': 'collection', '/map': 'map', '/more': 'more',
-  '/settings': 'more', '/help': 'more', '/privacy': 'more', '/records': 'more',
-  '/admin': 'more',
+  '/card/:id': 'collection', '/map': 'map',
+  '/missions': 'missions',
+  // 設定まわりはタブに出さない（アプリバーの歯車から行く）
+  '/more': '', '/settings': '', '/help': '', '/privacy': '', '/records': '', '/admin': '',
 };
 
 function onRouteChange(route) {
-  document.getElementById('appTitle').textContent = TITLES[route.path] || 'SHIKA COLLECTION';
+  document.getElementById('appTitle').textContent = TITLES[route.path] != null ? TITLES[route.path] : '';
   document.getElementById('btnBack').hidden = route.path === '/home';
   // 左右に払って前後のカードへ移れるのは、カード詳細のときだけ
   document.getElementById('view').classList.toggle('detail--swipe', route.path === '/card/:id');
@@ -193,12 +197,15 @@ function onRouteChange(route) {
 }
 
 function updateChrome() {
-  const total = publishedCards().length;
-  const owned = publishedCards().filter((c) => isOwned(c.id)).length;
-  const cards = document.getElementById('statCards');
-  cards.querySelector('b').textContent = String(owned);
-  cards.querySelector('i').textContent = String(total);
   document.getElementById('statCoins').querySelector('b').textContent = String(app.state.coins);
+
+  // ミッションの「受け取れる件数」をタブに出す
+  const badge = document.getElementById('missionBadge');
+  if (badge) {
+    const n = claimableCount();
+    badge.textContent = String(n);
+    badge.hidden = n === 0;
+  }
 
   // 管理モードのあいだは、どの画面でも分かるように帯を出す
   const bar = document.getElementById('adminBar');
