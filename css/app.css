@@ -215,7 +215,7 @@ a{color:var(--accent)}
   contain-intrinsic-height:auto 188px;   /* 実測に合わせる。ずれると画面外の行の高さが狂う */
 }
 .cell__name{
-  display:flex;gap:4px;align-items:baseline;
+  display:flex;gap:4px;align-items:baseline;justify-content:center;text-align:center;
   font-size:10.5px;line-height:1.35;margin-top:5px;color:var(--ink-2);
   /* 名前が1行でも2行でもマスの高さをそろえる（2行ぶんを先に確保する） */
   height:2.7em;
@@ -224,7 +224,16 @@ a{color:var(--accent)}
   min-width:0;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
-.cell__no{flex:none;color:var(--ink-3);font-weight:700;font-variant-numeric:tabular-nums}
+/* カードの左上の番号。カード詳細と同じ見え方にそろえる */
+.cell__no{
+  position:absolute;left:4px;top:4px;z-index:2;
+  background:rgba(28,25,22,.62);color:#fff;
+  font-size:9px;font-weight:800;letter-spacing:.02em;
+  font-variant-numeric:tabular-nums;
+  padding:1px 5px;border-radius:0 0 6px 0;
+  pointer-events:none;
+}
+.cell{position:relative}
 .cell__name--locked{color:var(--ink-3)}
 
 /* ===== 未取得の枠 =====

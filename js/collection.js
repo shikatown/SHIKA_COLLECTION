@@ -4,8 +4,9 @@
 
 import { app, isOwned, CATEGORIES, CATEGORY_LABEL, publishedCards, categoryStats, commit } from './state.js';
 import { el, clear, cardFace, cardBack, lockedCard, vibrate, reduceMotion, sleep } from './ui.js';
-import { categoryProgress, coinCfg } from './rewards.js';
+import { categoryProgress, coinCfg, titles } from './rewards.js';
 import { go } from './router.js';
+import { sfx } from './sound.js';
 
 const TABS = [
   { key: 'all', label: 'すべて' },
@@ -41,6 +42,21 @@ export function renderCollection(view, params) {
       el('span', { class: 'progressline__n', text: `${c.owned}/${c.total}` }),
     ]));
   }
+  // 称号。歯車の奥に埋もれていて見つけにくいので、ここにも出す。
+  const got = titles();
+  const marks = el('div', { class: 'badgegrid', style: { marginTop: '11px' } });
+  const all = [
+    ...CATEGORIES.map((x) => ({ name: x.master, icon: `./assets/frames/thumb/icon-${x.key}.png` })),
+    { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png' },
+  ];
+  for (const { name, icon } of all) {
+    const on = got.includes(name);
+    const b = el('span', { class: `badge${on ? ' badge--on' : ''}` });
+    b.append(el('img', { class: 'badge__i', attrs: { src: icon, alt: '', decoding: 'async' } }));
+    b.append(el('span', { text: on ? name : `${name}（未達成）` }));
+    marks.append(b);
+  }
+  head.append(marks);
   view.append(head);
 
   const tabs = el('div', { class: 'tabs' });
@@ -188,8 +204,9 @@ async function snapIn(grid, cells) {
     fly.classList.add('is-fly');
     await sleep(T.fly);
 
-    // 着地
+    // 着地。「パチーン」と鳴らす
     finish(cellEl);
+    sfx.snap();
     vibrate(last ? [16, 34, 24] : 12);
     fly.remove();
     dim.remove();
@@ -257,8 +274,16 @@ function cell(c, order = -1) {
     btn.append(owned ? cardFace(c, { small: true }) : lockedCard(c, { small: true }));
   }
 
+  /* 番号はカードの左上に小さく置く。カード詳細と同じ見え方。
+     名前の行に並べると、カードに印刷された番号と重なって見えるため。
+     空き枠は真ん中に大きく番号が出ているので、角には付けない。 */
+  if (owned) {
+    const no = String(Number(c.id) || 0).padStart(2, '0');
+    const box = btn.querySelector('.cell__box') || btn;
+    box.append(el('b', { class: 'cell__no', text: `#${no}` }));
+    if (box === btn) btn.classList.add('cell--hasno');
+  }
   const label = el('div', { class: `cell__name${owned ? '' : ' cell__name--locked'}` });
-  label.append(el('b', { class: 'cell__no', text: `#${String(Number(c.id) || 0).padStart(2, '0')}` }));
   label.append(el('span', {
     text: owned || openSpot ? c.name : (CATEGORY_LABEL[c.category] || '???'),
   }));

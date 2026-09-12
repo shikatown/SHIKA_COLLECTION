@@ -119,8 +119,11 @@ export function renderGacha(view) {
   clear(view);
   const s = app.state;
 
+  /* 前回の結果が残っているときは、聞かずにそのまま結果を出す。
+     演出の途中で画面を離れた場合も、次に開けばここで結果が見られる。 */
   if (s.pendingResult) {
-    view.append(pendingBanner(view, s.pendingResult));
+    showResults(view, s.pendingResult);
+    return;
   }
 
   if (!s.flags.firstFreeTenDone) {
@@ -157,20 +160,6 @@ export function renderGacha(view) {
 
   if (!freeNow && s.coins < SINGLE_COST) view.append(shortOfCoins());
   else if (!freeNow && s.coins < TEN_COST) view.append(shortOfCoins(true));
-}
-
-function pendingBanner(view, pending) {
-  const p = el('div', { class: 'panel' });
-  p.append(el('p', {
-    style: { margin: '0 0 10px', fontSize: '13.5px' },
-    text: pending.kind === 'single' ? '前回のガチャの結果があります。' : '前回の10連ガチャの結果があります。',
-  }));
-  p.append(el('button', {
-    class: 'btn btn--block', attrs: { type: 'button' },
-    text: '結果を見る',
-    on: { click: () => showResults(view, pending) },
-  }));
-  return p;
 }
 
 function firstTimePanel(view) {
@@ -269,9 +258,16 @@ export async function playSequence(view, payload) {
 
   const stage = createGachaStage(stageBox);
   let skipped = false;
-  // 途中で画面を離れても、背後のスクロールを止めたままにしない
+  let left = false;          // 途中で画面を離れたか
+  /* 途中で画面を離れたら、演出はそこでやめる。
+     裏で回り続けると、別の画面に結果を書き込んでしまう。 */
+  const onLeave = () => {
+    left = true;
+    document.body.classList.remove('is-drawing');
+    stage.skip();
+  };
+  window.addEventListener('hashchange', onLeave, { once: true });
   const release = () => document.body.classList.remove('is-drawing');
-  window.addEventListener('hashchange', release, { once: true });
   const skipAll = () => { skipped = true; stage.skip(); };
   skipBtn.addEventListener('click', (e) => { e.stopPropagation(); skipAll(); });
   // 舞台をタップすると、その1枚の演出だけ最後まで飛ばす
@@ -279,6 +275,7 @@ export async function playSequence(view, payload) {
 
   const total = payload.results.length;
   for (let i = 0; i < total; i++) {
+    if (left) break;
     const r = payload.results[i];
     const card = app.cardsById.get(r.id);
     if (!card) continue;
@@ -297,8 +294,9 @@ export async function playSequence(view, payload) {
       hold: i === 0 || i === total - 1,   // 1枚目と最後の1枚は余韻まで見せる
       onBeat: (beat) => {
         if (beat === 'impact') {
-          if (r.isNew) { sfx.neu(); vibrate([18, 40, 26]); }
-          else { sfx.normal(); vibrate(10); }
+          // 音は新しいカードでもそうでなくても同じにする（引いた手ごたえをそろえる）
+          sfx.neu();
+          vibrate(r.isNew ? [18, 40, 26] : 12);
           if (r.isNew) caption.append(el('div', { class: 'gacha__newtag', text: 'NEW' }));
         }
         if (beat === 'name') {
@@ -313,9 +311,10 @@ export async function playSequence(view, payload) {
   }
 
   stage.destroy();
-  window.removeEventListener('hashchange', release);
+  window.removeEventListener('hashchange', onLeave);
   release();
-  showResults(view, payload);
+  // 離れたあとは、その画面に結果を書き込まない（次にガチャを開いたときに出る）
+  if (!left) showResults(view, payload);
 }
 
 /* ===== 結果一覧 ===== */
