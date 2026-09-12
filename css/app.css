@@ -464,9 +464,9 @@ a{color:var(--accent)}
   margin-inline:auto;
 }
 .detail__hero--compact .detail__cardwrap .card{ max-width:calc((100dvh - 430px) * .8) }
-/* 未取得はまだ空き枠なので、端まで広げない */
-.detail__cardwrap--slot{width:58%;margin:0 auto 16px;padding:0;overflow:visible}
-.detail__cardwrap--slot .card{border-radius:9px;box-shadow:none}
+/* 未取得の空き枠も、取得済みのカードと同じ大きさで出す。
+   左右に払って行き来したときに、画面が上下に動かないため。 */
+.detail__cardwrap .card--slot{border-radius:10px;box-shadow:none}
 .detail__meta{min-width:0}
 .detail__cat{
   display:inline-block;font-size:10.5px;padding:2px 9px;border-radius:999px;

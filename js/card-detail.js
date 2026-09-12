@@ -20,14 +20,15 @@ export function renderCardDetail(view, params) {
 
   const owned = isOwned(c.id);
   const openSpot = !owned && c.gps.enabled;   // 未取得でも観光情報は見せるスポット
-  if (!owned && !openSpot) return renderLocked(view, c);
+  const showInfo = owned || openSpot;         // 中身まで見せるかどうか
 
-  // 現地訪問の欄が付くカードは、その高さぶんカードを控えめにして1画面に収める
+  /* カードの大きさは、取得済みでも未取得でも同じにする。
+     左右に払って行き来したときに、画面が上下に動かないようにするため。 */
   const hero = el('div', { class: `detail__hero${c.gps.enabled ? ' detail__hero--compact' : ''}` });
-  // 取得済みは画面の端まで大きく。未取得は空き枠なので、控えめな大きさにとどめる。
-  const wrap = el('div', { class: `detail__cardwrap${owned ? '' : ' detail__cardwrap--slot'}` });
+  const wrap = el('div', { class: 'detail__cardwrap' });
+  let face;
   if (owned) {
-    const face = cardFace(c);   // 大きく出すので原寸を使う
+    face = cardFace(c);   // 大きく出すので原寸を使う
     face.style.cursor = 'pointer';
     // カードに印刷されたボタンは本物のリンクにする。それ以外を押すとカードを大きく見る。
     linkCardButton(face, c);
@@ -36,17 +37,19 @@ export function renderCardDetail(view, params) {
       if (justSwiped()) return;            // 左右に払っただけのときは開かない
       openViewer(c.id);
     });
-    wrap.append(track(c, face, true));
   } else {
-    wrap.append(lockedCard(c));
-    wrap.append(el('p', { class: 'muted', style: { fontSize: '11px', textAlign: 'center', marginTop: '8px' }, text: 'カード画像は取得後のお楽しみ' }));
+    face = lockedCard(c);                  // 番号を振った空き枠。大きさは同じ
   }
+  wrap.append(track(c, face, true));
   hero.append(wrap);
 
   const meta = el('div', { class: 'detail__meta' });
   meta.append(el('span', { class: 'detail__cat', text: CATEGORY_LABEL[c.category] || '' }));
-  meta.append(el('h2', { class: 'detail__name', text: c.name }));
-  if (c.subCategory) meta.append(el('p', { class: 'detail__sub', text: c.subCategory }));
+  meta.append(el('h2', { class: 'detail__name', text: showInfo ? c.name : '???' }));
+  meta.append(el('p', {
+    class: 'detail__sub',
+    text: showInfo ? (c.subCategory || '') : 'まだ持っていないカードです',
+  }));
 
   const acts = el('div', { class: 'detail__acts' });
   if (owned) {
@@ -54,11 +57,15 @@ export function renderCardDetail(view, params) {
       class: 'btn', attrs: { type: 'button' }, text: 'カードを見る',
       on: { click: () => openViewer(c.id) },
     }));
+  } else {
+    acts.append(el('a', { class: 'btn btn--primary', text: 'ガチャを引く', attrs: { href: '#/gacha' } }));
   }
   acts.append(favButton(c));
   meta.append(acts);
   hero.append(meta);
   view.append(hero);
+
+  if (!showInfo) return;   // 中身は取得してからのお楽しみ
 
   const body = el('div', { class: 'detail', style: { marginTop: '12px' } });
 
@@ -104,17 +111,6 @@ export function renderCardDetail(view, params) {
   view.append(body);
 }
 
-function renderLocked(view, c) {
-  const box = el('div', { class: 'panel', style: { textAlign: 'center' } });
-  const w = el('div', { style: { width: '62%', margin: '0 auto 14px' } });
-  w.append(lockedCard(c));
-  box.append(w);
-  box.append(el('h2', { style: { fontSize: '16px', margin: '0 0 4px' }, text: '???' }));
-  box.append(el('p', { class: 'muted', style: { margin: '0 0 14px' }, text: `${CATEGORY_LABEL[c.category] || ''}のカード` }));
-  box.append(el('a', { class: 'btn btn--primary btn--block', text: 'ガチャを引く', attrs: { href: '#/gacha' } }));
-  view.append(box);
-}
-
 function favButton(c) {
   const on = app.state.favorites.includes(c.id);
   const btn = el('button', {
@@ -155,8 +151,9 @@ function track(c, face, withNo) {
     t.append(side(prev, 'prev'), side(next, 'next'));
   }
   const now = el('div', { class: 'cardtrack__now' }, [face]);
-  // カードの左上に番号。一覧の「#01 名前」と同じ見え方にそろえる
-  if (withNo) {
+  /* カードの左上に番号。一覧の「#01 名前」と同じ見え方にそろえる。
+     空き枠は真ん中に大きく番号が出ているので、角には付けない。 */
+  if (withNo && !face.classList.contains('card--slot')) {
     const no = String(Number(c.id) || 0).padStart(2, '0');   // 一覧やカードの表記に合わせる
     now.append(el('b', { class: 'detail__no', text: `#${no}` }));
   }
@@ -246,7 +243,9 @@ function attachSwipe(view) {
     // 隣が中央に来るところまで送ってから、その画面に切り替える
     const span = (t ? t.getBoundingClientRect().width : window.innerWidth) + 14;
     settle(t, dx < 0 ? -span : span, 220);
-    setTimeout(() => go(`#/card/${list[n].id}`), 190);
+    /* 履歴は積まずに置き換える。
+       何枚めくっても「＜」で、カードを開く前の画面に戻れるようにするため。 */
+    setTimeout(() => go(`#/card/${list[n].id}`, true), 190);
   });
   view.addEventListener('pointercancel', () => {
     if (start && start.on) settle(nowTrack(), 0, 200);
