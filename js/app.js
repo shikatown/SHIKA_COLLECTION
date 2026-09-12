@@ -264,19 +264,7 @@ function renderHome(view) {
     view.append(p);
   }
 
-  const prog = el('div', { class: 'panel', style: { marginTop: '14px' } });
-  prog.append(el('div', { class: 'panel__head' }, [
-    el('h3', { class: 'panel__title', text: '集まりぐあい' }),
-    el('a', { class: 'muted', text: '記録を見る', attrs: { href: '#/records' } }),
-  ]));
-  for (const c of categoryProgress()) {
-    prog.append(el('div', { class: 'progressline', style: { marginBottom: '8px' } }, [
-      el('span', { style: { width: '4.6em', flex: 'none' }, text: c.label }),
-      el('div', { class: 'bar' }, [el('span', { style: { width: `${c.total ? (c.owned / c.total) * 100 : 0}%` } })]),
-      el('span', { style: { flex: 'none', fontSize: '11.5px' }, text: `${c.owned}/${c.total}` }),
-    ]));
-  }
-  view.append(prog);
+  // 集まりぐあいは「コレクション」としてカード画面の上に置いた（js/collection.js）
 
   if (dailyAvailable()) {
     view.append(el('p', {

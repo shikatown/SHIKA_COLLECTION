@@ -23,9 +23,24 @@ export function renderCollection(view, params) {
   const total = publishedCards().length;
   const owned = publishedCards().filter((c) => isOwned(c.id)).length;
 
-  // 見出しはアプリバーに出ているので、ここでは繰り返さない
-  const head = el('div', { style: { marginBottom: '6px' } });
-  head.append(el('p', { class: 'muted', style: { margin: 0 }, text: `${owned} / ${total} 種類` }));
+  /* コレクション。全体の枚数と、ジャンルごとの集まりぐあいをひとつにまとめる。
+     （以前はホーム画面に「集まりぐあい」として置いていた） */
+  const head = el('div', { class: 'panel', style: { marginBottom: '12px' } });
+  head.append(el('div', { class: 'panel__head' }, [
+    el('h3', { class: 'panel__title', text: 'コレクション' }),
+    el('span', { class: 'collection__all', text: `${owned} / ${total} 種類` }),
+  ]));
+  head.append(el('div', { class: 'bar bar--lg' }, [
+    el('span', { style: { width: `${total ? (owned / total) * 100 : 0}%` } }),
+  ]));
+  for (const c of categoryProgress()) {
+    head.append(el('div', { class: 'progressline', style: { marginTop: '9px' } }, [
+      el('img', { class: 'progressline__i', attrs: { src: `./assets/frames/thumb/icon-${c.key}.png`, alt: '', decoding: 'async' } }),
+      el('span', { style: { width: '4.4em', flex: 'none' }, text: c.label }),
+      el('div', { class: 'bar' }, [el('span', { style: { width: `${c.total ? (c.owned / c.total) * 100 : 0}%` } })]),
+      el('span', { class: 'progressline__n', text: `${c.owned}/${c.total}` }),
+    ]));
+  }
   view.append(head);
 
   const tabs = el('div', { class: 'tabs' });

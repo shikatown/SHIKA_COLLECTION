@@ -18,7 +18,7 @@
 .cardart{
   position:absolute; inset:0;
   container-type:size;
-  font-family:var(--font);
+  font-family:var(--font);        /* カードの文字は読みやすさ優先。画面まわりとは別 */
   -webkit-font-smoothing:antialiased;
 }
 /* ボタン文字の色は元のカードから実測したジャンル別の色 */

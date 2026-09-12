@@ -246,9 +246,17 @@ export function renderRecords(view) {
   const t = titles();
   view.append(el('h3', { text: '称号' }));
   const bg = el('div', { class: 'badgegrid' });
-  const all = [...CATEGORIES.map((c) => c.master), '志賀町マスター'];
-  for (const name of all) {
-    bg.append(el('span', { class: `badge${t.includes(name) ? ' badge--on' : ''}`, text: t.includes(name) ? name : `${name}（未達成）` }));
+  // 称号ごとの絵。志賀町マスターは SHIKA COLLECTION のロゴを使う。
+  const all = [
+    ...CATEGORIES.map((c) => ({ name: c.master, icon: `./assets/frames/thumb/icon-${c.key}.png` })),
+    { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png' },
+  ];
+  for (const { name, icon } of all) {
+    const on = t.includes(name);
+    const b = el('span', { class: `badge${on ? ' badge--on' : ''}` });
+    b.append(el('img', { class: 'badge__i', attrs: { src: icon, alt: '', decoding: 'async' } }));
+    b.append(el('span', { text: on ? name : `${name}（未達成）` }));
+    bg.append(b);
   }
   view.append(bg);
 }
