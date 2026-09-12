@@ -119,24 +119,21 @@ a{color:var(--accent)}
 /* 絵も文字もひとつの絵として描く（index.html の svg の中）。
    文字は輪郭と影を付けて、おもちゃのシールのような見た目にしてある。 */
 .tab svg{
-  width:100%;max-width:64px;height:auto;
+  width:100%;max-width:84px;height:auto;
   filter:saturate(.6) opacity(.88);
   transition:filter .16s ease, transform .16s ease;
 }
 .tab.is-active svg{ filter:none; transform:translateY(-2px) scale(1.06) }
 .tab:active svg{ transform:scale(.95) }
-/* 文字。塗りの外側に太い輪郭を置くので、小さくてもつぶれない */
-.tab svg text{
-  font-family:var(--font-ui);
-  font-size:12.5px;font-weight:900;letter-spacing:.01em;
-  text-anchor:middle;
-}
-.tabtxt__d{ fill:#2b2722; opacity:.35 }
-.tabtxt__m{
-  fill:#fff8ec; stroke:#2b2722; stroke-width:3.2;
-  stroke-linejoin:round; paint-order:stroke;
-}
-.tab.is-active .tabtxt__m{ fill:#ffe9a8 }
+/* 文字は端末の書体ではなく、1画ずつの図形として描いてある（index.html）。
+   うしろに太い線で輪郭を、手前に細い線で本体を重ねる。
+   どの端末でも同じ形・同じ大きさで出る。 */
+.tabw path{ fill:none; stroke-linecap:round; stroke-linejoin:round }
+/* 影 → 輪郭 → 本体 の順に重ねて、裏面のロゴと同じ「厚みのある文字」にする */
+.tabw__s path{ stroke:#2b2722; stroke-width:6.4; opacity:.22 }
+.tabw__o path{ stroke:#2b2722; stroke-width:6 }
+.tabw__i path{ stroke:#fff3dc; stroke-width:2.9 }
+.tab.is-active .tabw__i path{ stroke:#ffd873 }
 /* 選んでいるタブの下に小さな印 */
 .tab.is-active::after{
   content:'';position:absolute;bottom:4px;
@@ -570,7 +567,7 @@ a{color:var(--accent)}
 /* タブの数字（受け取れるミッションの件数） */
 .tab{position:relative}
 .tab__badge{
-  position:absolute;top:0;left:50%;margin-left:6px;
+  position:absolute;top:0;left:50%;margin-left:7px;
   min-width:16px;height:16px;padding:0 4px;border-radius:999px;
   background:var(--danger);color:#fff;
   font-size:10px;font-weight:800;line-height:16px;text-align:center;
