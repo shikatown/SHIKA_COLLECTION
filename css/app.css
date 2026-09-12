@@ -675,24 +675,60 @@ a{color:var(--accent)}
   .card--wobble > *{ animation:none }
 }
 
-/* 文字を図形で書いたボタン（js/wordart.js） */
-.btn--art{flex-direction:column;gap:1px;padding:8px 14px 8px}
-/* 枠の高さ21.4のうち、文字そのものは12.2ぶん。見た目で20px前後になるよう決めている。 */
-.wa{height:36px;width:auto;max-width:100%;display:block}
-.wa path{fill:none;stroke-linecap:round;stroke-linejoin:round}
-.wa__s path{stroke:#1c1a17;opacity:.24}
-.wa__o path{stroke:#2b2722}
-.wa__i path{stroke:#fff6e4}
-.btn--primary .wa__i path{stroke:#fff}
-/* 値段は「コインの絵＋数字」。上のコインと同じ見え方にそろえる。 */
-.btn--art .btn__sub{
-  display:flex;align-items:center;gap:4px;
-  font-size:13px;font-weight:800;opacity:1;
-  font-variant-numeric:tabular-nums;
+/* ガチャのボタン。名前の右に、値段を「コインの絵＋数字」で並べる。 */
+.btn--gacha{gap:14px;padding:15px 20px}
+.btn--gacha__label{font-size:17px;font-weight:800;letter-spacing:.04em}
+.btn--gacha__cost{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;
 }
-.btn--art .btn__sub .coinico{width:17px;height:17px}
-.btn:not(.btn--primary) .btn__sub{color:var(--coin)}
-.btn--primary .btn__sub{color:#fff}
+/* 上のコインと同じ絵。文字の高さに合わせる */
+.btn--gacha__cost .coinico{width:22px;height:22px}
+.btn:not(.btn--primary) .btn--gacha__cost{color:var(--coin)}
+.btn--primary .btn--gacha__cost{color:#fff}
+
+/* 10連の「1枚おトク」の吹き出し。ボタンの右上にくっつけ、しっぽをボタンへ向ける。 */
+.gachabtn{position:relative}
+.gachabtn > .btn{width:100%}
+.gachabtn__pop{
+  position:absolute;right:8px;top:-20px;z-index:2;
+  display:flex;flex-direction:column;align-items:center;line-height:1.1;
+  padding:5px 11px 5px;border-radius:14px;
+  background:#ffd54a;color:#5a3a00;
+  border:2px solid #2b2722;
+  box-shadow:0 2px 0 #2b2722;
+  transform:rotate(4deg);
+  animation:popBob 2.4s ease-in-out infinite;
+  pointer-events:none;
+}
+.gachabtn__pop b{font-size:13px;font-weight:900;letter-spacing:.02em;white-space:nowrap}
+.gachabtn__pop small{font-size:9.5px;font-weight:700;white-space:nowrap}
+/* しっぽ（外側の黒ふち → 内側の黄色 の2枚重ね） */
+.gachabtn__pop::before,
+.gachabtn__pop::after{
+  content:'';position:absolute;left:22px;width:0;height:0;
+  border-style:solid;border-color:transparent;
+}
+.gachabtn__pop::before{bottom:-11px;border-width:11px 7px 0 7px;border-top-color:#2b2722}
+.gachabtn__pop::after{bottom:-7px;left:24px;border-width:8px 5px 0 5px;border-top-color:#ffd54a}
+@keyframes popBob{
+  0%,100%{transform:rotate(4deg) translateY(0)}
+  50%{transform:rotate(4deg) translateY(-3px)}
+}
+@media (prefers-reduced-motion: reduce){ .gachabtn__pop{animation:none} }
+/* 吹き出しがはみ出るぶん、ボタン同士の間をあける */
+.gachahome__acts{gap:26px;padding-top:6px}
+
+/* 結果のおまけ */
+.card__bonus{
+  position:absolute;left:0;top:6%;background:#ffd54a;color:#5a3a00;
+  font-size:8.5px;font-weight:900;letter-spacing:.06em;padding:2px 6px 2px 5px;
+  border-radius:0 4px 4px 0;
+}
+.result__bonusnote{
+  display:inline-block;margin:2px 0 4px;padding:2px 10px;border-radius:999px;
+  background:#fff4c7;color:#7a5200;font-size:11.5px;font-weight:800;
+}
 
 /* ===== 称号（ミッション画面） =====
    4つを 2×2 に並べ、ジャンルの絵がしっかり見える大きさにする。 */

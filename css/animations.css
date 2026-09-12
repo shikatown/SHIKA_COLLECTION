@@ -155,7 +155,9 @@ body.is-drawing{ overflow:hidden }
 /* 結果一覧 */
 .result__head{margin-bottom:12px}
 .result__head--solo{text-align:center;margin-bottom:20px}
-.result__grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+/* 10連は11枚。5枚ずつ並べ、あまりの1枚は真ん中に置く */
+.result__grid{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.result__grid > .cell{flex:0 0 calc((100% - 24px) / 5);min-width:0}
 /* 1枚だけのときは、左上に寄せず中央に大きく置く */
 .result__solo{display:grid;justify-items:center}
 .result__solo .cell{width:min(66vw,260px);content-visibility:visible}

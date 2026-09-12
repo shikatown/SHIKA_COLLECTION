@@ -281,7 +281,7 @@ export function renderMap(view, params) {
 
   const btn = el('button', {
     class: 'btn btn--primary btn--block btn--lg', attrs: { type: 'button' },
-    text: geo.hasFix() ? 'チェックイン（現在地を更新）' : 'チェックイン',
+    text: '近くのスポットを探す',
     style: { marginTop: '4px' },
     on: { click: () => runCheckIn(view, status, btn) },
   });
@@ -374,7 +374,7 @@ async function runCheckIn(view, status, btn) {
         '現地チェックインの判定に現在地を使用します。',
         '位置情報は保存・送信しません。判定した結果（訪問済み）だけを端末内に残します。',
       ],
-      actions: [{ label: 'やめる', value: false }, { label: 'チェックイン', value: true, primary: true }],
+      actions: [{ label: 'やめる', value: false }, { label: '探す', value: true, primary: true }],
     });
     if (!ok) return;
     commit((s) => { s.flags.spotHintShown = true; });
@@ -383,7 +383,7 @@ async function runCheckIn(view, status, btn) {
   btn.disabled = true;
   const orig = btn.textContent;
   try {
-    await geo.acquire((msg) => { status.textContent = msg; btn.textContent = '確認中…'; });
+    await geo.acquire((msg) => { status.textContent = msg; btn.textContent = '探しています…'; });
   } catch (e) {
     btn.disabled = false; btn.textContent = orig;
     status.textContent = '現在地は取得していません';
@@ -396,7 +396,7 @@ async function runCheckIn(view, status, btn) {
   }
 
   btn.disabled = false;
-  btn.textContent = '現在地を更新';
+  btn.textContent = '近くのスポットを探す';
 
   if (!geo.accuracyOK()) {
     status.textContent = '現在地は取得していません';

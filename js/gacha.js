@@ -11,10 +11,11 @@ import { openViewer } from './card-3d.js';
 import { photoUrl } from './card-render.js';
 import { createGachaStage } from './gacha-anim.js';
 import { isAdmin } from './admin.js';
-import { wordArt } from './wordart.js';
 
 export const SINGLE_COST = 1;
 export const TEN_COST = 10;
+/** 10連のおまけ枚数。10連は 10+1 枚出る。初回無料の10連にはつかない。 */
+export const TEN_BONUS = 1;
 
 function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
 
@@ -63,13 +64,18 @@ function rollFirstTen() {
 /** 押した瞬間にすべて確定させる。戻り値は演出用の確定データ。 */
 export function commitDraw(kind) {
   const free = kind === 'free10' || isAdmin();   // 管理モードはコインを使わない
-  const count = kind === 'single' ? 1 : 10;
+  // 10連はおまけつきで 11 枚。初回無料の10連は 10 枚のまま。
+  const count = kind === 'single' ? 1 : (kind === 'ten' ? 10 + TEN_BONUS : 10);
   const cost = free ? 0 : (kind === 'single' ? SINGLE_COST : TEN_COST);
 
   if (!publishedCards().length) { toast('カードデータがありません'); return null; }
   if (!free && app.state.coins < cost) { toast('SHIKA COIN が足りません'); return null; }
 
-  const results = free ? rollFirstTen() : rollNormal(count);
+  // 引き方は種類で決める（管理モードでも、1回なら1枚）
+  const results = kind === 'free10' ? rollFirstTen() : rollNormal(count);
+  if (kind === 'ten') {
+    for (let i = results.length - TEN_BONUS; i < results.length; i++) results[i].bonus = true;
+  }
 
   commit((s) => {
     if (cost) s.coins -= cost;
@@ -146,33 +152,42 @@ export function renderGacha(view) {
   back.classList.add('card--wobble');
   home.append(el('div', { class: 'gachahome__card' }, [back]));
 
-  const b1 = artButton('single', 'btn btn--lg', () => start('single', view));
-  const b10 = artButton('ten', 'btn btn--lg btn--primary', () => start('ten', view));
   const freeNow = isAdmin();
+  const b1 = gachaButton('シングルガチャ', SINGLE_COST, 'btn btn--lg', freeNow, () => start('single', view));
+  const b10 = gachaButton('10連ガチャ', TEN_COST, 'btn btn--lg btn--primary', freeNow, () => start('ten', view));
   if (!freeNow && s.coins < SINGLE_COST) b1.disabled = true;
   if (!freeNow && s.coins < TEN_COST) b10.disabled = true;
-  // 値段は「コインの絵＋数字」で出す。上のコインと同じ見え方にそろえる。
-  const cost = (b, n) => {
-    const sub = b.querySelector('.btn__sub');
-    clear(sub);
-    if (freeNow) { sub.append(el('span', { text: '管理モード（コイン不要）' })); return; }
-    sub.append(coinIcon());
-    sub.append(el('b', { text: String(n) }));
-  };
-  cost(b1, SINGLE_COST); cost(b10, TEN_COST);
 
-  home.append(el('div', { class: 'gachahome__acts' }, [b1, b10]));
+  // 10連には「1枚おトク」の吹き出しをつける
+  const tenWrap = el('div', { class: 'gachabtn' }, [
+    b10,
+    el('span', { class: 'gachabtn__pop', attrs: { 'aria-hidden': 'true' } }, [
+      el('b', { text: `${TEN_BONUS}枚おトク！` }),
+      el('small', { text: `${10 + TEN_BONUS}枚出ます` }),
+    ]),
+  ]);
+  b10.setAttribute('aria-label', `10連ガチャ ${TEN_COST} SHIKA COIN。${TEN_BONUS}枚おまけで${10 + TEN_BONUS}枚出ます`);
+
+  home.append(el('div', { class: 'gachahome__acts' }, [b1, tenWrap]));
   view.append(home);
 
   if (!freeNow && s.coins < SINGLE_COST) view.append(shortOfCoins());
   else if (!freeNow && s.coins < TEN_COST) view.append(shortOfCoins(true));
 }
 
-/** 文字を図形で書いたボタン。文字の下に小さく値段を添える。 */
-function artButton(key, cls, onClick) {
-  const b = el('button', { class: `${cls} btn--art`, attrs: { type: 'button' }, on: { click: onClick } });
-  b.append(wordArt(key));
-  b.append(el('span', { class: 'btn__sub' }));
+/** ガチャのボタン。名前の右に、値段を「コインの絵＋数字」で添える。 */
+function gachaButton(label, cost, cls, freeNow, onClick) {
+  const b = el('button', { class: `${cls} btn--gacha`, attrs: { type: 'button' }, on: { click: onClick } });
+  b.append(el('span', { class: 'btn--gacha__label', text: label }));
+  const price = el('span', { class: 'btn--gacha__cost' });
+  if (freeNow) {
+    price.append(el('span', { text: 'コイン不要' }));
+  } else {
+    price.append(coinIcon());
+    price.append(el('b', { text: String(cost) }));
+  }
+  b.append(price);
+  if (!b.hasAttribute('aria-label')) b.setAttribute('aria-label', `${label} ${cost} SHIKA COIN`);
   return b;
 }
 
@@ -342,6 +357,9 @@ export function showResults(view, payload) {
 
   const head = el('div', { class: solo ? 'result__head result__head--solo' : 'result__head' });
   head.append(el('h2', { text: payload.kind === 'single' ? 'ガチャ結果' : '10連の結果' }));
+  if (payload.results.some((r) => r.bonus)) {
+    head.append(el('p', { class: 'result__bonusnote', text: `おまけ ${payload.results.filter((r) => r.bonus).length} 枚つき` }));
+  }
   head.append(el('p', {
     class: 'muted',
     style: { margin: 0 },
@@ -359,6 +377,7 @@ export function showResults(view, payload) {
     // 大きく出す1枚だけは原寸を使う（縮小版だとぼやける）
     const face = cardFace(c, { small: !solo });
     if (r.isNew) face.append(el('div', { class: 'card__new', text: 'NEW' }));
+    if (r.bonus) face.append(el('div', { class: 'card__bonus', text: 'おまけ' }));
     cell.append(face);
     cell.addEventListener('click', () => openViewer(c.id, payload.results.map((x) => x.id)));
     grid.append(cell);

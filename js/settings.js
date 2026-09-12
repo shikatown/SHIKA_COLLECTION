@@ -147,7 +147,7 @@ export function renderHelp(view) {
   const cfg = coinCfg();
 
   view.append(section('ガチャ', [
-    `1回 ${SINGLE_COST} SHIKA COIN、10連 ${TEN_COST} SHIKA COIN です（10連割引はありません）。`,
+    `1回 ${SINGLE_COST} SHIKA COIN、10連 ${TEN_COST} SHIKA COIN です。10連は1枚おまけつきで11枚出ます。`,
     'すべてのカードが同じ確率で登場します。レアリティはありません。',
     'はじめての方は無料10連から。10枚すべて重複なし、グルメ・スポット・文化が最低1枚ずつ入ります。',
   ]));
