@@ -4,13 +4,14 @@
 
 import { app, commit, publishedCards, CATEGORIES, CATEGORY_LABEL } from './state.js';
 import { applyDraw, duplicateGaugeInfo, categoryProgress, dailyAvailable, claimDaily, coinCfg } from './rewards.js';
-import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dialog, coinAmount } from './ui.js';
+import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dialog, coinAmount, coinIcon } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
 import { photoUrl } from './card-render.js';
 import { createGachaStage } from './gacha-anim.js';
 import { isAdmin } from './admin.js';
+import { wordArt } from './wordart.js';
 
 export const SINGLE_COST = 1;
 export const TEN_COST = 10;
@@ -131,35 +132,41 @@ export function renderGacha(view) {
     return;
   }
 
-  const cfg = coinCfg();
-  const head = el('div', { class: 'panel' });
-  head.append(el('div', { class: 'panel__head' }, [
-    el('h2', { class: 'panel__title', text: 'ガチャを引く' }),
-    coinAmount(s.coins),
-  ]));
-  head.append(el('p', { class: 'muted', text: 'すべてのカードが同じ確率で登場します。' }));
+  /* 画面いっぱいに、上からコイン・カードの裏・ボタン2つを積む。
+     カードの裏は、残った高さいっぱいまで大きくする（ボタンは必ず入る）。 */
+  const home = el('div', { class: 'gachahome' });
 
-  const acts = el('div', { style: { display: 'grid', gap: '10px', marginTop: '12px' } });
-  const b1 = el('button', {
-    class: 'btn btn--lg', attrs: { type: 'button' },
-    on: { click: () => start('single', view) },
-  }, [el('span', { text: '1回引く' }), el('span', { class: 'btn__sub', text: `／ ${SINGLE_COST} COIN` })]);
-  const b10 = el('button', {
-    class: 'btn btn--lg btn--primary', attrs: { type: 'button' },
-    on: { click: () => start('ten', view) },
-  }, [el('span', { text: '10連で引く' }), el('span', { class: 'btn__sub', text: `／ ${TEN_COST} COIN` })]);
+  home.append(el('div', { class: 'gachahome__coin' }, [
+    coinIcon({ big: true }),
+    el('b', { class: 'gachahome__n', text: String(s.coins) }),
+  ]));
+
+  // たまごが孵る前のように、カードがゆらゆら揺れる
+  const back = cardBack();
+  back.classList.add('card--wobble');
+  home.append(el('div', { class: 'gachahome__card' }, [back]));
+
+  const b1 = artButton('single', 'btn btn--lg', () => start('single', view));
+  const b10 = artButton('ten', 'btn btn--lg btn--primary', () => start('ten', view));
   const freeNow = isAdmin();
   if (!freeNow && s.coins < SINGLE_COST) b1.disabled = true;
   if (!freeNow && s.coins < TEN_COST) b10.disabled = true;
-  if (freeNow) {
-    for (const b of [b1, b10]) b.querySelector('.btn__sub').textContent = '／ 管理モード（コイン不要）';
-  }
-  acts.append(b1, b10);
-  head.append(acts);
-  view.append(head);
+  const cost = (b, n) => { b.querySelector('.btn__sub').textContent = freeNow ? '管理モード（コイン不要）' : `${n} COIN`; };
+  cost(b1, SINGLE_COST); cost(b10, TEN_COST);
+
+  home.append(el('div', { class: 'gachahome__acts' }, [b1, b10]));
+  view.append(home);
 
   if (!freeNow && s.coins < SINGLE_COST) view.append(shortOfCoins());
   else if (!freeNow && s.coins < TEN_COST) view.append(shortOfCoins(true));
+}
+
+/** 文字を図形で書いたボタン。文字の下に小さく値段を添える。 */
+function artButton(key, cls, onClick) {
+  const b = el('button', { class: `${cls} btn--art`, attrs: { type: 'button' }, on: { click: onClick } });
+  b.append(wordArt(key));
+  b.append(el('span', { class: 'btn__sub' }));
+  return b;
 }
 
 function firstTimePanel(view) {

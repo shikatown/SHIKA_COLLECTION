@@ -37,7 +37,7 @@ Service Worker の Cache Storage に、アプリ本体・カード画像・地�
 | 宛先 | 内容 | タイミング |
 |---|---|---|
 | 配信元（GitHub Pages） | HTML/CSS/JS、cards.json、画像 | 起動時・表示時 |
-| `cyberjapandata.gsi.go.jp` | 国土地理院の地図タイル | まち巡り画面を開いたとき |
+| `tile.openstreetmap.org` | OpenStreetMap の地図タイル | まち巡り画面を開いたとき |
 | `www.google.com/maps` | 検索語または緯度経度を含むURL | 利用者がリンクを押したときだけ |
 
 Google Maps へのリンクには、利用者の現在地は含めない（スポットの座標または検索語のみ）。

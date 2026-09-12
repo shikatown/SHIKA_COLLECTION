@@ -40,11 +40,15 @@ export function renderCardDetail(view, params) {
   } else {
     face = lockedCard(c);                  // 番号を振った空き枠。大きさは同じ
   }
-  wrap.append(track(c, face, true));
+  wrap.append(track(c, face));
   hero.append(wrap);
 
   const meta = el('div', { class: 'detail__meta' });
-  meta.append(el('span', { class: 'detail__cat', text: CATEGORY_LABEL[c.category] || '' }));
+  const no = String(Number(c.id) || 0).padStart(2, '0');   // 一覧の表記に合わせる
+  meta.append(el('div', { class: 'detail__tags' }, [
+    el('b', { class: 'detail__no', text: `#${no}` }),
+    el('span', { class: 'detail__cat', text: CATEGORY_LABEL[c.category] || '' }),
+  ]));
   meta.append(el('h2', { class: 'detail__name', text: showInfo ? c.name : '???' }));
   meta.append(el('p', {
     class: 'detail__sub',
@@ -135,7 +139,7 @@ function favButton(c) {
 
 /** カードの左右に、前後のカードを控えさせる。
     払っているあいだ、指について動いて隣が見える。 */
-function track(c, face, withNo) {
+function track(c, face) {
   const t = el('div', { class: 'cardtrack' });
   const list = ordered();
   const at = list.findIndex((x) => x.id === c.id);
@@ -150,14 +154,8 @@ function track(c, face, withNo) {
     const next = list[(at + 1) % list.length];
     t.append(side(prev, 'prev'), side(next, 'next'));
   }
-  const now = el('div', { class: 'cardtrack__now' }, [face]);
-  /* カードの左上に番号。一覧の「#01 名前」と同じ見え方にそろえる。
-     空き枠は真ん中に大きく番号が出ているので、角には付けない。 */
-  if (withNo && !face.classList.contains('card--slot')) {
-    const no = String(Number(c.id) || 0).padStart(2, '0');   // 一覧やカードの表記に合わせる
-    now.append(el('b', { class: 'detail__no', text: `#${no}` }));
-  }
-  t.append(now);
+  // 番号はカードに重ねず、名前の欄（分類の横）に出す
+  t.append(el('div', { class: 'cardtrack__now' }, [face]));
   return t;
 }
 

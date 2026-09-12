@@ -1,18 +1,20 @@
 /* map.js — まち巡り画面と地図。
-   地図は国土地理院の標準タイル（淡色地図）をそのまま表示する簡易スリッピーマップ。
+   地図は OpenStreetMap の標準タイルをそのまま表示する簡易スリッピーマップ。
+   利用条件により、画面のすみに出典（© OpenStreetMap contributors）を必ず出す。
    経路・所要時間・ナビは Google Maps へ外部リンクで渡す。 */
 
 import { app, isVisited, isOwned, gpsCards, mapCards, commit } from './state.js';
-import { el, clear, toast, dialog, confirm2, externalLink, mapsSearchUrl, mapsRouteUrl, cardFace, vibrate } from './ui.js';
+import { el, clear, toast, dialog, confirm2, externalLink, mapsSearchUrl, mapsRouteUrl, cardFace, vibrate, pinIcon, checkIcon } from './ui.js';
 import * as geo from './geo.js';
 import { coinCfg } from './rewards.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
 
-const TILE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
-const TILE_ATTR = '国土地理院';
-const MIN_Z = 8, MAX_Z = 17;
+const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_ATTR = 'OpenStreetMap contributors';
+const TILE_ATTR_URL = 'https://www.openstreetmap.org/copyright';
+const MIN_Z = 8, MAX_Z = 18;
 
 /* ===== 投影 ===== */
 function project(lat, lng, z) {
@@ -37,7 +39,10 @@ export function createMap(container, { center, zoom }) {
   const tilesLayer = el('div', { class: 'map__tiles' });
   const markerLayer = el('div', { class: 'map__tiles' });
   container.append(tilesLayer, markerLayer);
-  container.append(el('div', { class: 'map__attr', html: `地図：<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">${TILE_ATTR}</a>` }));
+  container.append(el('div', { class: 'map__attr' }, [
+    el('span', { text: '地図：© ' }),
+    el('a', { text: TILE_ATTR, attrs: { href: TILE_ATTR_URL, target: '_blank', rel: 'noopener noreferrer' } }),
+  ]));
 
   const zoomBox = el('div', { class: 'map__zoom' });
   const zin = el('button', { attrs: { type: 'button', 'aria-label': '拡大' }, text: '+' });
@@ -312,10 +317,13 @@ function listSection(title, list) {
 
 function spotRow(c, visited, dist = null, highlight = false) {
   const row = el('div', { class: 'spotrow' });
-  row.append(el('div', {
-    class: `spotrow__i${visited ? ' spotrow__i--done' : ''}`,
-    text: visited ? '✓' : (highlight ? '★' : '・'),
-  }));
+  /* 目印は、まだならタブと同じピン、行ったならミッション達成と同じ「✓」。
+     近い順の上位は、ピンを少し目立たせる。 */
+  const mark = el('div', {
+    class: `spotrow__i${visited ? ' spotrow__i--done' : ''}${!visited && highlight ? ' spotrow__i--near' : ''}`,
+  });
+  mark.append(visited ? checkIcon() : pinIcon());
+  row.append(mark);
   const t = el('div', { class: 'spotrow__t' });
   t.append(el('div', { class: 'spotrow__n', text: c.name }));
   const sub = [];

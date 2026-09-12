@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.24.0';
+const APP_VERSION = '1.25.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -42,6 +42,7 @@ const SHELL = [
   './js/missions.js',
   './js/backup.js',
   './js/update.js',
+  './js/wordart.js',
   './assets/icons/coin-sm.png',
   './assets/icons/coin.png',
 ];
@@ -82,7 +83,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
 
   // 地図タイル（別オリジン）
-  if (url.hostname === 'cyberjapandata.gsi.go.jp') {
+  if (url.hostname === 'tile.openstreetmap.org') {
     e.respondWith(cacheFirst(req, TILE_CACHE, TILE_LIMIT));
     return;
   }

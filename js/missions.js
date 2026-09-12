@@ -9,7 +9,7 @@
 
 import { app, commit, CATEGORIES, categoryStats } from './state.js';
 import { el, clear, toast, vibrate, coinIcon } from './ui.js';
-import { coinCfg } from './rewards.js';
+import { coinCfg, titles } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
 
@@ -152,6 +152,9 @@ export function renderMissions(view) {
   head.append(all);
   view.append(head);
 
+  view.append(el('h3', { text: '称号' }));
+  view.append(titlesPanel());
+
   for (const group of ['カード', 'まち巡り']) {
     const rows = list.filter((m) => m.group === group);
     if (!rows.length) continue;
@@ -164,6 +167,25 @@ export function renderMissions(view) {
     }
     view.append(box);
   }
+}
+
+/* 称号。ミッションと同じ「達成したことが分かるもの」なので、ここにまとめる。
+   （以前はカード画面のコレクション欄に置いていた） */
+function titlesPanel() {
+  const got = titles();
+  const box = el('div', { class: 'panel badgegrid' });
+  const all = [
+    ...CATEGORIES.map((x) => ({ name: x.master, icon: `./assets/frames/thumb/icon-${x.key}.png` })),
+    { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png' },
+  ];
+  for (const { name, icon } of all) {
+    const on = got.includes(name);
+    const b = el('span', { class: `badge${on ? ' badge--on' : ''}` });
+    b.append(el('img', { class: 'badge__i', attrs: { src: icon, alt: '', decoding: 'async' } }));
+    b.append(el('span', { text: on ? name : `${name}（未達成）` }));
+    box.append(b);
+  }
+  return box;
 }
 
 function row(m, view) {

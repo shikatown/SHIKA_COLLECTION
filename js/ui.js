@@ -99,15 +99,15 @@ function placeholderFace(c) {
   return face;
 }
 
-/** 未取得カードの置き場。番号を先に振っておき、あとからカードがはまる枠にする。
-    アルバムの台紙と同じ考え方で、揃っていない番号がひと目で分かる。 */
+/** 未取得カードの置き場。あとからカードがはまる枠にする。
+    番号と名前は枠の下（名前の行）に出すので、枠の中は「？？？」だけ。 */
 export function lockedCard(cardData, { small = false } = {}) {
-  const no = String(Number(cardData.id) || 0).padStart(2, '0');
   const cat = cardData.category || '';
   const wrap = el('div', {
     class: `card card--slot${cat ? ` card--slot-${cat}` : ''}${small ? ' card--sm' : ''}`,
   });
-  wrap.append(el('span', { class: 'slot__no', text: `#${no}` }));
+  // 番号は名前の行に出しているので、枠の中は「？？？」だけにする
+  wrap.append(el('span', { class: 'slot__no', text: '???' }));
   wrap.append(el('span', { class: 'slot__cat', text: CATEGORY_LABEL[cat] || '???' }));
   return wrap;
 }
@@ -161,6 +161,50 @@ export function coinAmount(n, { big = false, sign = false, label = true } = {}) 
   wrap.append(el('b', { class: 'coin__n', text: `${sign && n > 0 ? '+' : ''}${n}` }));
   if (label) wrap.append(el('span', { class: 'coin__u', text: 'SHIKA COIN' }));
   return wrap;
+}
+
+/* ===== まち巡りの目印 =====
+   ピンはタブの「まち巡り」と同じ形。訪問済みはミッションの達成と同じ「✓」。 */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function svgIcon(cls, viewBox, parts) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', viewBox);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('class', cls);
+  for (const [tag, attrs] of parts) {
+    const n = document.createElementNS(SVG_NS, tag);
+    for (const k of Object.keys(attrs)) n.setAttribute(k, attrs[k]);
+    svg.append(n);
+  }
+  return svg;
+}
+
+/** 地図のピン。タブの「まち巡り」と同じ絵。 */
+export function pinIcon() {
+  return svgIcon('pinico', '0 0 24 24', [
+    ['path', {
+      d: 'M12 21.4S19 14.3 19 9.9A7 7 0 0 0 5 9.9c0 4.4 7 11.5 7 11.5z',
+      fill: '#2f6f8f', stroke: '#2b2722', 'stroke-width': '1.5',
+      'stroke-linejoin': 'round', 'paint-order': 'stroke',
+    }],
+    ['circle', {
+      cx: '12', cy: '9.8', r: '2.7',
+      fill: '#fff8ec', stroke: '#2b2722', 'stroke-width': '1.5',
+      'stroke-linejoin': 'round', 'paint-order': 'stroke',
+    }],
+  ]);
+}
+
+/** 済みの印。ミッションを達成したときの「✓」と同じ見え方。 */
+export function checkIcon() {
+  return svgIcon('checkico', '0 0 24 24', [
+    ['path', {
+      d: 'M5 12.6 L10 17.4 L19 7',
+      fill: 'none', stroke: 'currentColor', 'stroke-width': '3.2',
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+    }],
+  ]);
 }
 
 export function resolveAsset(p) {
