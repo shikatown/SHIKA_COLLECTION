@@ -39,6 +39,7 @@ Service Worker の Cache Storage に、アプリ本体・カード画像・地�
 | 配信元（GitHub Pages） | HTML/CSS/JS、cards.json、画像 | 起動時・表示時 |
 | `tile.openstreetmap.org` | OpenStreetMap の地図タイル | まち巡り画面を開いたとき |
 | `www.google.com/maps` | 検索語または緯度経度を含むURL | 利用者がリンクを押したときだけ |
+| X／LINE／Facebook の投稿画面 | アプリのURLと、集めた枚数の一文 | 利用者が「SNSでシェア」から選んだときだけ |
 
 Google Maps へのリンクには、利用者の現在地は含めない（スポットの座標または検索語のみ）。
 

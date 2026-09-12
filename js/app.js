@@ -18,6 +18,7 @@ import { registerSW, checkDataUpdate, maybeSuggestInstall } from './update.js';
 import { maybeSuggestBackup } from './backup.js';
 import { categoryProgress, dailyAvailable, coinCfg } from './rewards.js';
 import * as geo from './geo.js';
+import { shareApp } from './share.js';
 
 /* ===== 動作環境の確認 ===== */
 function unsupportedReason() {
@@ -284,6 +285,13 @@ function renderHome(view) {
   const vs = geo.visitStats();
   main.append(bigBtn('#/map', 'まちを巡る', `現地訪問 ${vs.visited} / ${vs.total} か所`, false,
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6.5-6.2 6.5-10.5A6.5 6.5 0 0 0 5.5 10.5C5.5 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="10.3" r="2.3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'));
+
+  // SNSでシェア。3つのボタンの下に、少し控えめに置く
+  main.append(el('button', {
+    class: 'btn btn--block home__share', attrs: { type: 'button' },
+    html: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 10.8l7.4-4M8.3 13.2l7.4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>SNSでシェア</span>',
+    on: { click: () => shareApp() },
+  }));
 
   view.append(main);
 

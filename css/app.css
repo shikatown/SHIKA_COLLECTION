@@ -626,7 +626,14 @@ a{color:var(--accent)}
      ボタンが画面の外に押し出されることがない。 */
   height:calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom));
 }
-.gachahome__coin{display:flex;align-items:center;gap:10px;flex:none}
+/* コインの絵を画面の真ん中に置き、枚数はその右に添える。
+   左右を同じ幅の列にすると、枚数の桁が増えてもコインの位置は動かない。 */
+.gachahome__coin{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:10px;
+  width:100%;flex:none;
+}
+.gachahome__coin > .coinico{grid-column:2}
+.gachahome__coin > .gachahome__n{grid-column:3;justify-self:start}
 .gachahome__coin .coinico--lg{width:60px;height:60px}
 .gachahome__n{
   font-size:32px;font-weight:800;color:var(--coin);line-height:1;
@@ -754,6 +761,14 @@ a{color:var(--accent)}
 .titlebadge.is-on .titlebadge__i{filter:none}
 .titlebadge.is-on .titlebadge__n{color:var(--ink)}
 .titlebadge.is-on .titlebadge__s{color:var(--coin);font-weight:800}
+
+/* ===== SNSでシェア ===== */
+.home__share{margin-top:4px;gap:8px;color:var(--ink-2);font-size:14px}
+.home__share svg{width:18px;height:18px;flex:none}
+.sharelist{display:grid;gap:8px;margin:4px 0 2px}
+.share--x{background:#111;border-color:#111;color:#fff}
+.share--line{background:#06c755;border-color:#06c755;color:#fff}
+.share--fb{background:#1877f2;border-color:#1877f2;color:#fff}
 
 /* ===== 管理モード（公開前の点検用） ===== */
 .adminbar{
