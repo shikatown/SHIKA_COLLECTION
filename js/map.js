@@ -243,8 +243,8 @@ export function renderMap(view, params) {
   if (mapApi) { mapApi.destroy(); mapApi = null; }
 
   const stats = geo.visitStats();
+  // 見出しはアプリバーに出ているので、ここでは繰り返さない
   const head = el('div', { style: { marginBottom: '12px' } });
-  head.append(el('h2', { text: 'まち巡り', style: { marginBottom: '2px' } }));
   head.append(el('p', { class: 'muted', style: { margin: 0 }, text: `現地訪問 ${stats.visited} / ${stats.total} か所` }));
   head.append(el('div', { class: 'bar', style: { marginTop: '8px' } }, [
     el('span', { style: { width: `${stats.total ? (stats.visited / stats.total) * 100 : 0}%` } }),

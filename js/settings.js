@@ -12,7 +12,6 @@ import { clearImageCache } from './update.js';
 
 export function renderMore(view) {
   clear(view);
-  view.append(el('h2', { text: 'その他' }));
 
   const list = el('div', { class: 'list' });
   list.append(link('遊び方', '#/help'));
@@ -42,7 +41,6 @@ function link(label, href) {
 /* ===== 設定 ===== */
 export function renderSettings(view) {
   clear(view);
-  view.append(el('h2', { text: '設定' }));
 
   const list = el('div', { class: 'list' });
   list.append(toggleRow('効果音', 'sound'));
@@ -147,7 +145,6 @@ async function doReset() {
 export function renderHelp(view) {
   clear(view);
   const cfg = coinCfg();
-  view.append(el('h2', { text: '遊び方' }));
 
   view.append(section('ガチャ', [
     `1回 ${SINGLE_COST} SHIKA COIN、10連 ${TEN_COST} SHIKA COIN です（10連割引はありません）。`,
@@ -196,7 +193,6 @@ function section(title, lines) {
 /* ===== プライバシー ===== */
 export function renderPrivacy(view) {
   clear(view);
-  view.append(el('h2', { text: 'プライバシーについて' }));
   view.append(section('集めない情報', [
     '氏名・住所・電話番号・メールアドレスは入力欄そのものがありません。',
     'ユーザー登録やアカウントはありません。',
@@ -221,7 +217,6 @@ export function renderPrivacy(view) {
 export function renderRecords(view) {
   clear(view);
   const s = app.state;
-  view.append(el('h2', { text: '集めた記録' }));
 
   const p = el('div', { class: 'panel' });
   const stat = (k, v) => el('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', padding: '3px 0' } }, [

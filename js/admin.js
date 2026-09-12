@@ -59,7 +59,6 @@ export function renderAdmin(view) {
   const all = (app.cards || []).slice().sort((a, b) => String(a.id).localeCompare(String(b.id), 'ja'));
   const pub = publishedCards();
 
-  view.append(el('h2', { text: 'カード点検' }));
   view.append(el('p', {
     class: 'muted', style: { margin: '0 0 12px' },
     text: '公開前の確認用の画面です。配布前に管理モードを切ってください。',

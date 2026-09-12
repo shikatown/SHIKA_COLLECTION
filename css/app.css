@@ -390,6 +390,15 @@ a{color:var(--accent)}
 .cardtrack.is-sliding{ will-change:transform }
 .cardtrack.is-easing{ transition:transform .24s cubic-bezier(.25,.9,.3,1) }
 .cardtrack__now{ position:relative }
+/* カードの左上の番号。金の枠の上に置くので、絵は隠さない */
+.detail__no{
+  position:absolute;left:6px;top:6px;z-index:2;
+  background:rgba(28,25,22,.62);color:#fff;
+  font-size:10.5px;font-weight:800;letter-spacing:.03em;
+  font-variant-numeric:tabular-nums;
+  padding:2px 7px;border-radius:0 0 7px 0;
+  pointer-events:none;
+}
 .cardtrack__side{
   position:absolute;top:0;width:100%;
   pointer-events:none;display:none;

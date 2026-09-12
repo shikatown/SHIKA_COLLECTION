@@ -23,8 +23,8 @@ export function renderCollection(view, params) {
   const total = publishedCards().length;
   const owned = publishedCards().filter((c) => isOwned(c.id)).length;
 
+  // 見出しはアプリバーに出ているので、ここでは繰り返さない
   const head = el('div', { style: { marginBottom: '6px' } });
-  head.append(el('h2', { text: 'カード', style: { marginBottom: '2px' } }));
   head.append(el('p', { class: 'muted', style: { margin: 0 }, text: `${owned} / ${total} 種類` }));
   view.append(head);
 

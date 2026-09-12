@@ -36,7 +36,7 @@ export function renderCardDetail(view, params) {
       if (justSwiped()) return;            // 左右に払っただけのときは開かない
       openViewer(c.id);
     });
-    wrap.append(track(c, face));
+    wrap.append(track(c, face, true));
   } else {
     wrap.append(lockedCard(c));
     wrap.append(el('p', { class: 'muted', style: { fontSize: '11px', textAlign: 'center', marginTop: '8px' }, text: 'カード画像は取得後のお楽しみ' }));
@@ -139,7 +139,7 @@ function favButton(c) {
 
 /** カードの左右に、前後のカードを控えさせる。
     払っているあいだ、指について動いて隣が見える。 */
-function track(c, face) {
+function track(c, face, withNo) {
   const t = el('div', { class: 'cardtrack' });
   const list = ordered();
   const at = list.findIndex((x) => x.id === c.id);
@@ -154,7 +154,13 @@ function track(c, face) {
     const next = list[(at + 1) % list.length];
     t.append(side(prev, 'prev'), side(next, 'next'));
   }
-  t.append(el('div', { class: 'cardtrack__now' }, [face]));
+  const now = el('div', { class: 'cardtrack__now' }, [face]);
+  // カードの左上に番号。一覧の「#01 名前」と同じ見え方にそろえる
+  if (withNo) {
+    const no = String(Number(c.id) || 0).padStart(2, '0');   // 一覧やカードの表記に合わせる
+    now.append(el('b', { class: 'detail__no', text: `#${no}` }));
+  }
+  t.append(now);
   return t;
 }
 
@@ -178,8 +184,9 @@ function attachSwipe(view) {
   swipeReady = true;
   let start = null;
   /* 画面の左右の端は受け付けない。
-     端からの横払いは、スマホ本来の「戻る」操作に使われているため。 */
-  const EDGE = 32;
+     端からの横払いは、スマホ本来の「戻る」操作に使われているため。
+     指は端ぴったりから始まるとは限らないので、広めに空ける。 */
+  const EDGE = 56;
 
   const nowId = () => {
     const m = /^#\/card\/([^?]+)/.exec(location.hash || '');
