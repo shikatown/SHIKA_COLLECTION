@@ -247,48 +247,61 @@ a{color:var(--accent)}
 @keyframes snapDimIn{ from{ opacity:0 } to{ opacity:1 } }
 @keyframes snapDimOut{ from{ opacity:1 } to{ opacity:0 } }
 
-/* 外枠は動かさず、位置と奥行き（perspective）だけを決める。
-   動くのは中の .snapfly__c。こうすると飛び先の測り方が単純になる。 */
+/* 外枠は位置だけを決める。動くのは中の .snapfly__c。
+   回転は rotateY を使わず、横を縮めて 0 にしたところで面を入れ替える。
+   3Dの裏面制御（backface-visibility）が効かない端末があり、
+   そこでは表の絵が左右反転したまま見えてしまうため。 */
 .snapfly{
   position:fixed;left:50%;top:46%;z-index:65;
   width:min(62vw,44vh,260px);aspect-ratio:4/5;
   transform:translate(-50%,-50%);
-  perspective:1200px;pointer-events:none;
+  pointer-events:none;
 }
 .snapfly__c{
   position:absolute;inset:0;opacity:0;
-  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
   will-change:transform,opacity;
 }
-/* 表を rotateY(0) 側に置く。こうすると、万一アニメーションが効かなくても
-   表が見える（裏で止まらない）。 */
-.snapfly__s{
-  position:absolute;inset:0;border-radius:10px;overflow:hidden;
-  -webkit-backface-visibility:hidden;backface-visibility:hidden;
-}
-.snapfly__s--back{ transform:rotateY(180deg) }
+.snapfly__s{ position:absolute;inset:0;border-radius:10px;overflow:hidden;visibility:hidden }
 .snapfly__s .card{ position:absolute;inset:0;width:100%;height:100%;border-radius:10px;box-shadow:none }
 
-/* 小さく出てきて、くるっと1回半まわって表を向く */
-.snapfly.is-in .snapfly__c{ animation:snapSpin var(--tspin,.86s) cubic-bezier(.2,.85,.25,1) both }
-/* 裏のまま出てきて、いったん見せてから、1回半まわって表で止まる。
-   出てくる途中に回し始めると、裏が見えないうちに表になってしまう。 */
+/* 小さく出てきて、ゆっくり3回ひるがえり、表で止まる。
+   横幅が0になる 38% / 60% / 82% のところで、見せる面を入れ替える。 */
+.snapfly.is-in .snapfly__c{ animation:snapSpin var(--tspin,1.5s) linear both }
 @keyframes snapSpin{
-  0%  { opacity:0; transform:scale(.4)  rotateY(180deg) }
-  12% { opacity:1; transform:scale(.78) rotateY(180deg) }
-  30% { opacity:1; transform:scale(1)   rotateY(180deg) }   /* ここまで裏 */
-  72% { opacity:1; transform:scale(1.06) rotateY(520deg) }
-  100%{ opacity:1; transform:scale(1)   rotateY(720deg) }   /* 表で止まる */
+  0%  { opacity:0; transform:scale(.42) scaleX(1) }
+  10% { opacity:1; transform:scale(.55) scaleX(1) }
+  38% { opacity:1; transform:scale(.80) scaleX(.02) }
+  49% { opacity:1; transform:scale(.90) scaleX(1) }
+  60% { opacity:1; transform:scale(.97) scaleX(.02) }
+  71% { opacity:1; transform:scale(1.04) scaleX(1) }
+  82% { opacity:1; transform:scale(1.02) scaleX(.02) }
+  100%{ opacity:1; transform:scale(1) scaleX(1) }
 }
-/* 枠へ吸い込まれる。--dx / --dy / --k は js/collection.js が測って入れる */
+/* 裏 → 表 → 裏 → 表。切り替えは隣り合う目盛りで一瞬に。 */
+.snapfly.is-in .snapfly__s--back{ animation:snapFaceBack var(--tspin,1.5s) linear both }
+.snapfly.is-in .snapfly__s--front{ animation:snapFaceFront var(--tspin,1.5s) linear both }
+@keyframes snapFaceBack{
+  0%{ visibility:visible } 37.9%{ visibility:visible }
+  38%{ visibility:hidden } 59.9%{ visibility:hidden }
+  60%{ visibility:visible } 81.9%{ visibility:visible }
+  82%{ visibility:hidden } 100%{ visibility:hidden }
+}
+@keyframes snapFaceFront{
+  0%{ visibility:hidden } 37.9%{ visibility:hidden }
+  38%{ visibility:visible } 59.9%{ visibility:visible }
+  60%{ visibility:hidden } 81.9%{ visibility:hidden }
+  82%{ visibility:visible } 100%{ visibility:visible }
+}
+/* 枠へ吸い込まれる。表を向けたまま動かす。
+   --dx / --dy / --k は js/collection.js が測って入れる */
 .snapfly.is-fly .snapfly__c{ animation:snapFly var(--tfly,.44s) cubic-bezier(.5,-0.16,.3,1) forwards }
-/* 枠へ飛ぶあいだは表を向けたまま。獲得したカードの絵を見せながらはめる。 */
 @keyframes snapFly{
-  0%  { opacity:1; transform:translate(0,0) scale(1) rotateY(720deg) }
+  0%  { opacity:1; transform:translate(0,0) scale(1) }
   62% { opacity:1; transform:translate(calc(var(--dx) * .82), calc(var(--dy) * .82))
-                             scale(calc(var(--k) * 1.5)) rotateY(720deg) }
-  100%{ opacity:1; transform:translate(var(--dx), var(--dy)) scale(var(--k)) rotateY(720deg) }
+                             scale(calc(var(--k) * 1.5)) }
+  100%{ opacity:1; transform:translate(var(--dx), var(--dy)) scale(var(--k)) }
 }
+
 /* はまったあと、そのカードだけ左から右へ光が走る */
 /* 細く鋭い光。幅が広いと、ゆっくり通る靄のように見えてしまう */
 .cell__drop::after{

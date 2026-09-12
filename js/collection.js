@@ -97,9 +97,10 @@ async function snapIn(grid, cells) {
      省いたままだと高さが仮置きのままで、寄せた先が後からずれる。 */
   grid.classList.add('grid--snapping');
   const many = cells.length > 6;
+  // ゆっくり3回ひるがえるので、回転にはそれなりの時間を取る
   const T = many
-    ? { glide: 300, spin: 620, hold: 60, fly: 360, rest: 120 }
-    : { glide: 340, spin: 860, hold: 140, fly: 440, rest: 260 };
+    ? { glide: 300, spin: 1150, hold: 80, fly: 360, rest: 120 }
+    : { glide: 340, spin: 1500, hold: 180, fly: 440, rest: 260 };
 
   // 画面のどこかを触られたら、残りはまとめて終わらせる（長く待たせない）
   let skip = false;
@@ -178,6 +179,11 @@ async function snapIn(grid, cells) {
     fly.remove();
     dim.remove();
   };
+
+  /* 起動直後にこの画面から始まったときは、起動画面がまだ前に出ている。
+     その裏で演出しても見えないので、消えるまで待つ。 */
+  const bootEl = document.getElementById('boot');
+  for (let i = 0; i < 60 && bootEl && !bootEl.hidden; i += 1) await sleep(120);
 
   await sleep(620);   // 画面の位置を戻す処理（router.js）が落ち着くまで待つ
   for (const [i, cellEl] of cells.entries()) {
