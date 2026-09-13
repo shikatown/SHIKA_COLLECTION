@@ -117,7 +117,6 @@ export function createOpening() {
     boot.classList.add('is-title');
     nodes.title.setAttribute('aria-hidden', 'false');
     updateStartButton();
-    beginShellGlow(nodes.shells, later);
     markOpeningPlayed();
   }
 
@@ -221,17 +220,7 @@ function buildOpening(viewport) {
   const vignette = el('div', { class: 'opening__vignette', attrs: { 'aria-hidden': 'true' } });
   const canvas = el('canvas', { class: 'opening__particles', attrs: { 'aria-hidden': 'true' } });
 
-  const shells = el('div', { class: 'opening__shells', attrs: { 'aria-hidden': 'true' } });
-  const shellSettings = [
-    ['16%', '76%', '-18deg', '.82'],
-    ['73%', '72%', '21deg', '.7'],
-    ['31%', '87%', '9deg', '.58'],
-    ['84%', '88%', '-8deg', '.65'],
-    ['56%', '81%', '32deg', '.52'],
-  ];
-  for (const [x, y, r, s] of shellSettings) {
-    shells.append(el('i', { class: 'opening__shell', style: { '--x': x, '--y': y, '--r': r, '--s': s } }));
-  }
+  // v1.29.2: スタート付近の桜貝の飾りは外した（ボタンまわりが見にくくなるため）
 
   // #001（甘えび）の主役位置には、提供済みのカード裏面を無加工で表示する。
   const featured = el('div', { class: 'opening__side opening__side--featured' }, [cardBack()]);
@@ -262,9 +251,9 @@ function buildOpening(viewport) {
   ]);
 
   viewport.append(
-    shore, twilight, vignette, canvas, shells, fan, cardZone, flash, title,
+    shore, twilight, vignette, canvas, fan, cardZone, flash, title,
   );
-  return { canvas, shells, fan, logo, title, start };
+  return { canvas, fan, logo, title, start };
 }
 
 function fillFan(fan, cards) {
@@ -388,18 +377,6 @@ function scheduleSounds(mode, later) {
   }
 }
 
-function beginShellGlow(shells, later) {
-  const items = [...shells.querySelectorAll('.opening__shell')];
-  if (!items.length) return;
-  const glow = () => {
-    items.forEach((item) => item.classList.remove('is-glowing'));
-    const chosen = items[Math.floor(Math.random() * items.length)];
-    chosen.classList.add('is-glowing');
-    later(1100, () => chosen.classList.remove('is-glowing'));
-    later(3200 + Math.random() * 1800, glow);
-  };
-  later(1200, glow);
-}
 
 function startParticles(canvas, lite) {
   const ctx = canvas.getContext('2d', { alpha: true });
