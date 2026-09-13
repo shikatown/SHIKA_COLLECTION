@@ -192,43 +192,19 @@ a{color:var(--accent)}
 .hero__logoimg--hi{opacity:0;transition:opacity .2s linear}
 .hero__logoimg--hi.is-on{opacity:1}
 
-/* 「志賀町を、あつめよう。」をロゴ風に。
-   裏面のロゴの COLLECTION と同じく、青いリボンに、ふちどりの太い文字をのせる。 */
-.tagline{
-  display:flex;justify-content:center;margin:2px 0 14px;
-  font-family:var(--font-ui);line-height:1;
-  filter:drop-shadow(0 3px 0 #06397a) drop-shadow(0 7px 10px rgba(10,40,80,.22));
+/* 「志賀町を、あつめよう。」をロゴ風に（js/app.js の TAGLINE_SVG）。
+   ゆるい弧に沿った白い文字に青いふち、両脇に金の星。裏面のロゴの COLLECTION と同じ配色。 */
+.tagline{display:flex;justify-content:center;margin:0 0 8px;line-height:1}
+.tagline__svg{
+  width:min(100%,340px);height:auto;display:block;overflow:visible;
+  filter:drop-shadow(0 3px 0 #083a7c) drop-shadow(0 8px 10px rgba(10,40,80,.2));
 }
-.tagline__band{
-  display:inline-flex;align-items:baseline;gap:1px;
-  padding:9px 30px 10px;
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.35) 0 2px,transparent 2px),
-    linear-gradient(180deg,#3aa0ea 0%,#0d63c6 55%,#0a4a9e 100%);
-  /* 両端を切り欠いたリボン */
-  clip-path:polygon(0 0,100% 0,calc(100% - 14px) 50%,100% 100%,0 100%,14px 50%);
-  transform:rotate(-2deg);
+.tagline__svg text{
+  font-family:var(--font-ui);font-size:27px;font-weight:900;letter-spacing:2px;
+  fill:#fff;stroke:#0b4a9c;stroke-width:7px;paint-order:stroke;stroke-linejoin:round;
 }
-.tagline__town,
-.tagline__rest{
-  font-weight:900;letter-spacing:.05em;
-  paint-order:stroke fill;-webkit-font-smoothing:antialiased;
-}
-.tagline__town{
-  font-size:27px;color:#ffd54a;
-  -webkit-text-stroke:5px #5f3500;
-  text-shadow:0 2px 0 #5f3500;
-}
-.tagline__rest{
-  font-size:19px;color:#fff;
-  -webkit-text-stroke:4px #063a7a;
-  text-shadow:0 2px 0 #063a7a;
-}
-@media (max-width:359px){
-  .tagline__band{padding:8px 24px 9px}
-  .tagline__town{font-size:23px}
-  .tagline__rest{font-size:16px}
-}
+.tagline__star{fill:#f2b632;stroke:#8a5a00;stroke-width:1.4px;stroke-linejoin:round}
+
 /* ホームのボタンは3つ。遊び方と設定は歯車へ移したので、
    残った場所の真ん中に置いて、下が空きすぎないようにする。 */
 .home{
@@ -725,6 +701,14 @@ a{color:var(--accent)}
   .card--wobble > *{ animation:none }
 }
 
+/* 初回のガチャ画面：上はコインの代わりに、ひとことの案内 */
+.gachahome__intro{flex:none;text-align:center;padding:0 6px}
+.gachahome__hello{font-size:19px;font-weight:900;margin:0 0 4px;letter-spacing:.06em}
+.gachahome__intro p{margin:0;font-size:12.5px;color:var(--ink-3);line-height:1.5}
+.gachahome__intro p span{display:block}
+@media (max-width:374px){ .gachahome__intro p{font-size:11.5px} }
+.gachahome__firstbtn{font-size:18px;font-weight:900;letter-spacing:.06em;padding:16px 20px}
+
 /* ガチャのボタン。名前の右に、値段を「コインの絵＋数字」で並べる。 */
 .btn--gacha{gap:14px;padding:15px 20px}
 .btn--gacha__label{font-size:17px;font-weight:800;letter-spacing:.04em}
@@ -1029,13 +1013,10 @@ a{color:var(--accent)}
   display:grid;justify-items:center;gap:2px;text-align:center;
   font-family:var(--font-ui);line-height:1;
 }
-.firstpop__free{
-  font-size:44px;font-weight:900;color:#e0342f;letter-spacing:.06em;
+.firstpop__ten{
+  font-size:31px;font-weight:900;color:#e0342f;letter-spacing:.03em;
   -webkit-text-stroke:6px #fff;paint-order:stroke fill;
   filter:drop-shadow(0 3px 0 #2b2722);
-}
-.firstpop__ten{
-  font-size:22px;font-weight:900;color:#2b2722;letter-spacing:.04em;margin-top:2px;
 }
 .firstpop__cta{
   margin-top:8px;padding:6px 14px;border-radius:999px;
@@ -1059,8 +1040,7 @@ a{color:var(--accent)}
 }
 @media (max-width:359px){
   .firstpop__cards{width:76px}
-  .firstpop__free{font-size:38px}
-  .firstpop__ten{font-size:19px}
+  .firstpop__ten{font-size:26px}
 }
 
 /* ===== コインが右上へ飛ぶ演出（js/coin-fly.js） ===== */

@@ -274,7 +274,7 @@ function renderHome(view) {
   view.append(page);
   view = page;
 
-  /* 初めての人（無料10連をまだ引いていない人）には、ロゴと「無料10連」のポップを出す。
+  /* 初めての人（初回の10連をまだ引いていない人）には、ロゴと「10連ガチャ」のポップを出す。
      引いたあとは、ロゴの代わりに持っているカードを大きく見せる。 */
   const first = !s.flags.firstFreeTenDone;
   const hero = el('div', { class: `hero${first ? ' hero--first' : ''}` });
@@ -338,28 +338,31 @@ function homeLogo() {
   return logo;
 }
 
-/** 「志賀町を、あつめよう。」をロゴ風に。裏面のロゴの COLLECTION と同じく、青いリボンに太い文字をのせる */
+/** 「志賀町を、あつめよう。」をロゴ風に。
+    ゆるい弧に沿って並べた白い文字に青いふちを付け、両脇に金の星を置く。
+    裏面のロゴの COLLECTION と同じ配色。文字は画像ではなく本物の文字（固定の図形なので html で差し込む）。 */
+const TAGLINE_SVG = '<svg class="tagline__svg" viewBox="0 0 340 96" aria-hidden="true" focusable="false">'
+  + '<defs><path id="taglineArc" d="M24 86 Q170 20 316 86"/></defs>'
+  + '<text text-anchor="middle"><textPath href="#taglineArc" startOffset="50%">志賀町を、あつめよう。</textPath></text>'
+  + '<path class="tagline__star" d="M20 40l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L11 47l6-1z"/>'
+  + '<path class="tagline__star" d="M320 40l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L311 47l6-1z"/>'
+  + '</svg>';
+
 function taglineLogo() {
-  return el('h2', { class: 'tagline', attrs: { 'aria-label': '志賀町を、あつめよう。' } }, [
-    el('span', { class: 'tagline__band', attrs: { 'aria-hidden': 'true' } }, [
-      el('b', { class: 'tagline__town', text: '志賀町' }),
-      el('span', { class: 'tagline__rest', text: 'を、あつめよう。' }),
-    ]),
-  ]);
+  return el('h2', { class: 'tagline', attrs: { 'aria-label': '志賀町を、あつめよう。' }, html: TAGLINE_SVG });
 }
 
-/** 初回だけの「無料10連」ポップ。押すとガチャ画面（無料で10連を引くボタンがある）へ */
+/** 初回だけの「10連ガチャ」ポップ。押すとガチャ画面（10連ガチャを引くボタンがある）へ */
 function firstGachaPop() {
   const pop = el('a', {
     class: 'firstpop',
-    attrs: { href: '#/gacha', 'aria-label': '初回限定 無料で10連ガチャを引く' },
+    attrs: { href: '#/gacha', 'aria-label': '初回限定 10連ガチャを引く' },
   });
   pop.append(el('span', { class: 'firstpop__ribbon', attrs: { 'aria-hidden': 'true' }, text: '初回限定' }));
   pop.append(el('span', { class: 'firstpop__cards', attrs: { 'aria-hidden': 'true' } }, [
     cardBack({ small: true }), cardBack({ small: true }), cardBack({ small: true }),
   ]));
   pop.append(el('span', { class: 'firstpop__body', attrs: { 'aria-hidden': 'true' } }, [
-    el('span', { class: 'firstpop__free', text: '無料' }),
     el('span', { class: 'firstpop__ten', text: '10連ガチャ' }),
     el('span', { class: 'firstpop__cta', text: 'タップして引く ▶' }),
   ]));

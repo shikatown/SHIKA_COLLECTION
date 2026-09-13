@@ -214,21 +214,30 @@ function gachaButton(label, cost, cls, freeNow, onClick) {
   return b;
 }
 
+/* 初回のガチャ画面。いつものガチャ画面と同じく、カードの裏を大きく出して揺らす。
+   コインの代わりに、ひとことの案内を上に置く。 */
 function firstTimePanel(view) {
-  const p = el('div', { class: 'panel', style: { textAlign: 'center' } });
-  p.append(el('h2', { class: 'panel__title', text: 'はじめまして', style: { marginBottom: '6px' } }));
-  p.append(el('p', {
-    class: 'muted',
-    style: { margin: '0 0 4px' },
-    text: 'グルメ・スポット・文化のカードで志賀町を集めます。',
-  }));
-  p.append(el('p', { class: 'muted', style: { margin: '0 0 14px' }, text: 'まずは無料の10連からどうぞ。' }));
-  p.append(el('button', {
-    class: 'btn btn--primary btn--lg btn--block', attrs: { type: 'button' },
-    text: '無料で10連を引く',
-    on: { click: () => start('free10', view) },
-  }));
-  return p;
+  const home = el('div', { class: 'gachahome gachahome--first' });
+  home.append(el('div', { class: 'gachahome__intro' }, [
+    el('h2', { class: 'gachahome__hello', text: 'はじめまして' }),
+    // 文の途中で折り返して1〜2文字だけ次の行に落ちないよう、2つの文を行に分ける
+    el('p', {}, [
+      el('span', { text: 'グルメ・スポット・文化のカードで志賀町を集めます。' }),
+      el('span', { text: 'まずは10連からどうぞ。' }),
+    ]),
+  ]));
+  // たまごが孵る前のように、カードがゆらゆら揺れる（いつものガチャ画面と同じ）
+  const back = cardBack();
+  back.classList.add('card--wobble');
+  home.append(el('div', { class: 'gachahome__card' }, [back]));
+  home.append(el('div', { class: 'gachahome__acts' }, [
+    el('button', {
+      class: 'btn btn--primary btn--lg btn--block gachahome__firstbtn', attrs: { type: 'button' },
+      text: '10連ガチャを引く',
+      on: { click: () => start('free10', view) },
+    }),
+  ]));
+  return home;
 }
 
 function shortOfCoins(only10 = false) {
