@@ -8,7 +8,7 @@ import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dia
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
-import { photoUrl } from './card-render.js';
+import { photoUrl, thumbUrl } from './card-render.js';
 import { createGachaStage } from './gacha-anim.js';
 import { isAdmin } from './admin.js';
 
@@ -95,29 +95,52 @@ export function clearPending() { commit((s) => { s.pendingResult = null; }); }
    仕様§9.5: 当落画像を先に読み込み、表示できる状態になってから演出を始める。
    カードは部品から組み立てるので、写真とジャンル共通の部品（台紙・アイコン・ロゴ）を先に読む。 */
 function preload(ids) {
-  const urls = new Set();
+  /* 演出を始めるのに要るのは、カードの裏と、小さい写真・台紙だけ。
+     原寸（写真は平均640KB・最大3MB、台紙やアイコンは1枚1MB超）まで待つと、
+     スマホの回線では8秒近く「準備しています」のままになっていた。
+     カードは小さい写真の上に原寸を重ねて、読み終わったらそっと現す作りなので、
+     原寸は待たずに裏で読み始めるだけにする。 */
+  const need = new Set(['./assets/cards/_back.png']);
+  const later = new Set();
   for (const id of ids) {
     const c = app.cardsById.get(id);
     if (!c) continue;
     if (c.cardImage) {
-      urls.add(c.cardImage.startsWith('http') ? c.cardImage
+      need.add(c.cardImage.startsWith('http') ? c.cardImage
         : (c.cardImage.startsWith('assets/') ? `./${c.cardImage}` : `./assets/cards/${c.cardImage}`));
       continue;
     }
-    if (c.photo) urls.add(photoUrl(c.photo));
+    if (c.photo) {
+      const small = thumbUrl(c.photo);
+      if (small) need.add(small);
+      later.add(photoUrl(c.photo));
+    }
     if (c.category) {
-      urls.add(`./assets/frames/${c.category}.png`);
-      urls.add(`./assets/frames/icon-${c.category}.png`);
+      need.add(`./assets/frames/thumb/${c.category}.png`);
+      need.add(`./assets/frames/thumb/icon-${c.category}.png`);
+      later.add(`./assets/frames/${c.category}.png`);
     }
   }
-  urls.add('./assets/frames/logo.png');
-  urls.add('./assets/cards/_back.png');
-  const jobs = [...urls].map((src) => new Promise((resolve) => {
+  need.add('./assets/frames/thumb/logo.png');
+
+  const load = (src, low) => new Promise((resolve) => {
     const img = new Image();
+    img.decoding = 'async';
+    if (low) { try { img.fetchPriority = 'low'; } catch (_) { /* 未対応は無視 */ } }
     img.onload = img.onerror = () => resolve();
     img.src = src;
-  }));
-  return Promise.race([Promise.all(jobs), sleep(8000)]);
+  });
+  // 小さい部品がそろうか、1.5秒たったら始める
+  const ready = Promise.race([Promise.all([...need].map((src) => load(src, false))), sleep(1500)]);
+  /* 原寸は待たない。ただし小さい部品より先に読み始めると、
+     ブラウザが同じサーバーへ同時に張れる接続（6本ほど）を原寸が占めてしまい、
+     肝心の小さい写真が後ろで待たされる。そろってから、2本ずつ引いた順に読む。 */
+  ready.then(() => {
+    const queue = [...later];
+    const next = () => { if (queue.length) load(queue.shift(), true).then(next); };
+    next(); next();
+  });
+  return ready;
 }
 
 /* ===== ガチャ画面 ===== */

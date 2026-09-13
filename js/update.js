@@ -6,6 +6,10 @@ import { app, commit, publishedCards } from './state.js';
 import { dialog, toast } from './ui.js';
 
 let refreshing = false;
+/* 「更新する」を押したときだけ開き直す。
+   初めて開いたときは、Service Worker が入った瞬間にも controllerchange が起きる。
+   そこで開き直すと、起動演出がもう一度流れたり、ガチャの途中で画面が戻ったりしていた。 */
+let userAskedUpdate = false;
 
 export function canUseSW() {
   return 'serviceWorker' in navigator &&
@@ -18,7 +22,7 @@ export async function registerSW() {
     const reg = await navigator.serviceWorker.register('./service-worker.js');
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (refreshing) return;
+      if (refreshing || !userAskedUpdate) return;
       refreshing = true;
       location.reload();
     });
@@ -48,7 +52,10 @@ async function promptUpdate(worker) {
     body: ['更新すると最新の内容で開き直します。'],
     actions: [{ label: 'あとで', value: false }, { label: '更新する', value: true, primary: true }],
   });
-  if (ok) worker.postMessage({ type: 'SKIP_WAITING' });
+  if (ok) {
+    userAskedUpdate = true;
+    worker.postMessage({ type: 'SKIP_WAITING' });
+  }
 }
 
 /** 写真の控えを捨てるよう Service Worker に頼む。次に見たときに取り直す。 */

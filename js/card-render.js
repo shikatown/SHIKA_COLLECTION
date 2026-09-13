@@ -93,8 +93,13 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
     const full = photoUrl(card.photo);
     const small = thumbUrl(card.photo);
     const img = el('img', {
+      class: 'cardart__pic',
       attrs: { src: small || full, alt: '', loading: 'lazy', decoding: 'async' },
     });
+    // 読み終わってから現す。すでに手元にある（先読み済み）ときは最初から出す
+    const reveal = () => img.classList.add('is-on');
+    if (img.complete && img.naturalWidth) reveal();
+    else img.addEventListener('load', reveal);
     let triedFull = !small;
     img.addEventListener('error', () => {
       if (!triedFull) { triedFull = true; img.src = full; return; }   // 小さい写真が無ければ原寸で

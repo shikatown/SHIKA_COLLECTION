@@ -30,11 +30,18 @@
 .cardart__photo{
   position:absolute;
   left:5.278%; top:4.222%; width:89.352%; height:46.148%;
-  overflow:hidden; background:#17151a;
+  /* 写真が届くまでの下地。以前は黒に近い色で、読み込み中に「黒く抜けた」ように見えた。
+     台紙の色になじむ明るい砂色にして、写真はふわっと現す。 */
+  overflow:hidden;
+  background:linear-gradient(160deg,#efe9df 0%,#e2d9cb 100%);
 }
 .cardart__photo img{ width:100%; height:100%; object-fit:cover; display:block }
+/* 小さい写真は、読み終わってから現す（すでに手元にあるときは最初から出す） */
+.cardart__photo > img.cardart__pic{ opacity:0; transition:opacity .18s linear }
+.cardart__photo > img.cardart__pic.is-on{ opacity:1 }
+/* 「？」と「写真準備中」は白い文字なので、下地は暗いまま */
 .cardart__photo.is-empty,
-.cardart__photo.is-locked{ display:grid; place-items:center }
+.cardart__photo.is-locked{ display:grid; place-items:center; background:#17151a }
 .cardart__photo.is-empty span{
   color:rgba(255,255,255,.82); font-size:4.2cqw; font-weight:800; letter-spacing:.12em;
 }

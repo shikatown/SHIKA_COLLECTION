@@ -19,6 +19,7 @@ import { maybeSuggestBackup } from './backup.js';
 import { categoryProgress, dailyAvailable, coinCfg } from './rewards.js';
 import * as geo from './geo.js';
 import { createOpening } from './opening.js';
+import { thumbUrl } from './card-render.js';
 import { shareApp } from './share.js';
 
 /* ===== 動作環境の確認 ===== */
@@ -79,6 +80,8 @@ async function boot() {
 
   // 周りの8枚は、公開カードから既存の描画機能で作る
   opening.setCards(publishedCards());
+  // カード一覧で写真が黒く抜けないよう、小さい写真と台紙を先に読んでおく（待たない）
+  warmCardThumbs();
   let mode = opening.preferredMode;
   if (mode === 'full' && !readyInTime) mode = 'short';
   opening.start(mode);
@@ -109,6 +112,34 @@ async function boot() {
 
 /* ===== 起動演出 ===== */
 /** 起動画面のあいだに読んでおく絵。読み終わりは待たない。 */
+/**
+ * カード一覧で使う小さい写真と台紙を、裏で読んでおく。
+ * 一覧を開いた瞬間に写真がまだ無く、黒く抜けて見えるのを防ぐ。
+ * 53枚ぶんで合計およそ1.3MB。起動演出の絵を先に読ませたいので、少し遅らせて始め、
+ * 同時に読む数も2本に絞る（すぐガチャを引いたときに、ガチャ側の読み込みの邪魔をしない）。
+ * 読み終わりは待たない。
+ */
+function warmCardThumbs() {
+  const urls = [];
+  for (const g of ['gourmet', 'spot', 'culture']) {
+    urls.push(`./assets/frames/thumb/${g}.png`, `./assets/frames/thumb/icon-${g}.png`);
+  }
+  for (const c of publishedCards()) {
+    const u = c.photo ? thumbUrl(c.photo) : '';
+    if (u) urls.push(u);
+  }
+  let next = 0;
+  const one = () => {
+    if (next >= urls.length) return;
+    const img = new Image();
+    img.decoding = 'async';
+    try { img.fetchPriority = 'low'; } catch (_) { /* 未対応の端末は無視 */ }
+    img.onload = img.onerror = one;
+    img.src = urls[next++];
+  };
+  setTimeout(() => { one(); one(); }, 600);
+}
+
 function warmHomeImages() {
   for (const src of [
     './assets/cards/_back.png',            // 起動画面のカードの裏
