@@ -112,8 +112,12 @@ export function renderCollection(view, params) {
     はまったカードには NEW を付けて、何が手に入ったか画面を離れるまで分かるようにする。
     見せ終わったら控えを消して、次に開いたときは静かにする。 */
 async function snapIn(grid, cells) {
-  const done = () => commit((s) => { s.unseenCardIds = []; });
+  /* 「見た」にするのは、実際に枠にはまったカードだけ。
+     以前は途中でやめても未確認の記録を全部消していたので、見ていないカードの演出が二度と出なかった。 */
+  const shown = new Set();
+  const done = () => commit((s) => { s.unseenCardIds = s.unseenCardIds.filter((id) => !shown.has(id)); });
   const finish = (cellEl) => {
+    shown.add(cellEl.dataset.id);
     cellEl.classList.add('is-snapped');
     const card = cellEl.querySelector('.cell__drop > .card') || cellEl.querySelector('.card');
     if (card && !card.querySelector('.card__new')) card.append(el('div', { class: 'card__new', text: 'NEW' }));
@@ -143,6 +147,17 @@ async function snapIn(grid, cells) {
     for (const ev of ['wheel', 'touchstart', 'keydown']) window.removeEventListener(ev, stopFollow);
   };
 
+  /* 画面を離れたら（別のタブへ移る・カードを開く・絞り込みで一覧を描き直す）、演出はそこでやめて片付ける。
+     以前は画面が変わっても暗い幕と飛ぶカードが残り、次のカードの演出まで続いていた。 */
+  let cancelled = false;
+  const cancel = () => {
+    if (cancelled) return;
+    cancelled = true;
+    for (const n of document.querySelectorAll('.snapfly, .snapdim')) n.remove();
+  };
+  window.addEventListener('hashchange', cancel);
+  const gone = () => cancelled || !grid.isConnected;
+
   const targetY = (node) => {
     const r = node.getBoundingClientRect();
     const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
@@ -157,7 +172,7 @@ async function snapIn(grid, cells) {
     if (!follow || Math.abs(to - from) < 2) { resolve(); return; }
     const t0 = performance.now();
     const step = () => {
-      if (!follow) { resolve(); return; }
+      if (!follow || gone()) { resolve(); return; }   // 離れた画面を勝手に動かさない
       const k = Math.min(1, (performance.now() - t0) / T.glide);
       window.scrollTo(0, from + (to - from) * (1 - Math.pow(1 - k, 3)));
       if (k < 1) setTimeout(step, 16);
@@ -189,6 +204,7 @@ async function snapIn(grid, cells) {
     // 中央に大きく出して、くるっと回す
     fly.classList.add('is-in');
     await sleep(T.spin + T.hold);
+    if (gone()) { fly.remove(); dim.remove(); return; }
 
     // 枠の位置へ飛ばす
     settleOn(cellEl);
@@ -200,6 +216,7 @@ async function snapIn(grid, cells) {
     dim.classList.add('is-out');
     fly.classList.add('is-fly');
     await sleep(T.fly);
+    if (gone()) { fly.remove(); dim.remove(); return; }
 
     // 着地。「パチーン」と鳴らす
     finish(cellEl);
@@ -216,18 +233,21 @@ async function snapIn(grid, cells) {
 
   await sleep(620);   // 画面の位置を戻す処理（router.js）が落ち着くまで待つ
   for (const [i, cellEl] of cells.entries()) {
-    if (skip) break;
+    if (skip || gone()) break;
     const card = app.cardsById.get(cellEl.dataset.id);
     if (!card) { finish(cellEl); continue; }
     await glideTo(cellEl);
+    if (gone()) break;
     await flyInto(cellEl, card, i === cells.length - 1);
+    if (gone()) break;
     await sleep(T.rest);
   }
-  // 飛ばしたぶんは、そのまま枠に収める
-  for (const c of cells) finish(c);
+  window.removeEventListener('hashchange', cancel);
   for (const n of document.querySelectorAll('.snapfly, .snapdim')) n.remove();
   grid.classList.remove('grid--snapping');
   release();
+  // 触って飛ばしたぶんは、そのまま枠に収める。画面を離れたときは収めない（次に開いたときに演出する）
+  if (!gone()) for (const c of cells) finish(c);
   done();
 }
 

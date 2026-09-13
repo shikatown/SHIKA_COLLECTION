@@ -11,6 +11,7 @@ import { openViewer } from './card-3d.js';
 import { photoUrl, thumbUrl } from './card-render.js';
 import { createGachaStage } from './gacha-anim.js';
 import { isAdmin } from './admin.js';
+import { isValidPendingResult } from './storage.js';
 
 export const SINGLE_COST = 1;
 export const TEN_COST = 10;
@@ -400,6 +401,12 @@ export async function playSequence(view, payload) {
 /* ===== 結果一覧 ===== */
 
 export function showResults(view, payload) {
+  // 形の壊れた結果は見せずに捨て、ふつうのガチャ画面にする（結果画面で落ちないように）
+  if (!isValidPendingResult(payload)) {
+    clearPending();
+    renderGacha(view);
+    return;
+  }
   clear(view);
   const newCount = payload.results.filter((r) => r.isNew).length;
 

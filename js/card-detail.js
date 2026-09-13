@@ -3,8 +3,7 @@
 
 import { app, isOwned, isVisited, commit, CATEGORY_LABEL, CATEGORIES, publishedCards } from './state.js';
 import {
-  el, clear, cardFace, lockedCard, toast, externalLink, mapsSearchUrl, safeUrl, resolvePhoto, vibrate,
-} from './ui.js';
+  el, clear, cardFace, lockedCard, toast, externalLink, mapsSearchUrl, safeUrl, resolvePhoto, vibrate, mapsRouteUrl } from './ui.js';
 import { openViewer } from './card-3d.js';
 import { coinCfg } from './rewards.js';
 import { distanceText, hasFix } from './geo.js';
@@ -260,7 +259,8 @@ function maybeHintSwipe() {
 
 /** カードに印刷されたボタンが指す先。地図や販売店の検索はここ1か所で決める。 */
 export function cardActionUrl(c) {
-  if (c.category === 'spot' && c.gps.lat != null) return mapsSearchUrl(`${c.gps.lat},${c.gps.lng}`);
+  // スポットのボタンは「Googleマップで経路を見る」なので、場所の検索ではなく経路の検索を開く
+  if (c.category === 'spot' && c.gps.lat != null) return mapsRouteUrl(c.gps.lat, c.gps.lng);
   if (c.purchase.enabled) {
     const shop = c.purchase.shops.find((s) => safeUrl(s.url));
     if (shop) return safeUrl(shop.url);

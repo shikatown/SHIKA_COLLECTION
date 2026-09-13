@@ -504,6 +504,12 @@ a{color:var(--accent)}
   margin-inline:auto;
 }
 .detail__hero--compact .detail__cardwrap .card{ max-width:calc((100dvh - 430px) * .8) }
+/* 高さの低い画面（横向きなど）では、高さから引く計算がマイナスになって、カードの幅が0になり消えていた。
+   ここでは1画面に収めるのをあきらめ、横幅でカードの大きさを決めて、縦に送って見られるようにする。 */
+@media (max-height: 600px){
+  .detail__cardwrap .card,
+  .detail__hero--compact .detail__cardwrap .card{ max-width:min(62vw, 260px) }
+}
 /* 未取得の空き枠も、取得済みのカードと同じ大きさで出す。
    左右に払って行き来したときに、画面が上下に動かないため。 */
 .detail__cardwrap .card--slot{border-radius:10px;box-shadow:none}

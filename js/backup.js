@@ -56,6 +56,19 @@ export function validate(obj) {
   if (obj.checksum && obj.checksum !== checksum(JSON.stringify(obj.state))) {
     return 'ファイルが壊れている可能性があります。';
   }
+  /* 中身の形も確かめる。チェックサムは壊れたことを見つけるだけで、形が正しいことまでは保証しない
+     （チェックサムの無いファイルや、手で書き換えたファイルもある）。
+     ここで1つでもおかしければ、いまの進行は置き換えない。 */
+  const st = obj.state;
+  const isCount = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+  const isIdList = (v) => Array.isArray(v) && v.every((x) => typeof x === 'string' && x.length > 0 && x.length <= 40);
+  if (st.ownedCardIds != null && !isIdList(st.ownedCardIds)) return 'カードの記録が壊れています。';
+  if (st.favorites != null && !isIdList(st.favorites)) return '「気になる」の記録が壊れています。';
+  if (st.coins != null && !isCount(st.coins)) return 'SHIKA COIN の記録が壊れています。';
+  if (st.duplicateGauge != null && !isCount(st.duplicateGauge)) return 'かぶりゲージの記録が壊れています。';
+  if (st.visits != null && (typeof st.visits !== 'object' || Array.isArray(st.visits))) return '訪問の記録が壊れています。';
+  if (st.flags != null && (typeof st.flags !== 'object' || Array.isArray(st.flags))) return '設定の記録が壊れています。';
+  if (st.pendingResult != null && !storage.isValidPendingResult(st.pendingResult)) return 'ガチャの結果の記録が壊れています。';
   return null;
 }
 

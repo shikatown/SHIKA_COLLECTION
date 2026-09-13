@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.35.0';
+const APP_VERSION = '1.36.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -65,8 +65,18 @@ const DATA_FILES = ['./data/version.json', './data/cards.json', './data/config.j
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
+    const existed = await caches.has(SHELL_CACHE);
     const cache = await caches.open(SHELL_CACHE);
-    await Promise.allSettled(SHELL.map((u) => cache.add(new Request(u, { cache: 'reload' }))));
+    const got = await Promise.allSettled(SHELL.map((u) => cache.add(new Request(u, { cache: 'reload' }))));
+    /* 画面・動き・見た目のファイル（HTML/JS/CSS/manifest）は、1つでも取れなければ入れ替えない。
+       失敗を無視して入れ替えると、有効化のときに古い版の控えが消え、欠けた新しい版だけが残って、
+       通信が切れたときに開けなくなる。ここで失敗させれば、いまの版がそのまま使われ続ける。
+       絵（png など）は、見るときに取り直せるので、欠けていても進める。 */
+    const missing = SHELL.filter((u, i) => got[i].status === 'rejected' && !/\.(png|jpe?g|webp|svg|gif)$/i.test(u));
+    if (missing.length) {
+      if (!existed) await caches.delete(SHELL_CACHE);   // 作りかけの控えは残さない
+      throw new Error(`アプリ本体の控えを作れませんでした: ${missing.join(', ')}`);
+    }
     // 公開データは、通信優先で読むときと同じ名前（? を外した URL）で控える
     const data = await caches.open(DATA_CACHE);
     await Promise.allSettled(DATA_FILES.map(async (u) => {

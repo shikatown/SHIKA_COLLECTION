@@ -128,6 +128,22 @@ function normalizeCard(c) {
 function withConfigDefaults(cfg) {
   const c = cfg && typeof cfg === 'object' ? cfg : {};
   const ev = c.event && typeof c.event === 'object' ? c.event : {};
+  const coin = {
+    daily: 1, sakeSnack: 1, duplicatePer5: 1, categoryPer5: 2,
+    spotFirst: 3, spotRevisit: 1, townFirst: 5,
+    ...(c.coin || {}),
+  };
+  /* ミッションの報酬。以前はここで取り込んでいなかったので、config.json に書いても無視されていた。
+     0以上の数だけを受け付け、書いていない・おかしい値は既定値にする。 */
+  const ms = c.mission && typeof c.mission === 'object' ? c.mission : {};
+  const count = (v, d) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : d);
+  const visit = {};
+  if (ms.visit && typeof ms.visit === 'object' && !Array.isArray(ms.visit)) {
+    for (const [k, v] of Object.entries(ms.visit)) {
+      const n = Number(k);
+      if (Number.isInteger(n) && n > 0 && typeof v === 'number' && Number.isFinite(v) && v >= 0) visit[n] = Math.floor(v);
+    }
+  }
   return {
     townName: c.townName || '志賀町',
     gpsAccuracyLimit: typeof c.gpsAccuracyLimit === 'number' ? c.gpsAccuracyLimit : 120,
@@ -141,10 +157,13 @@ function withConfigDefaults(cfg) {
       culture: '',
       ...(c.cardButtons || {}),
     },
-    coin: {
-      daily: 1, sakeSnack: 1, duplicatePer5: 1, categoryPer5: 2,
-      spotFirst: 3, spotRevisit: 1, townFirst: 5,
-      ...(c.coin || {}),
+    coin,
+    mission: {
+      categoryStep: count(ms.categoryStep, count(coin.categoryPer5, 2)),   // ジャンル5種類ごと
+      categoryAll: count(ms.categoryAll, 10),    // ジャンルをすべて
+      allCards: count(ms.allCards, 30),          // すべてのカード
+      visit: Object.keys(visit).length ? visit : { 1: 3, 5: 5, 10: 8 },   // チェックインの箇所数ごと
+      visitAll: count(ms.visitAll, 15),          // すべての場所
     },
     event: {
       enabled: ev.enabled === true,

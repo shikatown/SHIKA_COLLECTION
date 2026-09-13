@@ -63,6 +63,30 @@ export function defaultState() {
   };
 }
 
+/**
+ * ガチャの未確認の結果として正しい形か。
+ * 壊れた保存データやバックアップの結果をそのまま使うと、結果画面が落ちる。
+ */
+export function isValidPendingResult(p) {
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return false;
+  if (!['single', 'ten', 'free10'].includes(p.kind)) return false;
+  if (!Array.isArray(p.results) || p.results.length < 1 || p.results.length > 30) return false;
+  for (const r of p.results) {
+    if (!r || typeof r !== 'object') return false;
+    if (typeof r.id !== 'string' || !r.id || r.id.length > 40) return false;
+    if (typeof r.isNew !== 'boolean') return false;
+    if (r.bonus != null && typeof r.bonus !== 'boolean') return false;
+  }
+  const b = p.bonus;
+  if (!b || typeof b !== 'object' || !Array.isArray(b.items)) return false;
+  if (typeof b.total !== 'number' || !Number.isFinite(b.total) || b.total < 0 || b.total > 100000) return false;
+  for (const it of b.items) {
+    if (!it || typeof it !== 'object' || typeof it.label !== 'string') return false;
+    if (typeof it.coins !== 'number' || !Number.isFinite(it.coins) || it.coins < 0) return false;
+  }
+  return true;
+}
+
 /** 保存データを既定形にそろえる。壊れた値は既定値で埋める。 */
 export function normalize(raw) {
   const d = defaultState();
@@ -113,7 +137,8 @@ export function normalize(raw) {
   const fl = obj(raw.flags);
   for (const k of Object.keys(d.flags)) out.flags[k] = fl[k] === true;
 
-  out.pendingResult = raw.pendingResult && typeof raw.pendingResult === 'object' ? raw.pendingResult : null;
+  // 形の壊れた結果は捨てる（結果画面が落ちないように）
+  out.pendingResult = isValidPendingResult(raw.pendingResult) ? raw.pendingResult : null;
   return out;
 }
 
