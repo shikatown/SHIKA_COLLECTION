@@ -138,7 +138,12 @@ async function doReset() {
   storage.clear();
   setState(storage.defaultState());
   toast('リセットしました');
-  go('#/home');
+  /* 初めて開いたときと同じ流れ（起動演出 → ログインボーナス → 初回の10連）に戻すため、開き直す。
+     以前は画面だけホームへ移していたので、ログインボーナスは次にアプリを開くまで受け取れなかった。 */
+  setTimeout(() => {
+    history.replaceState(null, '', `${location.pathname}${location.search}#/home`);
+    location.reload();
+  }, 700);
 }
 
 /* ===== 遊び方 ===== */

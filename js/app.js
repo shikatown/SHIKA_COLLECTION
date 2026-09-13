@@ -16,7 +16,7 @@ import { renderMissions, claimableCount } from './missions.js';
 import { startOfflineWatch } from './offline.js';
 import { registerSW, checkDataUpdate, maybeSuggestInstall } from './update.js';
 import { maybeSuggestBackup } from './backup.js';
-import { dailyAvailable, coinCfg } from './rewards.js';
+import { dailyAvailable } from './rewards.js';
 import { createOpening } from './opening.js';
 import { thumbUrl } from './card-render.js';
 import { maybeCelebrateComplete } from './title-complete.js';
@@ -243,7 +243,20 @@ function onRouteChange(route) {
   updateChrome();
   // 「志賀町コンプリート」を達成していたら、画面が落ち着いてから獲得演出を出す（1回だけ）
   setTimeout(maybeCelebrateComplete, 450);
+  // 日付が変わっていたら、ログインボーナスを受け取る（開いたまま日をまたいだとき用）
+  maybeDailyBonus();
 }
+
+/* ログインボーナスは起動時に受け取るが、アプリを開いたまま日付が変わることもある。
+   画面を移ったときと、アプリに戻ってきたときにも確かめる。起動画面が出ているあいだは待つ
+   （起動の流れの中で boot() が受け取る）。 */
+function maybeDailyBonus() {
+  if (!app.state) return;
+  const boot = document.getElementById('boot');
+  if (boot && !boot.hidden) return;
+  if (dailyAvailable()) offerDaily();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) maybeDailyBonus(); });
 
 function updateChrome() {
   /* コインが右上へ飛んでいるあいだ（js/coin-fly.js）は、数字をメーターのように増やしているので、
@@ -301,12 +314,7 @@ function renderHome(view) {
 
   // 集まりぐあいは「コレクション」としてカード画面の上に置いた（js/collection.js）
 
-  if (dailyAvailable()) {
-    view.append(el('p', {
-      class: 'muted center', style: { marginTop: '12px' },
-      text: `今日のログインボーナス +${coinCfg().daily} SHIKA COIN を受け取れます`,
-    }));
-  }
+  // ログインボーナスは開いたときに自動で受け取り、通知で知らせる（maybeDailyBonus）。ここに「受け取れます」は出さない
 
   // 遊び方と設定は、右上の歯車（その他）から行けるのでホームには置かない
 }
