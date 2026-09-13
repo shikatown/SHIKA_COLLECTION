@@ -10,6 +10,7 @@ import { coinCfg } from './rewards.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
+import { maybeCelebrateComplete } from './title-complete.js';
 
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTR = 'OpenStreetMap contributors';
@@ -216,10 +217,12 @@ export function createMap(container, { center, zoom }) {
       tilesLayer.replaceChildren();
       schedule();
     },
-    addMarker(lat, lng, { color = '#2f6f8f', label = '', onClick = null } = {}) {
-      const node = el('div', { class: 'map__pin', attrs: { title: label } });
-      node.innerHTML =
-        `<svg viewBox="0 0 26 32" aria-hidden="true"><path d="M13 31C13 31 24 19.5 24 12A11 11 0 1 0 2 12c0 7.5 11 19 11 19z" fill="${color}" stroke="#fff" stroke-width="1.6"/><circle cx="13" cy="12" r="4" fill="#fff"/></svg>`;
+    addMarker(lat, lng, { color = '#2f6f8f', label = '', onClick = null, star = false } = {}) {
+      const node = el('div', { class: `map__pin${star ? ' map__pin--star' : ''}`, attrs: { title: label } });
+      /* 訪問した場所は、ピンの代わりに金の星を立てる（固定の図形なので innerHTML で差し込む） */
+      node.innerHTML = star
+        ? '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.6l3.9 8.3 9.1 1.1-6.7 6.2 1.8 9L16 22.7l-8.1 4.5 1.8-9L3 12l9.1-1.1z" fill="#f2b632" stroke="#8a5a00" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 6.8l2.5 5.3 5.4.7" fill="none" stroke="#fff3c4" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/></svg>'
+        : `<svg viewBox="0 0 26 32" aria-hidden="true"><path d="M13 31C13 31 24 19.5 24 12A11 11 0 1 0 2 12c0 7.5 11 19 11 19z" fill="${color}" stroke="#fff" stroke-width="1.6"/><circle cx="13" cy="12" r="4" fill="#fff"/></svg>`;
       if (onClick) node.addEventListener('click', onClick);
       markerLayer.append(node);
       markers.push({ lat, lng, node });
@@ -265,7 +268,8 @@ export function renderMap(view, params) {
     const visited = isVisited(c.id);
     const target = c.gps.enabled;
     mapApi.addMarker(c.gps.lat, c.gps.lng, {
-      color: visited ? '#4a7a4a' : (target ? '#2f6f8f' : '#a29a8c'),
+      color: target ? '#2f6f8f' : '#a29a8c',
+      star: visited,
       label: c.name,
       onClick: () => go(`#/card/${c.id}`),
     });
@@ -431,6 +435,8 @@ async function runCheckIn(view, status, btn) {
   vibrate([20, 50, 30]);
   await showCheckinResult(res);
   renderMap(view, null);
+  // 最後のスポットでそろったら、称号「志賀町コンプリート」の獲得演出へ
+  maybeCelebrateComplete();
 }
 
 function showCheckinResult(res) {

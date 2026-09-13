@@ -49,6 +49,7 @@ export function defaultState() {
       spotHintShown: false,
       swipeHintShown: false,   // カード詳細で左右に払える案内
       openingPlayed: false,    // 起動演出の長い版を一度見たか（2回目からは短い版）
+      completeCelebrated: false, // 「志賀町コンプリート」の獲得演出を見せたか（1回だけ出す）
       admin: false,          // 管理者の確認用モード（公開前の点検だけに使う）
     },
     knownCardIds: [],        // 「新カード追加」通知の判定用

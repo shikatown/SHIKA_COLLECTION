@@ -5,7 +5,7 @@ import {
   categoryStats, CATEGORIES, todayKey,
 } from './state.js';
 import * as router from './router.js';
-import { el, clear, sleep } from './ui.js';
+import { el, clear, sleep, cardFace, cardBack } from './ui.js';
 import { renderGacha, showResults, offerDaily } from './gacha.js';
 import { renderCollection } from './collection.js';
 import { renderCardDetail } from './card-detail.js';
@@ -16,11 +16,11 @@ import { renderMissions, claimableCount } from './missions.js';
 import { startOfflineWatch } from './offline.js';
 import { registerSW, checkDataUpdate, maybeSuggestInstall } from './update.js';
 import { maybeSuggestBackup } from './backup.js';
-import { categoryProgress, dailyAvailable, coinCfg } from './rewards.js';
-import * as geo from './geo.js';
+import { dailyAvailable, coinCfg } from './rewards.js';
 import { createOpening } from './opening.js';
 import { thumbUrl } from './card-render.js';
 import { shareApp } from './share.js';
+import { maybeCelebrateComplete } from './title-complete.js';
 
 /* ===== 動作環境の確認 ===== */
 function unsupportedReason() {
@@ -101,6 +101,7 @@ async function boot() {
   // 「スタート」か「スキップ」を押すまで待つ
   await opening.done;
   document.getElementById('boot').hidden = true;
+  setTimeout(maybeCelebrateComplete, 450);
 
   // 起動後のお知らせ類（順番に1つずつ）
   await offerDaily();
@@ -221,9 +222,15 @@ function bindTabPop() {
   }
 }
 
+const TAB_ROOTS = new Set(['/home', '/map', '/collection', '/missions', '/gacha']);
+
 function onRouteChange(route) {
-  document.getElementById('appTitle').textContent = TITLES[route.path] != null ? TITLES[route.path] : '';
-  document.getElementById('btnBack').hidden = route.path === '/home';
+  /* 下のタブで開く画面（ホーム・まち巡り・カード・ミッション・ガチャ）では、
+     左上の「＜ 画面名」は出さない。タブが今いる場所を示しているので重複する。
+     カード詳細や歯車の奥の画面など、戻る先がある画面だけに出す。 */
+  const tabRoot = TAB_ROOTS.has(route.path);
+  document.getElementById('appTitle').textContent = tabRoot ? '' : (TITLES[route.path] != null ? TITLES[route.path] : '');
+  document.getElementById('btnBack').hidden = tabRoot;
   // 左右に払って前後のカードへ移れるのは、カード詳細のときだけ
   document.getElementById('view').classList.toggle('detail--swipe', route.path === '/card/:id');
   const tab = TAB_OF[route.path];
@@ -233,6 +240,8 @@ function onRouteChange(route) {
   // 画面が出そろってから戻すと、持ち上がりが最後まで見える
   requestAnimationFrame(() => requestAnimationFrame(unpopTabs));
   updateChrome();
+  // 「志賀町コンプリート」を達成していたら、画面が落ち着いてから獲得演出を出す（1回だけ）
+  setTimeout(maybeCelebrateComplete, 450);
 }
 
 function updateChrome() {
@@ -283,24 +292,13 @@ function renderHome(view) {
   hero.append(el('h2', { class: 'hero__title', text: '志賀町を、あつめよう。' }));
   view.append(hero);
 
+  /* 持っているカードを1枚ずつ大きく見せる。10秒ごとに入れ替え、
+     最近手に入れたカードほど出やすくする。押すとそのカードの詳細へ。
+     大きさはガチャ画面のカードと同じ（画面の高さの46%まで）。 */
   const main = el('div', { class: 'home__main' });
+  main.append(homeShowcase());
 
-  const gachaLabel = s.flags.firstFreeTenDone
-    ? `${s.coins} SHIKA COIN で引けます`
-    : 'はじめての方は無料10連から';
-  main.append(bigBtn('#/gacha', 'ガチャを引く', gachaLabel, true,
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 6v12" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>'));
-
-  const total = publishedCards().length;
-  const owned = publishedCards().filter((c) => isOwned(c.id)).length;
-  main.append(bigBtn('#/collection', 'カードを見る', `${owned} / ${total} 種類`, false,
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="4.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="3.5" y="14.5" width="7" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="14.5" width="7" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>'));
-
-  const vs = geo.visitStats();
-  main.append(bigBtn('#/map', 'まちを巡る', `現地訪問 ${vs.visited} / ${vs.total} か所`, false,
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6.5-6.2 6.5-10.5A6.5 6.5 0 0 0 5.5 10.5C5.5 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="10.3" r="2.3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'));
-
-  // SNSでシェア。3つのボタンの下に、少し控えめに置く
+  // SNSでシェア
   main.append(el('button', {
     class: 'btn btn--block home__share', attrs: { type: 'button' },
     html: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 10.8l7.4-4M8.3 13.2l7.4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>SNSでシェア</span>',
@@ -328,14 +326,61 @@ function renderHome(view) {
   // 遊び方と設定は、右上の歯車（その他）から行けるのでホームには置かない
 }
 
-function bigBtn(href, title, sub, accent, iconSvg) {
-  const a = el('a', { class: `bigbtn${accent ? ' bigbtn--accent' : ''}`, attrs: { href } });
-  a.append(el('span', { class: 'bigbtn__ico', html: iconSvg }));
-  const t = el('span');
-  t.append(el('span', { class: 'bigbtn__t', text: title }));
-  t.append(el('span', { class: 'bigbtn__sub', text: sub }));
-  a.append(t);
-  return a;
+
+/* ===== ホームのカード ===== */
+const SHOWCASE_MS = 10000;
+let showcaseTimer = 0;
+
+/** ホームに大きく出すカードの置き場。持っていなければカードの裏（押すとガチャへ）。 */
+function homeShowcase() {
+  clearInterval(showcaseTimer);
+  const box = el('div', { class: 'showcase' });
+  const owned = publishedCards().filter((c) => isOwned(c.id));
+  if (!owned.length) {
+    const back = el('button', { class: 'showcase__card', attrs: { type: 'button', 'aria-label': 'ガチャを引く' } }, [cardBack()]);
+    back.addEventListener('click', () => router.go('#/gacha'));
+    box.append(back);
+    return box;
+  }
+
+  // 新しく手に入れた順。上位ほど出やすい重みを付ける（いちばん新しい5枚は4倍、次の10枚は2倍）
+  const at = app.state.obtainedAt || {};
+  const sorted = owned.slice().sort((a, b) => String(at[b.id] || '').localeCompare(String(at[a.id] || '')));
+  const weight = (i) => (i < 5 ? 4 : (i < 15 ? 2 : 1));
+  let current = null;
+  const pickNext = () => {
+    const pool = sorted.length > 1 ? sorted.filter((c) => c !== current) : sorted;
+    const total = pool.reduce((a, c) => a + weight(sorted.indexOf(c)), 0);
+    let r = Math.random() * total;
+    for (const c of pool) { r -= weight(sorted.indexOf(c)); if (r <= 0) return c; }
+    return pool[pool.length - 1];
+  };
+
+  const show = (card, first) => {
+    const btn = el('button', {
+      class: `showcase__card${first ? ' is-in' : ''}`,
+      attrs: { type: 'button', 'aria-label': `${card.name} の詳細を見る` },
+    }, [cardFace(card)]);
+    btn.addEventListener('click', () => router.go(`#/card/${card.id}`));
+    const old = box.querySelector('.showcase__card:not(.is-out)');
+    box.append(btn);
+    if (!first) requestAnimationFrame(() => requestAnimationFrame(() => btn.classList.add('is-in')));
+    if (old) {
+      old.classList.add('is-out');
+      setTimeout(() => old.remove(), 700);
+    }
+    current = card;
+  };
+
+  // 最初はいちばん新しいカードから
+  show(sorted[0], true);
+  showcaseTimer = setInterval(() => {
+    // ホームを離れたら止める
+    if (!box.isConnected) { clearInterval(showcaseTimer); return; }
+    if (document.hidden) return;
+    show(pickNext(), false);
+  }, SHOWCASE_MS);
+  return box;
 }
 
 boot();

@@ -9,6 +9,8 @@
 import { app, commit, isOwned, publishedCards, CATEGORY_LABEL, CATEGORIES } from './state.js';
 import { el, clear, toast, dialog, confirm2 } from './ui.js';
 import { go } from './router.js';
+import { celebrateComplete } from './title-complete.js';
+import { gpsCards } from './state.js';
 
 export function isAdmin() {
   return !!(app.state && app.state.flags && app.state.flags.admin);
@@ -163,6 +165,38 @@ function operations(pub) {
         if (!owned.length) { toast('先にカードを取得してください'); return; }
         commit((s) => { s.unseenCardIds = owned; });
         go('#/collection');
+      },
+    },
+  }));
+
+  // 称号「志賀町コンプリート」の確認用
+  g.append(el('button', {
+    class: 'btn', attrs: { type: 'button' }, text: 'コンプリート演出を見る',
+    on: {
+      // 保存データは変えずに、演出だけを流す（終わると元の表示に戻る）
+      click: () => celebrateComplete({ preview: true }),
+    },
+  }));
+  g.append(el('button', {
+    class: 'btn', attrs: { type: 'button' }, text: 'コンプリート状態にする',
+    on: {
+      click: async () => {
+        if (!await confirm2('コンプリート状態にしますか', [
+          '全カードを取得済みにし、すべてのスポットを訪問済みにします。',
+          'このあと「志賀町コンプリート」の獲得演出が本番と同じ流れで出ます。',
+        ], 'コンプリートにする')) return;
+        const now = new Date().toISOString();
+        const today = now.slice(0, 10);
+        commit((s) => {
+          s.ownedCardIds = pub.map((c) => c.id);
+          s.unseenCardIds = [];
+          for (const c of gpsCards()) {
+            s.visits[c.id] = { firstVisitedAt: (s.visits[c.id] && s.visits[c.id].firstVisitedAt) || now, lastVisitDate: today };
+          }
+          s.flags.completeCelebrated = false;
+        });
+        toast('コンプリート状態にしました');
+        go('#/home');   // 画面が変わったところで、本番と同じ判定で演出が出る
       },
     },
   }));

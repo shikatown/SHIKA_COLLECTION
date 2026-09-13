@@ -9,7 +9,7 @@
 
 import { app, commit, CATEGORIES, categoryStats } from './state.js';
 import { el, clear, toast, vibrate, coinIcon } from './ui.js';
-import { coinCfg, titles } from './rewards.js';
+import { coinCfg, titles, COMPLETE_TITLE } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
 
@@ -150,10 +150,12 @@ export function renderMissions(view) {
   });
   all.disabled = ready.length === 0;
   head.append(all);
-  view.append(head);
 
-  view.append(el('h3', { text: '称号' }));
+  // 並びは 称号 → まとめて受け取る → カード → まち巡り
+  view.append(el('h3', { class: 'missions__first', text: '称号' }));
   view.append(titlesPanel());
+  head.style.marginTop = '14px';
+  view.append(head);
 
   for (const group of ['カード', 'まち巡り']) {
     const rows = list.filter((m) => m.group === group);
@@ -188,6 +190,20 @@ function titlesPanel() {
     b.append(el('div', { class: 'titlebadge__s', text: on ? '達成' : '未達成' }));
     box.append(b);
   }
+
+  /* いちばん上の称号「志賀町コンプリート」。4つの下の真ん中に置く。
+     名前は最初から出すが、絵は獲得するまで「？？？」にしておく。
+     獲得の演出（js/title-complete.js）は、この枠に .is-on を付けて絵を現す。 */
+  // 獲得の演出を見終わるまでは「？？？」のまま（演出で枠にはまった瞬間に絵が出る）
+  const done = got.includes(COMPLETE_TITLE) && app.state.flags.completeCelebrated;
+  const c = el('div', { class: `titlebadge titlebadge--complete${done ? ' is-on' : ''}` });
+  c.append(el('div', { class: 'titlebadge__ring' }, [
+    el('img', { class: 'titlebadge__i', attrs: { src: './assets/icons/title-complete.png', alt: '', decoding: 'async' } }),
+    el('span', { class: 'titlebadge__q', text: '？？？' }),
+  ]));
+  c.append(el('div', { class: 'titlebadge__n', text: COMPLETE_TITLE }));
+  c.append(el('div', { class: 'titlebadge__s', text: done ? '達成' : 'すべてのカードとチェックインで獲得' }));
+  box.append(c);
   return box;
 }
 

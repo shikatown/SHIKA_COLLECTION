@@ -195,7 +195,7 @@ a{color:var(--accent)}
   display:flex;flex-direction:column;
   min-height:calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom));
 }
-.home__main{display:grid;gap:12px;margin:auto 0}
+/* .home__main の並べ方は「ホームのカード」の欄に書いた */
 .bigbtn{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
@@ -537,6 +537,9 @@ a{color:var(--accent)}
   display:grid;place-items:center;width:26px;height:32px;
 }
 .map__pin svg{width:26px;height:32px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+/* 訪問済みは金の星。ピンと違って先がとがっていないので、星の中心を地点に合わせる */
+.map__pin--star{transform:translate(-50%,-50%);width:30px;height:30px}
+.map__pin--star svg{width:30px;height:30px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
 .map__me{
   position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;
   background:#2f6f8f;border:2.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);
@@ -737,6 +740,9 @@ a{color:var(--accent)}
   background:#fff4c7;color:#7a5200;font-size:11.5px;font-weight:800;
 }
 
+/* ミッション画面は見出し「称号」から始まるので、上の余白を詰める */
+.view > h3.missions__first{margin-top:4px}
+
 /* ===== 称号（ミッション画面） =====
    4つを 2×2 に並べ、ジャンルの絵がしっかり見える大きさにする。 */
 .titlegrid{
@@ -769,6 +775,160 @@ a{color:var(--accent)}
 .share--x{background:#111;border-color:#111;color:#fff}
 .share--line{background:#06c755;border-color:#06c755;color:#fff}
 .share--fb{background:#1877f2;border-color:#1877f2;color:#fff}
+
+/* ===== ホームのカード =====
+   ガチャ画面のカードと同じ大きさ（画面の高さの46%まで）で、1枚ずつ大きく見せる。
+   10秒ごとに次のカードへ、ふわっと入れ替える。 */
+.home__main{display:flex;flex-direction:column;align-items:center;gap:14px;margin:auto 0;width:100%}
+.showcase{
+  position:relative;width:100%;
+  height:min(46svh, calc((100vw - 32px) * 1.25), 560px);
+  container-type:size;
+}
+.showcase__card{
+  position:absolute;inset:0;margin:auto;
+  height:min(100cqh, 100cqw * 1.25);
+  aspect-ratio:4 / 5;
+  padding:0;border:0;background:none;cursor:pointer;
+  opacity:0;transform:translateY(10px) scale(.97);
+  transition:opacity .6s ease, transform .6s cubic-bezier(.2,.8,.25,1);
+  -webkit-tap-highlight-color:transparent;
+}
+.showcase__card.is-in{opacity:1;transform:none}
+.showcase__card.is-out{opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none}
+.showcase__card:active{transform:scale(.98)}
+.showcase__card > .card{width:100%;height:100%;box-shadow:var(--shadow-2);border-radius:12px}
+@media (prefers-reduced-motion: reduce){
+  .showcase__card{transition:opacity .2s linear;transform:none}
+}
+.home__share{width:100%}
+
+/* ===== 称号「志賀町コンプリート」 ===== */
+/* 4つの称号の下、まんなかに置く */
+.titlebadge--complete{grid-column:1 / -1;justify-self:center;width:min(100%,220px)}
+.titlebadge--complete .titlebadge__ring{width:112px;height:112px;position:relative;overflow:hidden}
+.titlebadge--complete .titlebadge__i{width:104px;height:104px;filter:none;display:none}
+.titlebadge--complete .titlebadge__q{
+  font-size:22px;font-weight:900;letter-spacing:.08em;color:#b9b0a0;
+}
+.titlebadge--complete.is-on .titlebadge__i{display:block}
+.titlebadge--complete.is-on .titlebadge__q{display:none}
+.titlebadge--complete .titlebadge__s{text-align:center;line-height:1.35}
+/* 枠にはまった瞬間の「パチーン」 */
+.titlebadge--complete.is-snapped .titlebadge__ring{animation:titleSnap .55s cubic-bezier(.2,1.6,.35,1)}
+.titlebadge--complete.is-snapped{animation:titleGlow 1.4s ease-out}
+@keyframes titleSnap{
+  0%{transform:scale(1.28)}
+  45%{transform:scale(.9)}
+  75%{transform:scale(1.06)}
+  100%{transform:scale(1)}
+}
+@keyframes titleGlow{
+  0%{box-shadow:0 0 0 0 rgba(242,182,50,.75)}
+  100%{box-shadow:0 0 0 22px rgba(242,182,50,0)}
+}
+
+/* 獲得の演出（js/title-complete.js） */
+.titlefly{position:fixed;inset:0;z-index:90;display:grid;place-items:center;overflow:hidden}
+.titlefly__veil{
+  position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(40,30,10,.55),rgba(10,8,4,.82));
+  opacity:0;transition:opacity .35s ease;
+}
+.titlefly.is-in .titlefly__veil{opacity:1}
+.titlefly.is-fly .titlefly__veil,.titlefly.is-out .titlefly__veil{opacity:0;transition:opacity .5s ease}
+.titlefly__rays{
+  position:absolute;left:50%;top:45%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;
+  background:repeating-conic-gradient(from 0deg,rgba(255,221,120,.34) 0 7deg,transparent 7deg 20deg);
+  opacity:0;transform:scale(.4) rotate(0deg);
+  transition:opacity .5s ease, transform .6s ease;
+  -webkit-mask-image:radial-gradient(circle,#000 0 18%,transparent 52%);
+  mask-image:radial-gradient(circle,#000 0 18%,transparent 52%);
+}
+.titlefly.is-reveal .titlefly__rays{opacity:1;transform:scale(1);animation:titleRays 9s linear infinite}
+.titlefly.is-fly .titlefly__rays{opacity:0}
+@keyframes titleRays{to{transform:scale(1) rotate(360deg)}}
+
+.titlefly__badge{
+  --size:min(72vw,46svh,320px);
+  position:absolute;left:50%;top:45%;width:var(--size);height:var(--size);
+  margin:calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  transform:scale(.2);opacity:0;
+  transition:transform .55s cubic-bezier(.2,1.5,.4,1), opacity .25s ease;
+}
+.titlefly.is-in .titlefly__badge{transform:scale(1);opacity:1}
+.titlefly__face{position:absolute;inset:0;display:grid;place-items:center;border-radius:50%}
+.titlefly__face--back{
+  background:radial-gradient(circle at 40% 35%,#fff7da,#e3c46c 55%,#b8862b);
+  border:6px solid #fff3c4;box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 0 0 4px rgba(138,90,0,.35);
+}
+.titlefly__face--back span{font-size:calc(var(--size) * .16);font-weight:900;color:#7a5200;letter-spacing:.06em}
+.titlefly__face--front{visibility:hidden}
+.titlefly__face--front img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 30px rgba(0,0,0,.45))}
+/* 回る：横につぶして戻す、を3回。最後に表になる */
+.titlefly.is-spin .titlefly__badge{animation:titleSpin 1.5s cubic-bezier(.45,.05,.55,.95) both}
+.titlefly.is-spin .titlefly__face--back{animation:titleFaceBack 1.5s linear both}
+.titlefly.is-spin .titlefly__face--front{animation:titleFaceFront 1.5s linear both}
+.titlefly.is-reveal .titlefly__face--back{visibility:hidden}
+.titlefly.is-reveal .titlefly__face--front{visibility:visible}
+@keyframes titleSpin{
+  0%{transform:scale(1) scaleX(1)}
+  16%{transform:scale(1.04) scaleX(.02)}
+  33%{transform:scale(1.08) scaleX(1)}
+  50%{transform:scale(1.12) scaleX(.02)}
+  66%{transform:scale(1.16) scaleX(1)}
+  83%{transform:scale(1.2) scaleX(.02)}
+  100%{transform:scale(1.1) scaleX(1)}
+}
+@keyframes titleFaceBack{
+  0%{visibility:visible} 16%{visibility:visible} 16.1%{visibility:hidden}
+  50%{visibility:hidden} 50.1%{visibility:visible} 83%{visibility:visible} 83.1%{visibility:hidden} 100%{visibility:hidden}
+}
+@keyframes titleFaceFront{
+  0%{visibility:hidden} 16%{visibility:hidden} 16.1%{visibility:visible}
+  50%{visibility:visible} 50.1%{visibility:hidden} 83%{visibility:hidden} 83.1%{visibility:visible} 100%{visibility:visible}
+}
+.titlefly.is-reveal .titlefly__badge{animation:titlePulse 1.9s ease-in-out both}
+@keyframes titlePulse{
+  0%{transform:scale(1.1)}
+  18%{transform:scale(1.22)}
+  40%{transform:scale(1.02)}
+  100%{transform:scale(1.06)}
+}
+/* 枠へ飛ぶ */
+.titlefly.is-fly .titlefly__badge{
+  animation:none;
+  transform:translate(var(--fx,0),var(--fy,0)) scale(var(--fs,.3));
+  transition:transform .62s cubic-bezier(.55,0,.2,1);
+}
+.titlefly.is-out .titlefly__badge{opacity:0;transition:opacity .3s ease}
+
+.titlefly__sparks{position:absolute;left:50%;top:45%;width:0;height:0}
+.titlefly__sparks i{
+  position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;
+  background:radial-gradient(circle,#fff,#ffd86b 55%,rgba(255,216,107,0));
+  opacity:0;transform:rotate(var(--a)) translateY(0) scale(.4);
+}
+.titlefly.is-reveal .titlefly__sparks i{animation:titleSpark 1.1s cubic-bezier(.1,.8,.3,1) var(--d) both}
+@keyframes titleSpark{
+  0%{opacity:1;transform:rotate(var(--a)) translateY(0) scale(.6)}
+  70%{opacity:1}
+  100%{opacity:0;transform:rotate(var(--a)) translateY(calc(min(72vw,46svh,320px) * -.8)) scale(1.1)}
+}
+
+.titlefly__text{
+  position:absolute;left:0;right:0;top:calc(45% + min(72vw,46svh,320px) * .62);
+  display:grid;justify-items:center;gap:2px;color:#fff;text-align:center;
+  opacity:0;transform:translateY(10px);transition:opacity .4s ease, transform .4s ease;
+  text-shadow:0 2px 0 rgba(0,0,0,.35);
+}
+.titlefly__text small{font-size:15px;font-weight:800;letter-spacing:.2em;color:#ffd86b}
+.titlefly__text b{font-size:26px;font-weight:900;letter-spacing:.06em}
+.titlefly.is-reveal .titlefly__text{opacity:1;transform:none}
+.titlefly.is-fly .titlefly__text{opacity:0}
+@media (prefers-reduced-motion: reduce){
+  .titlefly__rays{animation:none !important}
+  .titlefly__sparks{display:none}
+}
 
 /* ===== 管理モード（公開前の点検用） ===== */
 .adminbar{

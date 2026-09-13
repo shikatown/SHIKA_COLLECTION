@@ -5,7 +5,7 @@
    ・カテゴリ収集       ミッション画面で受け取る（js/missions.js）
    ・現地訪問           初訪問 +3 / 再訪 1日1回 +1 / 町初訪問 +5（1回限り） */
 
-import { app, commit, todayKey, CATEGORIES, CATEGORY_LABEL, categoryStats, eventActive } from './state.js';
+import { app, commit, todayKey, CATEGORIES, CATEGORY_LABEL, categoryStats, eventActive, publishedCards, isOwned, gpsCards, isVisited } from './state.js';
 
 export function coinCfg() {
   return (app.config && app.config.coin) || {
@@ -104,10 +104,23 @@ export function categoryProgress() {
 }
 
 /** 獲得済みの称号 */
+/** いちばん上の称号。すべてのカードを集め、すべてのスポットでチェックインしたらもらえる */
+export const COMPLETE_TITLE = '志賀町コンプリート';
+
+/** すべてのカードとすべてのチェックイン対象を達成したか
+    （geo.js は rewards.js を読み込んでいるので、ここでは state.js の関数で数える） */
+export function isTownComplete() {
+  const cards = publishedCards();
+  const spots = gpsCards();
+  if (!cards.length) return false;
+  return cards.every((c) => isOwned(c.id)) && spots.every((c) => isVisited(c.id));
+}
+
 export function titles() {
   const prog = categoryProgress();
   const list = prog.filter((p) => p.complete).map((p) => p.master);
   if (prog.length && prog.every((p) => p.complete)) list.push('志賀町マスター');
+  if (isTownComplete()) list.push(COMPLETE_TITLE);
   return list;
 }
 
