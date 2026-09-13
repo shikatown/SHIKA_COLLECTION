@@ -337,6 +337,10 @@
 
 .opening__logo{
   position:relative;
+  /* v1.29.1: 画面の高さの10%ぶん上げる（絵の上端が画面の約26%の位置にくる）。
+     動きは transform で付けているので、位置は top でずらし、動きと干渉させない。 */
+  top:-10vh;
+  top:-10dvh;
   width:min(102%,470px);
   max-height:40vh;
   max-height:40dvh;
