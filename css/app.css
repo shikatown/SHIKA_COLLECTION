@@ -187,19 +187,24 @@ a{color:var(--accent)}
 /* 「志賀町を、あつめよう。」のロゴ（支給画像 assets/icons/tagline*.png、縦横比 1469:864）。
    読む前から場所を取っておき、あとで下の要素が動かないようにする。 */
 .tagline{
-  position:relative;display:block;margin:0 auto 6px;
-  width:min(100%,340px);aspect-ratio:1469 / 864;
+  position:relative;display:block;margin:0 auto 4px;
+  width:min(62%,230px);aspect-ratio:1469 / 864;
 }
+/* .view h2 の余白指定（左寄せ）に負けないよう、ここで真ん中にそろえ直す */
+.view .tagline{margin:0 auto 4px}
 .tagline__img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 .tagline__img--hi{opacity:0;transition:opacity .2s linear}
 .tagline__img--hi.is-on{opacity:1}
 
 /* ホームのボタンは3つ。遊び方と設定は歯車へ移したので、
    残った場所の真ん中に置いて、下が空きすぎないようにする。 */
+/* ホームは画面の高さぴったり。上にロゴを小さく置き、残りの高さをぜんぶカードに使う */
 .home{
   display:flex;flex-direction:column;
-  min-height:calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom));
+  height:calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom));
 }
+.home > .hero{flex:none;padding:0}
+.home > .muted,.home > .panel{flex:none}
 /* .home__main の並べ方は「ホームのカード」の欄に書いた */
 .bigbtn{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
@@ -781,9 +786,14 @@ a{color:var(--accent)}
 .titlebadge.is-on .titlebadge__n{color:var(--ink)}
 .titlebadge.is-on .titlebadge__s{color:var(--coin);font-weight:800}
 
-/* ===== SNSでシェア ===== */
-.home__share{margin-top:4px;gap:8px;color:var(--ink-2);font-size:14px}
-.home__share svg{width:18px;height:18px;flex:none}
+/* ===== SNSでシェア（カード画面のコレクション欄の下） ===== */
+.collection__share{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);
+}
+.collection__sharetext{font-size:12px;color:var(--ink-3);line-height:1.4;min-width:0}
+.collection__sharebtn{flex:none;gap:6px;padding:8px 14px;font-size:13px;color:var(--accent);border-color:#cfe0da}
+.collection__sharebtn svg{width:16px;height:16px;flex:none}
 .sharelist{display:grid;gap:8px;margin:4px 0 2px}
 .share--x{background:#111;border-color:#111;color:#fff}
 .share--line{background:#06c755;border-color:#06c755;color:#fff}
@@ -792,12 +802,15 @@ a{color:var(--accent)}
 /* ===== ホームのカード =====
    ガチャ画面のカードと同じ大きさ（画面の高さの46%まで）で、1枚ずつ大きく見せる。
    10秒ごとに次のカードへ、ふわっと入れ替える。 */
-.home__main{display:flex;flex-direction:column;align-items:center;gap:14px;margin:auto 0;width:100%}
+.home__main{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;flex:1 1 auto;min-height:0}
+/* カードの置き場は、ロゴの下に残った高さをぜんぶ使う。カードはその中で縦横比を保って入るだけ大きく */
 .showcase{
   position:relative;width:100%;
-  height:min(46svh, calc((100vw - 32px) * 1.25), 560px);
+  flex:1 1 auto;min-height:0;
   container-type:size;
 }
+/* 初回のポップは、上に寄せず残りの高さの真ん中あたりに置く */
+.home__main > .firstpop{margin:auto 0}
 .showcase__card{
   position:absolute;inset:0;margin:auto;
   height:min(100cqh, 100cqw * 1.25);
@@ -1051,6 +1064,42 @@ a{color:var(--accent)}
   0%{transform:rotate(0)}
   50%{transform:rotate(-14deg) scale(1.15)}
   100%{transform:rotate(0)}
+}
+
+/* ===== 初めて開いた画面の案内（js/guide.js） =====
+   カードを見るときの案内（card-3d.css の .tut3d）と同じ雰囲気。暗い幕に白い文字、動く絵。 */
+.guide{
+  position:fixed;inset:0;z-index:85;display:grid;place-items:center;
+  padding:20px 20px calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom));
+  /* 後ろの画面の文字と重なって読みにくくならないよう、幕を暗くして、説明は暗い札にのせる */
+  background:rgba(8,10,12,.62);
+  color:#fff;text-align:center;cursor:pointer;
+  animation:guideIn .28s ease-out both;
+}
+.guide.is-out{animation:guideOut .24s ease-in both}
+@keyframes guideIn{from{opacity:0}to{opacity:1}}
+@keyframes guideOut{from{opacity:1}to{opacity:0}}
+.guide__card{
+  max-width:340px;display:grid;justify-items:center;gap:6px;
+  padding:22px 20px 16px;border-radius:20px;
+  background:rgba(22,30,38,.94);border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 14px 36px rgba(0,0,0,.45);
+}
+.guide__demo{
+  width:64px;height:64px;margin-bottom:6px;display:grid;place-items:center;border-radius:50%;
+  background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.6);
+  animation:guideBob 1.6s ease-in-out infinite;
+}
+.guide__demo svg{width:40px;height:40px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+@keyframes guideBob{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+.guide__title{font-size:18px;font-weight:900;letter-spacing:.06em;margin-bottom:2px}
+.guide__line{margin:0;font-size:13.5px;line-height:1.7;opacity:.95}
+.guide__tap{margin-top:12px;font-size:12px;opacity:.7;letter-spacing:.08em}
+@media (prefers-reduced-motion: reduce){
+  .guide,.guide.is-out,.guide__demo{animation:none}
 }
 
 /* ===== 管理モード（公開前の点検用） ===== */

@@ -13,6 +13,7 @@ import { coinCfg, titles, COMPLETE_TITLE } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
 import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
+import { showGuide } from './guide.js';
 
 /** ミッションの賞金。config.json の mission で上書きできる。 */
 function cfg() {
@@ -155,10 +156,7 @@ export function renderMissions(view) {
   all.disabled = ready.length === 0;
   head.append(all);
 
-  // 並びは 称号 → まとめて受け取る → カード → まち巡り
-  view.append(el('h3', { class: 'missions__first', text: '称号' }));
-  view.append(titlesPanel());
-  head.style.marginTop = '14px';
+  // 並びは まとめて受け取る → カード → まち巡り → 称号
   view.append(head);
 
   for (const group of ['カード', 'まち巡り']) {
@@ -173,6 +171,20 @@ export function renderMissions(view) {
     }
     view.append(box);
   }
+
+  view.append(el('h3', { text: '称号' }));
+  view.append(titlesPanel());
+
+  // 初めて開いたときだけの案内
+  showGuide('missionsGuideShown', {
+    icon: 'star',
+    title: 'ミッションのあそびかた',
+    lines: [
+      'カードを集めたり、まちを巡ったりすると、ミッションを達成します。',
+      '達成したら「受け取る」で SHIKA COIN がもらえます。「まとめて受け取る」で一度にもらうこともできます。',
+      'いちばん下の称号も、ぜんぶ集めてみよう。',
+    ],
+  });
 }
 
 /* 称号。ミッションと同じ「達成したことが分かるもの」なので、ここにまとめる。

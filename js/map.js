@@ -11,6 +11,7 @@ import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
 import { maybeCelebrateComplete } from './title-complete.js';
+import { showGuide } from './guide.js';
 
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTR = 'OpenStreetMap contributors';
@@ -298,6 +299,17 @@ export function renderMap(view, params) {
   fillSpotLists(lists);
 
   if (params && params.checkin) setTimeout(() => runCheckIn(view, status, btn), 60);
+
+  // 初めて開いたときだけの案内（お知らせやチェックインの結果が出ていれば、閉じてから出る）
+  showGuide('mapGuideShown', {
+    icon: 'pin',
+    title: 'まち巡りのあそびかた',
+    lines: [
+      '地図のピンが、チェックインできるスポットです。',
+      'スポットの近くで「近くのスポットを探す」を押すと、チェックインして SHIKA COIN がもらえます。',
+      '行った場所は、金の星に変わります。',
+    ],
+  });
 }
 
 /** スポットの一覧を作り直す。現在地が分かっていれば近い順に並ぶ。 */

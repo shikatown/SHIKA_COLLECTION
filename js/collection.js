@@ -5,6 +5,7 @@
 import { app, isOwned, CATEGORIES, CATEGORY_LABEL, publishedCards, categoryStats, commit } from './state.js';
 import { el, clear, cardFace, cardBack, lockedCard, vibrate, reduceMotion, sleep } from './ui.js';
 import { categoryProgress, coinCfg } from './rewards.js';
+import { shareApp } from './share.js';
 import { go } from './router.js';
 import { sfx } from './sound.js';
 
@@ -43,6 +44,16 @@ export function renderCollection(view, params) {
     ]));
   }
   // 称号はミッションの画面にまとめた（達成したことが分かるものを1か所に集めるため）
+
+  /* SNSでシェア。集めた枚数を一緒に送るので、コレクション欄の下にまとめて置く */
+  const share = el('div', { class: 'collection__share' });
+  share.append(el('span', { class: 'collection__sharetext', text: `${owned} 種類あつめたことを、みんなに知らせよう` }));
+  share.append(el('button', {
+    class: 'btn collection__sharebtn', attrs: { type: 'button' },
+    html: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 10.8l7.4-4M8.3 13.2l7.4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>SNSでシェア</span>',
+    on: { click: () => shareApp() },
+  }));
+  head.append(share);
   view.append(head);
 
   const tabs = el('div', { class: 'tabs' });

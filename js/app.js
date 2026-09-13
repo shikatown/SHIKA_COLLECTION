@@ -19,7 +19,6 @@ import { maybeSuggestBackup } from './backup.js';
 import { dailyAvailable, coinCfg } from './rewards.js';
 import { createOpening } from './opening.js';
 import { thumbUrl } from './card-render.js';
-import { shareApp } from './share.js';
 import { maybeCelebrateComplete } from './title-complete.js';
 
 /* ===== 動作環境の確認 ===== */
@@ -289,12 +288,7 @@ function renderHome(view) {
   const main = el('div', { class: 'home__main' });
   main.append(first ? firstGachaPop() : homeShowcase());
 
-  // SNSでシェア
-  main.append(el('button', {
-    class: 'btn btn--block home__share', attrs: { type: 'button' },
-    html: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 10.8l7.4-4M8.3 13.2l7.4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>SNSでシェア</span>',
-    on: { click: () => shareApp() },
-  }));
+  // SNSでシェアは、カード画面のコレクション欄へ移した（js/collection.js）。ここはカードを大きく見せる
 
   view.append(main);
 
