@@ -190,8 +190,8 @@ a{color:var(--accent)}
   position:relative;display:block;margin:0 auto 4px;
   width:min(62%,230px);aspect-ratio:1469 / 864;
 }
-/* .view h2 の余白指定（左寄せ）に負けないよう、ここで真ん中にそろえ直す */
-.view .tagline{margin:0 auto 4px}
+/* 画面の左右の端ぎりぎり（端から4px）まで広げる。.view の左右の余白16pxを打ち消す */
+.view .tagline{width:calc(100% + 24px);max-width:none;margin:0 -12px 4px}
 .tagline__img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 .tagline__img--hi{opacity:0;transition:opacity .2s linear}
 .tagline__img--hi.is-on{opacity:1}
@@ -1096,7 +1096,8 @@ a{color:var(--accent)}
   50%{transform:translateY(-8px)}
 }
 .guide__title{font-size:18px;font-weight:900;letter-spacing:.06em;margin-bottom:2px}
-.guide__line{margin:0;font-size:13.5px;line-height:1.7;opacity:.95}
+/* 説明文は読みやすいよう左揃え（見出し・絵・「タップして閉じる」は真ん中のまま） */
+.guide__line{margin:0;font-size:13.5px;line-height:1.7;opacity:.95;text-align:left;justify-self:stretch}
 .guide__tap{margin-top:12px;font-size:12px;opacity:.7;letter-spacing:.08em}
 @media (prefers-reduced-motion: reduce){
   .guide,.guide.is-out,.guide__demo{animation:none}
