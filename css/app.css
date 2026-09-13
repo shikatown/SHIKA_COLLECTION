@@ -182,6 +182,53 @@ a{color:var(--accent)}
 .hero{ text-align:center;padding:10px 0 4px; }
 .hero__lead{font-size:12px;color:var(--ink-3);margin:0 0 2px;letter-spacing:.14em}
 .hero__title{font-size:21px;margin:0 0 12px;letter-spacing:.06em;font-weight:800}
+.hero--first{padding-top:2px}
+/* 初回のホームだけに出す SHIKA COLLECTION のロゴ */
+.hero__logo{
+  position:relative;display:block;width:min(66%,250px);margin:0 auto 2px;
+  aspect-ratio:320/213;      /* ロゴの形。読む前から場所を取って、あとで動かない */
+}
+.hero__logoimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.hero__logoimg--hi{opacity:0;transition:opacity .2s linear}
+.hero__logoimg--hi.is-on{opacity:1}
+
+/* 「志賀町を、あつめよう。」をロゴ風に。
+   裏面のロゴの COLLECTION と同じく、青いリボンに、ふちどりの太い文字をのせる。 */
+.tagline{
+  display:flex;justify-content:center;margin:2px 0 14px;
+  font-family:var(--font-ui);line-height:1;
+  filter:drop-shadow(0 3px 0 #06397a) drop-shadow(0 7px 10px rgba(10,40,80,.22));
+}
+.tagline__band{
+  display:inline-flex;align-items:baseline;gap:1px;
+  padding:9px 30px 10px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.35) 0 2px,transparent 2px),
+    linear-gradient(180deg,#3aa0ea 0%,#0d63c6 55%,#0a4a9e 100%);
+  /* 両端を切り欠いたリボン */
+  clip-path:polygon(0 0,100% 0,calc(100% - 14px) 50%,100% 100%,0 100%,14px 50%);
+  transform:rotate(-2deg);
+}
+.tagline__town,
+.tagline__rest{
+  font-weight:900;letter-spacing:.05em;
+  paint-order:stroke fill;-webkit-font-smoothing:antialiased;
+}
+.tagline__town{
+  font-size:27px;color:#ffd54a;
+  -webkit-text-stroke:5px #5f3500;
+  text-shadow:0 2px 0 #5f3500;
+}
+.tagline__rest{
+  font-size:19px;color:#fff;
+  -webkit-text-stroke:4px #063a7a;
+  text-shadow:0 2px 0 #063a7a;
+}
+@media (max-width:359px){
+  .tagline__band{padding:8px 24px 9px}
+  .tagline__town{font-size:23px}
+  .tagline__rest{font-size:16px}
+}
 /* ホームのボタンは3つ。遊び方と設定は歯車へ移したので、
    残った場所の真ん中に置いて、下が空きすぎないようにする。 */
 .home{
@@ -937,6 +984,83 @@ a{color:var(--accent)}
 @media (prefers-reduced-motion: reduce){
   .titlefly__rays{animation:none !important}
   .titlefly__sparks{display:none}
+}
+
+/* ===== 初回のホーム：「無料10連」のポップ ===== */
+.firstpop{
+  position:relative;display:flex;align-items:center;gap:10px;width:100%;
+  padding:18px 16px 16px 14px;border-radius:22px;
+  background:
+    radial-gradient(120% 90% at 30% 20%,#fff6c9 0%,#ffe27a 38%,#f6b92c 100%);
+  border:3px solid #2b2722;
+  box-shadow:0 5px 0 #b97808,0 9px 0 #2b2722,0 14px 22px rgba(60,40,0,.25);
+  color:#3b2400;text-decoration:none;overflow:hidden;isolation:isolate;
+  -webkit-tap-highlight-color:transparent;
+  animation:firstPopBounce 1.9s ease-in-out infinite;
+}
+.firstpop:active{transform:translateY(4px) scale(.99);box-shadow:0 2px 0 #b97808,0 4px 0 #2b2722}
+@keyframes firstPopBounce{
+  0%,100%{transform:translateY(0) scale(1)}
+  12%{transform:translateY(-6px) scale(1.02)}
+  24%{transform:translateY(0) scale(1)}
+  32%{transform:translateY(-2px) scale(1.005)}
+  40%{transform:translateY(0) scale(1)}
+}
+/* 左上の「初回限定」リボン */
+.firstpop__ribbon{
+  position:absolute;left:-2px;top:10px;z-index:3;
+  padding:4px 14px 4px 12px;
+  background:#e0342f;color:#fff;font-size:12.5px;font-weight:900;letter-spacing:.12em;
+  border:2px solid #2b2722;border-left:0;border-radius:0 999px 999px 0;
+  box-shadow:0 2px 0 #2b2722;
+}
+/* 裏向きのカードを3枚、扇に広げる */
+.firstpop__cards{position:relative;flex:none;width:92px;height:96px;margin-top:14px}
+.firstpop__cards > .card{
+  position:absolute;left:50%;top:50%;width:58px;margin:-36px 0 0 -29px;
+  border-radius:6px;box-shadow:0 3px 8px rgba(40,25,0,.35);
+  transform-origin:50% 120%;
+}
+.firstpop__cards > .card:nth-child(1){transform:rotate(-18deg) translateX(-10px)}
+.firstpop__cards > .card:nth-child(2){transform:rotate(0deg) translateY(-6px);z-index:1}
+.firstpop__cards > .card:nth-child(3){transform:rotate(18deg) translateX(10px)}
+.firstpop__body{
+  position:relative;z-index:2;flex:1;min-width:0;
+  display:grid;justify-items:center;gap:2px;text-align:center;
+  font-family:var(--font-ui);line-height:1;
+}
+.firstpop__free{
+  font-size:44px;font-weight:900;color:#e0342f;letter-spacing:.06em;
+  -webkit-text-stroke:6px #fff;paint-order:stroke fill;
+  filter:drop-shadow(0 3px 0 #2b2722);
+}
+.firstpop__ten{
+  font-size:22px;font-weight:900;color:#2b2722;letter-spacing:.04em;margin-top:2px;
+}
+.firstpop__cta{
+  margin-top:8px;padding:6px 14px;border-radius:999px;
+  background:linear-gradient(180deg,#2e9fe3,#0960bd);color:#fff;
+  font-size:13px;font-weight:900;letter-spacing:.06em;
+  border:2px solid #2b2722;box-shadow:0 2px 0 #2b2722;
+}
+/* ときどき光が横切る */
+.firstpop__shine{
+  position:absolute;top:-30%;bottom:-30%;left:-40%;width:30%;z-index:1;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.75) 50%,transparent);
+  transform:skewX(-18deg) translateX(-120%);
+  animation:firstPopShine 3.2s ease-in-out infinite;
+}
+@keyframes firstPopShine{
+  0%,55%{transform:skewX(-18deg) translateX(-120%)}
+  80%,100%{transform:skewX(-18deg) translateX(560%)}
+}
+@media (prefers-reduced-motion: reduce){
+  .firstpop,.firstpop__shine{animation:none}
+}
+@media (max-width:359px){
+  .firstpop__cards{width:76px}
+  .firstpop__free{font-size:38px}
+  .firstpop__ten{font-size:19px}
 }
 
 /* ===== コインが右上へ飛ぶ演出（js/coin-fly.js） ===== */

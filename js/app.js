@@ -274,16 +274,19 @@ function renderHome(view) {
   view.append(page);
   view = page;
 
-  // 上はひとことだけ。ロゴは起動演出で大きく見せているので、ホームには置かない
-  const hero = el('div', { class: 'hero' });
-  hero.append(el('h2', { class: 'hero__title', text: '志賀町を、あつめよう。' }));
+  /* 初めての人（無料10連をまだ引いていない人）には、ロゴと「無料10連」のポップを出す。
+     引いたあとは、ロゴの代わりに持っているカードを大きく見せる。 */
+  const first = !s.flags.firstFreeTenDone;
+  const hero = el('div', { class: `hero${first ? ' hero--first' : ''}` });
+  if (first) hero.append(homeLogo());
+  hero.append(taglineLogo());
   view.append(hero);
 
-  /* 持っているカードを1枚ずつ大きく見せる。10秒ごとに入れ替え、
+  /* 持っているカードを1枚ずつ大きく見せる。5秒ごとに入れ替え、
      最近手に入れたカードほど出やすくする。押すとそのカードの詳細へ。
      大きさはガチャ画面のカードと同じ（画面の高さの46%まで）。 */
   const main = el('div', { class: 'home__main' });
-  main.append(homeShowcase());
+  main.append(first ? firstGachaPop() : homeShowcase());
 
   // SNSでシェア
   main.append(el('button', {
@@ -313,6 +316,56 @@ function renderHome(view) {
   // 遊び方と設定は、右上の歯車（その他）から行けるのでホームには置かない
 }
 
+
+/* ===== ホームの見出し・ロゴ・初回ポップ ===== */
+
+/** SHIKA COLLECTION のロゴ（初回のホームだけ）。小さい方を先に出し、原寸は読み終わってから重ねて現す */
+function homeLogo() {
+  const logo = el('div', { class: 'hero__logo' });
+  logo.append(el('img', {
+    class: 'hero__logoimg',
+    attrs: { src: './assets/frames/thumb/logo.png', alt: 'SHIKA COLLECTION', decoding: 'async' },
+  }));
+  const hi = el('img', {
+    class: 'hero__logoimg hero__logoimg--hi',
+    attrs: { src: './assets/frames/logo.png', alt: '', decoding: 'async' },
+  });
+  const show = () => hi.classList.add('is-on');
+  if (hi.complete && hi.naturalWidth) show();
+  else hi.addEventListener('load', show, { once: true });
+  hi.addEventListener('error', () => hi.remove(), { once: true });
+  logo.append(hi);
+  return logo;
+}
+
+/** 「志賀町を、あつめよう。」をロゴ風に。裏面のロゴの COLLECTION と同じく、青いリボンに太い文字をのせる */
+function taglineLogo() {
+  return el('h2', { class: 'tagline', attrs: { 'aria-label': '志賀町を、あつめよう。' } }, [
+    el('span', { class: 'tagline__band', attrs: { 'aria-hidden': 'true' } }, [
+      el('b', { class: 'tagline__town', text: '志賀町' }),
+      el('span', { class: 'tagline__rest', text: 'を、あつめよう。' }),
+    ]),
+  ]);
+}
+
+/** 初回だけの「無料10連」ポップ。押すとガチャ画面（無料で10連を引くボタンがある）へ */
+function firstGachaPop() {
+  const pop = el('a', {
+    class: 'firstpop',
+    attrs: { href: '#/gacha', 'aria-label': '初回限定 無料で10連ガチャを引く' },
+  });
+  pop.append(el('span', { class: 'firstpop__ribbon', attrs: { 'aria-hidden': 'true' }, text: '初回限定' }));
+  pop.append(el('span', { class: 'firstpop__cards', attrs: { 'aria-hidden': 'true' } }, [
+    cardBack({ small: true }), cardBack({ small: true }), cardBack({ small: true }),
+  ]));
+  pop.append(el('span', { class: 'firstpop__body', attrs: { 'aria-hidden': 'true' } }, [
+    el('span', { class: 'firstpop__free', text: '無料' }),
+    el('span', { class: 'firstpop__ten', text: '10連ガチャ' }),
+    el('span', { class: 'firstpop__cta', text: 'タップして引く ▶' }),
+  ]));
+  pop.append(el('span', { class: 'firstpop__shine', attrs: { 'aria-hidden': 'true' } }));
+  return pop;
+}
 
 /* ===== ホームのカード ===== */
 const SHOWCASE_MS = 5000;   // 次のカードに入れ替えるまで
