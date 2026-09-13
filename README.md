@@ -131,6 +131,7 @@ data/config.json            イベント・コイン・地図の設定
 data/version.json           バージョン情報
 assets/photos/              カードの写真 52枚（Excelから書き出したもの）
 assets/photos/thumb/        一覧表示用の小さい写真（無くても動くが一覧が重くなる）
+assets/photos/web/          表示用の軽い写真（WebP。無くても動くが通信量が増える）
 assets/frames/              ジャンル別の台紙・カテゴリアイコン・SHIKAロゴ
 assets/frames/thumb/        一覧表示用の小さい台紙・アイコン・ロゴ
 assets/cards/               カード裏面（_back.png）と、完成画像で上書きする場合

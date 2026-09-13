@@ -377,10 +377,91 @@ function spotRow(c, visited, dist = null, highlight = false) {
 
 /* ===== チェックイン ===== */
 
+/**
+ * 現在地を確認できなかったときの案内。理由ごとに、利用者がすることを分けて伝える。
+ * 以前はどの理由でも「屋外で再度お試しください」だったので、許可していない人は何度試しても直らなかった。
+ * @returns {Promise<boolean>} 「もう一度試す」を押したら true
+ */
+async function geoFailDialog(kind) {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  const closeOnly = [{ label: '閉じる', value: false, primary: true }];
+  const withRetry = [{ label: '閉じる', value: false }, { label: 'もう一度試す', value: true, primary: true }];
+  const steps = (lines) => {
+    const ol = el('ol', { class: 'geofail__steps' });
+    for (const t of lines) ol.append(el('li', { text: t }));
+    return ol;
+  };
+
+  let title;
+  let body;
+  let actions = withRetry;
+  if (kind === 'unsupported') {
+    title = '現在地を使えません';
+    body = ['この端末・ブラウザでは位置情報を取得できません。'];
+    actions = closeOnly;
+  } else if (kind === 'denied') {
+    title = '位置情報が許可されていません';
+    if (!window.isSecureContext) {
+      body = ['安全な接続（https）で開いていないため、位置情報を使えません。https:// から始まるアドレスで開き直してください。'];
+    } else if (isIOS) {
+      body = [
+        'このサイトに位置情報の利用が許可されていないため、現在地を確認できません。',
+        steps([
+          '「設定」アプリを開く',
+          '「プライバシーとセキュリティ」→「位置情報サービス」をオンにする',
+          '同じ画面の「Safari の Web サイト」を「使用中」または「確認」にする',
+        ]),
+        '変更したら、この画面に戻って「近くのスポットを探す」をもう一度押してください。',
+      ];
+    } else if (isAndroid) {
+      body = [
+        'このサイトに位置情報の利用が許可されていないため、現在地を確認できません。',
+        steps([
+          'アドレスバーの左にあるアイコンをタップ',
+          '「権限」または「サイトの設定」→「位置情報」を「許可」にする',
+          '端末の位置情報がオフなら、画面上から下へスワイプしてオンにする',
+        ]),
+        '変更したら、ページを開き直して「近くのスポットを探す」をもう一度押してください。',
+      ];
+    } else {
+      body = [
+        'このサイトに位置情報の利用が許可されていないため、現在地を確認できません。',
+        'ブラウザのサイト設定で、このサイトの位置情報を「許可」に変更してから、もう一度お試しください。',
+      ];
+    }
+    actions = closeOnly;   // 設定を変えるまでは、何度試しても同じ結果になる
+  } else if (kind === 'unavailable') {
+    title = '現在地が見つかりませんでした';
+    body = [
+      '端末の位置情報（GPS）がオフになっていないか確認してください。',
+      '建物の中や地下では見つからないことがあります。',
+    ];
+  } else if (kind === 'inaccurate') {
+    const acc = geo.currentAccuracy();
+    title = '現在地の精度が足りませんでした';
+    body = [
+      acc != null
+        ? `いまの精度は約 ${acc} m です。チェックインには約 ${geo.accuracyLimit()} m 以内の精度が必要です。`
+        : `チェックインには約 ${geo.accuracyLimit()} m 以内の精度が必要です。`,
+      '屋外など、空が見える場所へ移動してから、もう一度お試しください。',
+    ];
+  } else {
+    // 時間切れと、理由の分からない失敗
+    title = '時間内に現在地を確認できませんでした';
+    body = [
+      '電波の状況によって、時間がかかることがあります。',
+      '少し待ってから、もう一度お試しください。',
+    ];
+  }
+  return !!(await dialog({ title, body, actions }));
+}
+
 async function runCheckIn(view, status, btn) {
   unlock();
   if (!geo.supported()) {
-    await dialog({ title: '現在地を使えません', body: ['この端末・ブラウザでは位置情報を取得できません。'], actions: [{ label: '閉じる', value: null, primary: true }] });
+    await geoFailDialog('unsupported');
     return;
   }
   if (!app.state.flags.spotHintShown) {
@@ -402,12 +483,12 @@ async function runCheckIn(view, status, btn) {
     await geo.acquire((msg) => { status.textContent = msg; btn.textContent = '探しています…'; });
   } catch (e) {
     btn.disabled = false; btn.textContent = orig;
+    const kind = geo.errorKind(e);
+    if (kind === 'busy') return;   // すでに探している最中
     status.textContent = '現在地は取得していません';
     sfx.error();
-    const msg = e && e.message === 'unsupported'
-      ? 'この端末では位置情報を取得できません。'
-      : '現在地を正確に確認できませんでした。屋外など、空が見える場所で再度お試しください。';
-    await dialog({ title: '現在地を確認できませんでした', body: [msg], actions: [{ label: '閉じる', value: null, primary: true }] });
+    const retry = await geoFailDialog(kind);
+    if (retry && btn.isConnected) return runCheckIn(view, status, btn);
     return;
   }
 
@@ -417,12 +498,10 @@ async function runCheckIn(view, status, btn) {
   if (!geo.accuracyOK()) {
     status.textContent = '現在地は取得していません';
     sfx.error();
-    await dialog({
-      title: '現在地を正確に確認できませんでした',
-      body: ['屋外など、空が見える場所で再度お試しください。'],
-      actions: [{ label: '閉じる', value: null, primary: true }],
-    });
+    const retry = await geoFailDialog('inaccurate');
+    if (!btn.isConnected) return;   // 案内を見ているあいだに別の画面へ移った
     refreshSpotLists(view);
+    if (retry) return runCheckIn(view, status, btn);
     return;
   }
 

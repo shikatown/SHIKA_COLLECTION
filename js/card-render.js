@@ -49,17 +49,32 @@ export function thumbUrl(file) {
   return `./assets/photos/thumb/${file.replace(/\.[^.]+$/, '.jpg')}`;
 }
 
+/**
+ * 表示用の軽い画像（WebP）の場所。assets/<フォルダ>/web/<名前>.webp
+ * 元の画像（数百KB〜3MB）を、画面に出る大きさまで縮めて WebP にしたもの。
+ * 作り方は assets/photos/README.txt。無いときは呼ぶ側で元の画像に戻す。
+ */
+export function webUrl(src) {
+  const m = /^\.\/assets\/(photos|frames|cards|icons)\/([^/]+)\.(png|jpe?g)$/i.exec(src || '');
+  return m ? `./assets/${m[1]}/web/${m[2]}.webp` : '';
+}
+
 /** 原寸を上に重ねて、読み終わってからそっと現す層。
-    差し替え（src の付け替え）だと一瞬抜けてちらつくので、重ねて不透明度だけ変える。 */
+    差し替え（src の付け替え）だと一瞬抜けてちらつくので、重ねて不透明度だけ変える。
+    まず軽い WebP を読み、無ければ元の画像を読む。 */
 function layerHi(src) {
+  const light = webUrl(src);
   const hi = el('img', {
     class: 'cardart__layer cardart__layer--hi',
-    attrs: { src, alt: '', decoding: 'async' },
+    attrs: { src: light || src, alt: '', decoding: 'async' },
   });
   const show = () => hi.classList.add('is-on');
   if (hi.complete && hi.naturalWidth) show();
   else hi.addEventListener('load', show, { once: true });
-  hi.addEventListener('error', () => hi.remove(), { once: true });
+  hi.addEventListener('error', () => {
+    if (light && hi.getAttribute('src') === light) { hi.src = src; return; }
+    hi.remove();
+  });
   return hi;
 }
 

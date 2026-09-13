@@ -171,11 +171,11 @@ function warmCardThumbs() {
 
 function warmHomeImages() {
   for (const src of [
-    './assets/cards/_back.png',            // 起動画面のカードの裏
+    './assets/cards/web/_back.webp',       // 起動画面のカードの裏
     './assets/frames/thumb/logo.png',      // ホームのロゴ（小）
-    './assets/frames/logo.png',            // ホームのロゴ（原寸）
+    './assets/frames/web/logo.webp',       // ホームのロゴ（大）
     './assets/icons/tagline-sm.png',       // 「志賀町を、あつめよう。」のロゴ（小）
-    './assets/icons/tagline.png',          // 「志賀町を、あつめよう。」のロゴ（原寸）
+    './assets/icons/web/tagline.webp',     // 「志賀町を、あつめよう。」のロゴ（大）
   ]) {
     const i = new Image();
     i.decoding = 'async';
@@ -359,14 +359,19 @@ function taglineLogo() {
     class: 'tagline__img',
     attrs: { src: './assets/icons/tagline-sm.png', alt: '志賀町を、あつめよう。 SHIKA COLLECTION', decoding: 'async' },
   }));
+  // 大きい方は軽い WebP を読み、無ければ元の PNG
+  const LIGHT = './assets/icons/web/tagline.webp';
   const hi = el('img', {
     class: 'tagline__img tagline__img--hi',
-    attrs: { src: './assets/icons/tagline.png', alt: '', decoding: 'async' },
+    attrs: { src: LIGHT, alt: '', decoding: 'async' },
   });
   const show = () => hi.classList.add('is-on');
   if (hi.complete && hi.naturalWidth) show();
   else hi.addEventListener('load', show, { once: true });
-  hi.addEventListener('error', () => hi.remove(), { once: true });
+  hi.addEventListener('error', () => {
+    if (hi.getAttribute('src') === LIGHT) { hi.src = './assets/icons/tagline.png'; return; }
+    hi.remove();
+  });
   box.append(hi);
   return box;
 }

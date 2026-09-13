@@ -116,7 +116,8 @@ export function lockedCard(cardData, { small = false } = {}) {
    以前は先に「描いた裏面」を出してから画像に差し替えていたので、
    起動直後に青緑色の仮の絵がちらついていた。
    画像が読めなかったときだけ、描いた裏面に切り替える。 */
-const BACK_SRCS = ['./assets/cards/_back.png', './assets/cards/_back.webp'];
+// まず軽い WebP（web/）、無ければ元の画像
+const BACK_SRCS = ['./assets/cards/web/_back.webp', './assets/cards/_back.png', './assets/cards/_back.webp'];
 
 export function cardBack({ small = false } = {}) {
   const wrap = el('div', { class: `card${small ? ' card--sm' : ''}` });

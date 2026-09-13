@@ -17,6 +17,15 @@ const TABS = [
 
 let currentTab = 'all';
 
+/* 取得済み／未取得の絞り込みと、カード名の検索。画面を移っても覚えておく。 */
+const OWN_FILTERS = [
+  { key: 'all', label: 'すべて' },
+  { key: 'owned', label: '取得済み' },
+  { key: 'unowned', label: '未取得' },
+];
+let currentOwn = 'all';
+let currentQuery = '';
+
 export function renderCollection(view, params) {
   clear(view);
   if (params && params.tab) currentTab = params.tab;
@@ -66,6 +75,42 @@ export function renderCollection(view, params) {
   }
   view.append(tabs);
 
+  /* 取得済み／未取得と、カード名の検索。
+     選んだり打ったりしたときは下の一覧だけを描き直す（入力欄を作り直すと、打っている途中で入力が切れる）。 */
+  const tools = el('div', { class: 'collection__tools' });
+  const seg = el('div', { class: 'seg', attrs: { role: 'group', 'aria-label': '取得状況で絞り込む' } });
+  const segBtns = OWN_FILTERS.map((o) => el('button', {
+    class: `seg__b${currentOwn === o.key ? ' is-active' : ''}`,
+    attrs: { type: 'button', 'aria-pressed': String(currentOwn === o.key) },
+    text: o.label,
+    on: {
+      click: () => {
+        currentOwn = o.key;
+        segBtns.forEach((b, i) => {
+          const on = OWN_FILTERS[i].key === currentOwn;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', String(on));
+        });
+        fillList();
+      },
+    },
+  }));
+  seg.append(...segBtns);
+  const search = el('input', {
+    class: 'collection__search',
+    attrs: { type: 'search', placeholder: 'カード名で探す', 'aria-label': 'カード名で探す', enterkeyhint: 'search', autocomplete: 'off' },
+  });
+  search.value = currentQuery;
+  const onSearch = (e) => {
+    if (e && e.isComposing) return;   // 日本語の変換中は、確定してから絞り込む
+    currentQuery = search.value;
+    fillList();
+  };
+  search.addEventListener('input', onSearch);
+  search.addEventListener('compositionend', onSearch);
+  search.addEventListener('keydown', (e) => { if (e.key === 'Enter') search.blur(); });
+  tools.append(seg, search);
+
   if (currentTab !== 'all' && currentTab !== 'fav') {
     const p = categoryProgress().find((x) => x.key === currentTab);
     if (p) {
@@ -86,24 +131,58 @@ export function renderCollection(view, params) {
     }
   }
 
-  const list = filtered();
-  if (!list.length) {
-    view.append(el('p', {
-      class: 'empty',
-      text: currentTab === 'fav' ? '「気になる」に入れたカードがここに並びます。' : '該当するカードがありません。',
-    }));
-    return;
+  view.append(tools);
+  const area = el('div', { class: 'collection__list' });
+  view.append(area);
+
+  function fillList() {
+    clear(area);
+    const base = filtered();
+    const list = narrowed(base);
+    if (!list.length) {
+      area.append(el('p', { class: 'empty', text: emptyText(base.length) }));
+      return;
+    }
+
+    // 取得したばかりのカードは、この一覧で枠にはめて見せる（絞り込みで見えていないカードは、次に見えたときに）
+    const fresh = app.state.unseenCardIds.filter((id) => list.some((c) => c.id === id));
+
+    const grid = el('div', { class: 'grid' });
+    let n = 0;
+    for (const c of list) grid.append(cell(c, fresh.includes(c.id) ? n++ : -1));
+    area.append(grid);
+
+    if (fresh.length) snapIn(grid, [...grid.querySelectorAll('.cell--snap')]);
   }
+  fillList();
+}
 
-  // 取得したばかりのカードは、この一覧で枠にはめて見せる
-  const fresh = app.state.unseenCardIds.filter((id) => list.some((c) => c.id === id));
+/** 名前を見せてよいカードか。一覧の名前の出し方（cell）と合わせる。
+    まだ持っていないカードの名前は、検索でも当てられないようにする。 */
+const nameVisible = (c) => isOwned(c.id) || c.gps.enabled;
 
-  const grid = el('div', { class: 'grid' });
-  let n = 0;
-  for (const c of list) grid.append(cell(c, fresh.includes(c.id) ? n++ : -1));
-  view.append(grid);
+/** 検索のために文字をそろえる。全角・半角、大文字・小文字、カタカナ・ひらがな、空白の違いを無視する。 */
+function foldText(s) {
+  return String(s || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '')
+    .replace(/[ァ-ヶ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
 
-  if (fresh.length) snapIn(grid, [...grid.querySelectorAll('.cell--snap')]);
+/** ジャンルで分けたあとの一覧を、取得状況と検索語でさらに絞る。 */
+function narrowed(list) {
+  let out = list;
+  if (currentOwn === 'owned') out = out.filter((c) => isOwned(c.id));
+  else if (currentOwn === 'unowned') out = out.filter((c) => !isOwned(c.id));
+  const q = foldText(currentQuery);
+  if (q) out = out.filter((c) => nameVisible(c) && [c.name, c.reading].some((t) => foldText(t).includes(q)));
+  return out;
+}
+
+function emptyText(baseCount) {
+  if (!baseCount) return currentTab === 'fav' ? '「気になる」に入れたカードがここに並びます。' : '該当するカードがありません。';
+  if (foldText(currentQuery)) return `「${currentQuery.trim()}」に当てはまるカードはありません。まだ持っていないカードの名前では探せません。`;
+  if (currentOwn === 'owned') return '取得済みのカードはまだありません。';
+  if (currentOwn === 'unowned') return 'このなかのカードは、すべて集めました！';
+  return '該当するカードがありません。';
 }
 
 /** 枠にはまる演出。見せ終わったら控えを消して、次に開いたときは静かにする。 */
@@ -134,9 +213,24 @@ async function snapIn(grid, cells) {
     ? { glide: 300, spin: 1150, hold: 80, fly: 360, rest: 120 }
     : { glide: 340, spin: 1500, hold: 180, fly: 440, rest: 260 };
 
-  // 画面のどこかを触られたら、残りはまとめて終わらせる（長く待たせない）
+  /* SKIP ボタン（または暗い幕のどこか）を押したら、残りはまとめて枠に収める。
+     待ち時間の途中でもすぐ終わるよう、待っている眠りを起こす。 */
   let skip = false;
-  const askSkip = () => { skip = true; };
+  let wake = null;
+  const nap = (ms) => new Promise((resolve) => {
+    if (skip) { resolve(); return; }
+    const t = setTimeout(() => { wake = null; resolve(); }, ms);
+    wake = () => { clearTimeout(t); wake = null; resolve(); };
+  });
+  const skipBtn = el('button', { class: 'snapskip', attrs: { type: 'button', 'aria-label': '演出をスキップ' }, text: 'SKIP' });
+  const askSkip = () => {
+    if (skip) return;
+    skip = true;
+    skipBtn.remove();
+    for (const n of document.querySelectorAll('.snapfly, .snapdim')) n.remove();
+    if (wake) wake();
+  };
+  skipBtn.addEventListener('click', askSkip);
   // 手で動かされたら、追いかけるのはやめる（勝手に戻されると操作できない）
   let follow = true;
   const stopFollow = () => { follow = false; };
@@ -153,7 +247,9 @@ async function snapIn(grid, cells) {
   const cancel = () => {
     if (cancelled) return;
     cancelled = true;
+    skipBtn.remove();
     for (const n of document.querySelectorAll('.snapfly, .snapdim')) n.remove();
+    if (wake) wake();
   };
   window.addEventListener('hashchange', cancel);
   const gone = () => cancelled || !grid.isConnected;
@@ -203,8 +299,8 @@ async function snapIn(grid, cells) {
 
     // 中央に大きく出して、くるっと回す
     fly.classList.add('is-in');
-    await sleep(T.spin + T.hold);
-    if (gone()) { fly.remove(); dim.remove(); return; }
+    await nap(T.spin + T.hold);
+    if (skip || gone()) { fly.remove(); dim.remove(); return; }
 
     // 枠の位置へ飛ばす
     settleOn(cellEl);
@@ -215,8 +311,8 @@ async function snapIn(grid, cells) {
     fly.style.setProperty('--k', (to.width / from.width).toFixed(4));
     dim.classList.add('is-out');
     fly.classList.add('is-fly');
-    await sleep(T.fly);
-    if (gone()) { fly.remove(); dim.remove(); return; }
+    await nap(T.fly);
+    if (skip || gone()) { fly.remove(); dim.remove(); return; }
 
     // 着地。「パチーン」と鳴らす
     finish(cellEl);
@@ -231,7 +327,9 @@ async function snapIn(grid, cells) {
   const bootEl = document.getElementById('boot');
   for (let i = 0; i < 60 && bootEl && !bootEl.hidden; i += 1) await sleep(120);
 
-  await sleep(620);   // 画面の位置を戻す処理（router.js）が落ち着くまで待つ
+  // SKIP は演出のあいだだけ出す（起動画面の裏では出さない）
+  if (!gone()) document.body.append(skipBtn);
+  await nap(620);   // 画面の位置を戻す処理（router.js）が落ち着くまで待つ
   for (const [i, cellEl] of cells.entries()) {
     if (skip || gone()) break;
     const card = app.cardsById.get(cellEl.dataset.id);
@@ -239,15 +337,20 @@ async function snapIn(grid, cells) {
     await glideTo(cellEl);
     if (gone()) break;
     await flyInto(cellEl, card, i === cells.length - 1);
-    if (gone()) break;
-    await sleep(T.rest);
+    if (skip || gone()) break;
+    await nap(T.rest);
   }
   window.removeEventListener('hashchange', cancel);
+  skipBtn.remove();
   for (const n of document.querySelectorAll('.snapfly, .snapdim')) n.remove();
   grid.classList.remove('grid--snapping');
   release();
   // 触って飛ばしたぶんは、そのまま枠に収める。画面を離れたときは収めない（次に開いたときに演出する）
-  if (!gone()) for (const c of cells) finish(c);
+  if (!gone()) {
+    const rest = cells.filter((c) => !c.classList.contains('is-snapped'));
+    for (const c of rest) finish(c);
+    if (skip && rest.length) { sfx.snap(); vibrate(12); }   // 残りをまとめて収めた合図
+  }
   done();
 }
 

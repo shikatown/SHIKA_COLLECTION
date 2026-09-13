@@ -7,11 +7,12 @@ import { cardBack, cardFace, reduceMotion, resolveAsset } from './ui.js';
 import { photoUrl, thumbUrl } from './card-render.js';
 import { isUnlocked as isAudioUnlocked, sfx, unlock } from './sound.js';
 
-const SHORE_IMAGE = './assets/photos/035.jpeg';
+// 大きい絵は表示用の軽い WebP（assets/*/web/）。読めなければ小さい方のまま演出する
+const SHORE_IMAGE = './assets/photos/web/035.webp';
 const SHORE_THUMB = './assets/photos/thumb/035.jpg';
-const LOGO_IMAGE = './assets/frames/logo.png';
+const LOGO_IMAGE = './assets/frames/web/logo.webp';
 const LOGO_THUMB = './assets/frames/thumb/logo.png';
-const CARD_BACK_IMAGE = './assets/cards/_back.png';
+const CARD_BACK_IMAGE = './assets/cards/web/_back.webp';   // js/ui.js の cardBack() と同じもの
 
 // 画像パスではなくカードIDだけを持つ。実際の面は常に cards.json と既存描画関数から作る。
 // 欠番・非公開化があっても、下の selectFeaturedCards() が公開カードで補う。

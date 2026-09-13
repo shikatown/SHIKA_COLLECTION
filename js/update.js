@@ -3,7 +3,7 @@
    ・データ更新：起動時に軽量チェック。進行データはそのまま。 */
 
 import { app, commit, publishedCards } from './state.js';
-import { dialog, toast } from './ui.js';
+import { dialog, toast, el } from './ui.js';
 
 let refreshing = false;
 /* 「更新する」を押したときだけ開き直す。
@@ -101,23 +101,68 @@ export async function checkDataUpdate(dataVersion) {
   return added.length;
 }
 
-/** PWA のホーム画面追加案内（ある程度遊んだ後に1回だけ） */
+/* ブラウザが用意する「ホーム画面に追加」の画面（Android の Chrome など）。
+   起動のすぐあとに届くので、読み込んだ時点で受け取っておき、おすすめのボタンから開く。 */
+let installEvent = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installEvent = e;
+});
+window.addEventListener('appinstalled', () => { installEvent = null; });
+
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+/** ホーム画面に追加（PWA）のおすすめ。初めて開いたとき、起動演出を閉じたあとに1回だけ出す。 */
 export async function maybeSuggestInstall() {
   const s = app.state;
   if (s.flags.pwaPromptShown) return;
-  if (!s.flags.firstFreeTenDone) return;
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-    commit((st) => { st.flags.pwaPromptShown = true; });
-    return;
-  }
   commit((st) => { st.flags.pwaPromptShown = true; });
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  await dialog({
-    title: 'ホーム画面に追加できます',
-    body: [
-      'ホーム画面に追加すると、次回からすぐ遊べます。',
-      isIOS ? '共有ボタン →「ホーム画面に追加」' : 'ブラウザのメニュー →「ホーム画面に追加」',
-    ],
-    actions: [{ label: '閉じる', value: null, primary: true }],
+  if (isStandalone()) return;   // すでにホーム画面から開いている
+
+  // ブラウザの追加の画面は、少し遅れて届くことがあるので、ほんの少しだけ待つ
+  for (let i = 0; i < 6 && !installEvent; i += 1) await new Promise((r) => setTimeout(r, 250));
+
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const box = el('div', { class: 'pwapop' });
+  box.append(el('div', { class: 'pwapop__head' }, [
+    el('img', { class: 'pwapop__icon', attrs: { src: './assets/pwa/icon-192.png', alt: '', width: '56', height: '56' } }),
+    el('div', {}, [
+      el('div', { class: 'pwapop__name', text: 'SHIKA COLLECTION' }),
+      el('div', { class: 'pwapop__sub', text: 'ホーム画面に追加して、アプリのように使えます' }),
+    ]),
+  ]));
+  const merits = el('ul', { class: 'pwapop__merits' });
+  for (const t of ['ホーム画面からすぐに開ける', '画面いっぱいに広く表示できる', '電波の弱い場所でも遊べる']) {
+    merits.append(el('li', { text: t }));
+  }
+  box.append(merits);
+
+  const canPrompt = !!installEvent;
+  if (!canPrompt) {
+    const steps = el('ol', { class: 'pwapop__steps' });
+    const lines = isIOS
+      ? ['画面の共有ボタン（□に↑）をタップ', '「ホーム画面に追加」を選ぶ', '右上の「追加」をタップ']
+      : ['ブラウザのメニュー（︙）をタップ', '「ホーム画面に追加」または「アプリをインストール」を選ぶ'];
+    for (const t of lines) steps.append(el('li', { text: t }));
+    box.append(steps);
+  }
+
+  const ok = await dialog({
+    title: 'ホーム画面に追加しませんか？',
+    body: [box],
+    actions: canPrompt
+      ? [{ label: 'あとで', value: false }, { label: 'ホーム画面に追加', value: true, primary: true }]
+      : [{ label: '閉じる', value: false, primary: true }],
   });
+  if (ok && installEvent) {
+    const ev = installEvent;
+    installEvent = null;   // 同じ画面は1回しか開けない
+    try {
+      await ev.prompt();
+      const choice = await ev.userChoice;
+      if (choice && choice.outcome === 'accepted') toast('ホーム画面に追加しました');
+    } catch (_) { /* 開けなかったときは何もしない */ }
+  }
 }

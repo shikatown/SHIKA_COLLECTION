@@ -95,7 +95,7 @@
     <pre id="previewBox" hidden></pre>
     <p class="note" style="margin-top:12px">
       photos.zip を展開して <code>assets/photos/</code> に入れてください。ファイル名はカードIDになります。<br>
-      中の <code>thumb/</code> フォルダは一覧表示用の小さい写真です。これも一緒に入れてください
+      中の <code>thumb/</code> フォルダは一覧表示用の小さい写真、<code>web/</code> フォルダは表示用の軽い写真です。これも一緒に入れてください
       （無くても動きますが、カード一覧が重くなります）。
     </p>
   </div>
@@ -756,6 +756,39 @@ document.getElementById('save').addEventListener('click', () => {
   download(new Blob([JSON.stringify(output, null, 1)], { type: 'application/json' }), 'cards.json');
 });
 
+/**
+ * 表示用の軽い写真（WebP）を作る。カードの写真の窓を覆う大きさ（1100×710 を下回らない最小）まで縮める。
+ * アプリは assets/photos/web/ を先に読み、無ければ元の写真を読む。
+ * WebP を書き出せないブラウザ（古い Safari など）や、元より大きくなるときは作らない。
+ */
+async function makeWeb(bytes, name) {
+  const url = URL.createObjectURL(new Blob([bytes]));
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const s = Math.min(1, Math.max(1100 / img.naturalWidth, 710 / img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * s));
+    const h = Math.max(1, Math.round(img.naturalHeight * s));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.imageSmoothingQuality = 'high';
+    x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);   // 透過PNG対策
+    x.drawImage(img, 0, 0, w, h);
+    const dataUrl = c.toDataURL('image/webp', 0.8);
+    c.width = c.height = 1;
+    if (!dataUrl.startsWith('data:image/webp')) return null;
+    const bin = atob(dataUrl.split(',')[1]);
+    if (bin.length >= bytes.length) return null;
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return { name: 'web/' + name.replace(/\.[^.]+$/, '.webp'), data: out };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /** 一覧表示用の小さい写真を作る。原寸はそのまま同梱する。 */
 async function makeThumb(bytes, name) {
   const url = URL.createObjectURL(new Blob([bytes]));
@@ -790,8 +823,10 @@ document.getElementById('savePhotos').addEventListener('click', async () => {
   try {
     const files = photos.slice();
     for (let i = 0; i < photos.length; i++) {
-      btn.textContent = `一覧用の写真を作成中… ${i + 1}/${photos.length}`;
+      btn.textContent = `一覧用・表示用の写真を作成中… ${i + 1}/${photos.length}`;
       files.push(await makeThumb(photos[i].data, photos[i].name));
+      const web = await makeWeb(photos[i].data, photos[i].name);
+      if (web) files.push(web);
     }
     download(makeZip(files), 'photos.zip');
   } catch (e) {

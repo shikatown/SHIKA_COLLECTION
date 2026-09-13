@@ -8,7 +8,7 @@ import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dia
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
-import { photoUrl, thumbUrl } from './card-render.js';
+import { photoUrl, thumbUrl, webUrl } from './card-render.js';
 import { createGachaStage } from './gacha-anim.js';
 import { isAdmin } from './admin.js';
 import { isValidPendingResult } from './storage.js';
@@ -104,7 +104,7 @@ function preload(ids) {
      スマホの回線では8秒近く「準備しています」のままになっていた。
      カードは小さい写真の上に原寸を重ねて、読み終わったらそっと現す作りなので、
      原寸は待たずに裏で読み始めるだけにする。 */
-  const need = new Set(['./assets/cards/_back.png']);
+  const need = new Set(['./assets/cards/web/_back.webp']);   // js/ui.js の cardBack() と同じもの
   const later = new Set();
   for (const id of ids) {
     const c = app.cardsById.get(id);
@@ -117,12 +117,12 @@ function preload(ids) {
     if (c.photo) {
       const small = thumbUrl(c.photo);
       if (small) need.add(small);
-      later.add(photoUrl(c.photo));
+      later.add(webUrl(photoUrl(c.photo)) || photoUrl(c.photo));   // カードで重ねるのと同じ軽い版
     }
     if (c.category) {
       need.add(`./assets/frames/thumb/${c.category}.png`);
       need.add(`./assets/frames/thumb/icon-${c.category}.png`);
-      later.add(`./assets/frames/${c.category}.png`);
+      later.add(`./assets/frames/web/${c.category}.webp`);
     }
   }
   need.add('./assets/frames/thumb/logo.png');

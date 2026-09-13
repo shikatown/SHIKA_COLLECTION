@@ -61,10 +61,27 @@ export function acquire(onProgress = () => {}) {
   });
 }
 
+/** チェックインに必要な精度（m）。config.json の gpsAccuracyLimit */
+export function accuracyLimit() { return (app.config && app.config.gpsAccuracyLimit) || 120; }
+
 export function accuracyOK() {
   if (!fix) return false;
-  const limit = (app.config && app.config.gpsAccuracyLimit) || 120;
-  return fix.acc <= limit;
+  return fix.acc <= accuracyLimit();
+}
+
+/**
+ * 現在地を取れなかった理由。案内を理由ごとに分けるために使う。
+ * @returns {'unsupported'|'busy'|'denied'|'unavailable'|'timeout'|'failed'}
+ */
+export function errorKind(e) {
+  if (!e) return 'failed';
+  if (e.message === 'unsupported') return 'unsupported';
+  if (e.message === 'busy') return 'busy';
+  // ブラウザが返す理由（GeolocationPositionError）: 1=許可されていない 2=見つからない 3=時間切れ
+  if (e.code === 1) return 'denied';
+  if (e.code === 2) return 'unavailable';
+  if (e.code === 3 || e.message === 'timeout') return 'timeout';
+  return 'failed';
 }
 export function currentAccuracy() { return fix ? Math.round(fix.acc) : null; }
 

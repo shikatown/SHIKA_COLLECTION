@@ -48,7 +48,7 @@
 
 | 層 | 中身 | どこから |
 |---|---|---|
-| ① 写真 | 産品・風景の写真 | `assets/photos/<photo>`（一覧では `assets/photos/thumb/` の縮小版） |
+| ① 写真 | 産品・風景の写真 | `assets/photos/<photo>`（一覧では `assets/photos/thumb/` の縮小版、大きく出すときは `assets/photos/web/` の WebP。無ければ元の写真） |
 | ② 台紙 | 外枠・背景・区切り線・所在地ピル・罫線 | `assets/frames/<category>.png`（写真部分は透過。一覧では `thumb/` の縮小版） |
 | ③ バッジ | 紺のピル＋アイコン＋カテゴリ名 | `assets/frames/icon-<category>.png` ＋ アプリ側で描画 |
 | ④ 番号 | `#01 / 53` | `id` と公開枚数から生成 |
