@@ -146,6 +146,8 @@ function warmHomeImages() {
     './assets/cards/_back.png',            // 起動画面のカードの裏
     './assets/frames/thumb/logo.png',      // ホームのロゴ（小）
     './assets/frames/logo.png',            // ホームのロゴ（原寸）
+    './assets/icons/tagline-sm.png',       // 「志賀町を、あつめよう。」のロゴ（小）
+    './assets/icons/tagline.png',          // 「志賀町を、あつめよう。」のロゴ（原寸）
   ]) {
     const i = new Image();
     i.decoding = 'async';
@@ -338,18 +340,24 @@ function homeLogo() {
   return logo;
 }
 
-/** 「志賀町を、あつめよう。」をロゴ風に。
-    ゆるい弧に沿って並べた白い文字に青いふちを付け、両脇に金の星を置く。
-    裏面のロゴの COLLECTION と同じ配色。文字は画像ではなく本物の文字（固定の図形なので html で差し込む）。 */
-const TAGLINE_SVG = '<svg class="tagline__svg" viewBox="0 0 340 96" aria-hidden="true" focusable="false">'
-  + '<defs><path id="taglineArc" d="M24 86 Q170 20 316 86"/></defs>'
-  + '<text text-anchor="middle"><textPath href="#taglineArc" startOffset="50%">志賀町を、あつめよう。</textPath></text>'
-  + '<path class="tagline__star" d="M20 40l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L11 47l6-1z"/>'
-  + '<path class="tagline__star" d="M320 40l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L311 47l6-1z"/>'
-  + '</svg>';
-
+/** 「志賀町を、あつめよう。」のロゴ（支給画像）。
+    小さい方を先に出し、原寸は読み終わってから重ねて現す（差し替えるとちらつく）。 */
 function taglineLogo() {
-  return el('h2', { class: 'tagline', attrs: { 'aria-label': '志賀町を、あつめよう。' }, html: TAGLINE_SVG });
+  const box = el('h2', { class: 'tagline' });
+  box.append(el('img', {
+    class: 'tagline__img',
+    attrs: { src: './assets/icons/tagline-sm.png', alt: '志賀町を、あつめよう。 SHIKA COLLECTION', decoding: 'async' },
+  }));
+  const hi = el('img', {
+    class: 'tagline__img tagline__img--hi',
+    attrs: { src: './assets/icons/tagline.png', alt: '', decoding: 'async' },
+  });
+  const show = () => hi.classList.add('is-on');
+  if (hi.complete && hi.naturalWidth) show();
+  else hi.addEventListener('load', show, { once: true });
+  hi.addEventListener('error', () => hi.remove(), { once: true });
+  box.append(hi);
+  return box;
 }
 
 /** 初回だけの「10連ガチャ」ポップ。押すとガチャ画面（10連ガチャを引くボタンがある）へ */

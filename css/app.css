@@ -192,18 +192,18 @@ a{color:var(--accent)}
 .hero__logoimg--hi{opacity:0;transition:opacity .2s linear}
 .hero__logoimg--hi.is-on{opacity:1}
 
-/* 「志賀町を、あつめよう。」をロゴ風に（js/app.js の TAGLINE_SVG）。
-   ゆるい弧に沿った白い文字に青いふち、両脇に金の星。裏面のロゴの COLLECTION と同じ配色。 */
-.tagline{display:flex;justify-content:center;margin:0 0 8px;line-height:1}
-.tagline__svg{
-  width:min(100%,340px);height:auto;display:block;overflow:visible;
-  filter:drop-shadow(0 3px 0 #083a7c) drop-shadow(0 8px 10px rgba(10,40,80,.2));
+/* 「志賀町を、あつめよう。」のロゴ（支給画像 assets/icons/tagline*.png、縦横比 1469:864）。
+   読む前から場所を取っておき、あとで下の要素が動かないようにする。 */
+.tagline{
+  position:relative;display:block;margin:0 auto 6px;
+  width:min(100%,340px);aspect-ratio:1469 / 864;
 }
-.tagline__svg text{
-  font-family:var(--font-ui);font-size:27px;font-weight:900;letter-spacing:2px;
-  fill:#fff;stroke:#0b4a9c;stroke-width:7px;paint-order:stroke;stroke-linejoin:round;
-}
-.tagline__star{fill:#f2b632;stroke:#8a5a00;stroke-width:1.4px;stroke-linejoin:round}
+.tagline__img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.tagline__img--hi{opacity:0;transition:opacity .2s linear}
+.tagline__img--hi.is-on{opacity:1}
+/* 初回のホームは SHIKA COLLECTION のロゴとポップも並ぶので、少し小さくする */
+.hero--first .tagline{width:min(78%,280px)}
+.hero--first .hero__logo{width:min(50%,190px)}
 
 /* ホームのボタンは3つ。遊び方と設定は歯車へ移したので、
    残った場所の真ん中に置いて、下が空きすぎないようにする。 */
