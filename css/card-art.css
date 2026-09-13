@@ -67,13 +67,17 @@
 
 /* ③ カテゴリバッジ（紺のピル＋アイコン＋カテゴリ名） */
 .cardart__badge{
+  /* 幅は、いちばん長い「スポット」が左右同じ余白で収まる大きさにそろえ、中身は真ん中に置く。
+     アイコン（ピルの高さの94% ≒ 5.66cqw）＋間 1cqw ＋「スポット」9.95cqw ＋左右の余白 1.3cqw ずつ ≒ 19.3cqw。
+     以前は余白を em（端末の文字の大きさ16px）で決めていて、小さいカードほど右へ大きく伸びていた。
+     文字の幅が端末で違っても、min-width なので左右均等のまま広がる。 */
   position:absolute; left:7.593%; top:5.481%; height:4.815%;
-  display:flex; align-items:center; gap:.22em;
-  padding:0 1.55em 0 .2em;
+  display:flex; align-items:center; justify-content:center; gap:1cqw;
+  box-sizing:border-box; min-width:19.3cqw; padding:0 1.3cqw;
   background:#0b3a6b; border-radius:99px;
   color:#fff; line-height:1; white-space:nowrap;
 }
-.cardart__badge img{ height:94%; width:auto; display:block }
+.cardart__badge img{ height:94%; width:auto; display:block; flex:none }
 .cardart__badge span{ font-size:3.1cqw; font-weight:800; letter-spacing:.04em }
 
 /* ④ 番号

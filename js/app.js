@@ -245,7 +245,10 @@ function onRouteChange(route) {
 }
 
 function updateChrome() {
-  document.getElementById('statCoins').querySelector('b').textContent = String(app.state.coins);
+  /* コインが右上へ飛んでいるあいだ（js/coin-fly.js）は、数字をメーターのように増やしているので、
+     ここでは書き換えない。演出が終わると coin-fly.js が最新の枚数にそろえる。 */
+  const coinStat = document.getElementById('statCoins');
+  if (coinStat.dataset.hold == null) coinStat.querySelector('b').textContent = String(app.state.coins);
 
   // ミッションの「受け取れる件数」をタブに出す
   const badge = document.getElementById('missionBadge');
@@ -271,24 +274,8 @@ function renderHome(view) {
   view.append(page);
   view = page;
 
+  // 上はひとことだけ。ロゴは起動演出で大きく見せているので、ホームには置かない
   const hero = el('div', { class: 'hero' });
-  /* ロゴは原寸が1.8MBある。ここは幅230pxほどなので、まず小さい方を出し、
-     原寸は上に重ねて読み終わってから現す（差し替えるとちらつく）。 */
-  const logo = el('div', { class: 'hero__logo' });
-  logo.append(el('img', {
-    class: 'hero__logoimg',
-    attrs: { src: './assets/frames/thumb/logo.png', alt: 'SHIKA COLLECTION', decoding: 'async' },
-  }));
-  const logoHi = el('img', {
-    class: 'hero__logoimg hero__logoimg--hi',
-    attrs: { src: './assets/frames/logo.png', alt: '', decoding: 'async' },
-  });
-  const showHi = () => logoHi.classList.add('is-on');
-  if (logoHi.complete && logoHi.naturalWidth) showHi();
-  else logoHi.addEventListener('load', showHi, { once: true });
-  logoHi.addEventListener('error', () => logoHi.remove(), { once: true });
-  logo.append(logoHi);
-  hero.append(logo);
   hero.append(el('h2', { class: 'hero__title', text: '志賀町を、あつめよう。' }));
   view.append(hero);
 
@@ -328,7 +315,7 @@ function renderHome(view) {
 
 
 /* ===== ホームのカード ===== */
-const SHOWCASE_MS = 10000;
+const SHOWCASE_MS = 5000;   // 次のカードに入れ替えるまで
 let showcaseTimer = 0;
 
 /** ホームに大きく出すカードの置き場。持っていなければカードの裏（押すとガチャへ）。 */

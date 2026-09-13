@@ -120,6 +120,10 @@ export async function celebrateComplete({ preview = false } = {}) {
       badge.style.setProperty('--fx', `${dx}px`);
       badge.style.setProperty('--fy', `${dy}px`);
       badge.style.setProperty('--fs', String(r.width / b.width));
+      // 暗い幕は残したまま、称号の枠のところだけ丸く照らす（はまるまで目を離させない）
+      fly.style.setProperty('--hx', `${r.left + r.width / 2}px`);
+      fly.style.setProperty('--hy', `${r.top + r.height / 2}px`);
+      fly.style.setProperty('--hr', `${r.width * 0.62}px`);
       fly.classList.add('is-fly');
       await sleep(640);
     }
@@ -133,6 +137,9 @@ export async function celebrateComplete({ preview = false } = {}) {
     unlock();
     sfx.snap();
     vibrate([24, 50, 36]);
+    // はまったあとも少しのあいだ照らしたままにして、枠に収まった姿を見せてから幕を上げる
+    fly.classList.add('is-landed');
+    await sleep(quick ? 400 : 1100);
     fly.classList.add('is-out');
     await sleep(420);
     fly.remove();

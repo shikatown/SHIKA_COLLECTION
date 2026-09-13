@@ -181,13 +181,6 @@ a{color:var(--accent)}
 /* ===== ホーム ===== */
 .hero{ text-align:center;padding:10px 0 4px; }
 .hero__lead{font-size:12px;color:var(--ink-3);margin:0 0 2px;letter-spacing:.14em}
-.hero__logo{
-  position:relative;display:block;width:min(64%,230px);margin:0 auto 4px;
-  aspect-ratio:320/213;      /* ロゴの形。読む前から場所を取って、あとで動かない */
-}
-.hero__logoimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
-.hero__logoimg--hi{opacity:0;transition:opacity .2s linear}
-.hero__logoimg--hi.is-on{opacity:1}
 .hero__title{font-size:21px;margin:0 0 12px;letter-spacing:.06em;font-weight:800}
 /* ホームのボタンは3つ。遊び方と設定は歯車へ移したので、
    残った場所の真ん中に置いて、下が空きすぎないようにする。 */
@@ -835,7 +828,23 @@ a{color:var(--accent)}
   opacity:0;transition:opacity .35s ease;
 }
 .titlefly.is-in .titlefly__veil{opacity:1}
-.titlefly.is-fly .titlefly__veil,.titlefly.is-out .titlefly__veil{opacity:0;transition:opacity .5s ease}
+/* 枠へ飛ぶあいだと、はまった直後は、幕を下ろしたまま枠のところだけ丸く照らす */
+.titlefly.is-fly .titlefly__veil{
+  opacity:1;
+  background:radial-gradient(circle at var(--hx,50%) var(--hy,50%),
+    rgba(10,8,4,0) 0 var(--hr,80px),
+    rgba(10,8,4,.45) calc(var(--hr,80px) + 10px),
+    rgba(10,8,4,.84) calc(var(--hr,80px) + 60px));
+}
+.titlefly.is-landed .titlefly__veil{
+  background:radial-gradient(circle at var(--hx,50%) var(--hy,50%),
+    rgba(255,226,140,.18) 0 var(--hr,80px),
+    rgba(10,8,4,.45) calc(var(--hr,80px) + 10px),
+    rgba(10,8,4,.84) calc(var(--hr,80px) + 60px));
+}
+.titlefly.is-out .titlefly__veil{opacity:0;transition:opacity .5s ease}
+/* 幕の下にある称号の枠をタップで邪魔しないよう、はまったあとは幕を素通しにする */
+.titlefly.is-landed{pointer-events:none}
 .titlefly__rays{
   position:absolute;left:50%;top:45%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;
   background:repeating-conic-gradient(from 0deg,rgba(255,221,120,.34) 0 7deg,transparent 7deg 20deg);
@@ -928,6 +937,27 @@ a{color:var(--accent)}
 @media (prefers-reduced-motion: reduce){
   .titlefly__rays{animation:none !important}
   .titlefly__sparks{display:none}
+}
+
+/* ===== コインが右上へ飛ぶ演出（js/coin-fly.js） ===== */
+.coinfly{position:fixed;inset:0;z-index:95;pointer-events:none;overflow:visible}
+.coinfly__coin{
+  position:absolute;left:0;top:0;width:22px;height:22px;
+  opacity:0;will-change:transform;
+  filter:drop-shadow(0 2px 3px rgba(120,80,0,.35));
+}
+/* 1枚届くたびに、右上の枚数表示がぽんと弾む */
+.stat--coin.is-bump{animation:coinBump .22s ease-out}
+.stat--coin.is-bump .coinico{animation:coinIconBump .22s ease-out}
+@keyframes coinBump{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.1);box-shadow:0 0 0 3px rgba(242,182,50,.35)}
+  100%{transform:scale(1)}
+}
+@keyframes coinIconBump{
+  0%{transform:rotate(0)}
+  50%{transform:rotate(-14deg) scale(1.15)}
+  100%{transform:rotate(0)}
 }
 
 /* ===== 管理モード（公開前の点検用） ===== */

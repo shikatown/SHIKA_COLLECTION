@@ -320,7 +320,16 @@ export async function playSequence(view, payload) {
   };
   window.addEventListener('hashchange', onLeave, { once: true });
   const release = () => document.body.classList.remove('is-drawing');
-  const skipAll = () => { skipped = true; stage.skip(); };
+  /* SKIP を1回押したら、すぐ結果まで行く。
+     以前は、カードとカードの間の待ち（2.2秒）が途中で切れず、
+     しかも最後の1枚は演出を最後まで流していたので、押しても効いていないように見え、
+     もう一度押す必要があった。待ちを起こし、最後の1枚も最終状態から始める。 */
+  let wake = null;
+  const skipAll = () => {
+    skipped = true;
+    stage.skip();
+    if (wake) { const w = wake; wake = null; w(); }
+  };
   skipBtn.addEventListener('click', (e) => { e.stopPropagation(); skipAll(); });
   // 舞台をタップすると、その1枚の演出だけ最後まで飛ばす
   stageBox.addEventListener('click', () => stage.skip());
@@ -340,7 +349,7 @@ export async function playSequence(view, payload) {
       if (i < total - 1) continue;
     }
 
-    await stage.play(cardFace(card), {
+    const playing = stage.play(cardFace(card), {
       category: card.category || 'gourmet',
       quick: i > 0,
       hold: i === 0 || i === total - 1,   // 1枚目と最後の1枚は余韻まで見せる
@@ -356,10 +365,17 @@ export async function playSequence(view, payload) {
         }
       },
     });
+    if (skipped) stage.skip();   // SKIP 済みなら、最後の1枚は演出を流さず最終状態へ
+    await playing;
 
     if (i === 0 && total > 1 && !skipped) skipBtn.hidden = false;
-    // 引いたカードをしばらく眺められるように、次へ行くまで間を置く
-    if (!skipped && i < total - 1) await sleep(reduceMotion() ? 60 : 2200);
+    // 引いたカードをしばらく眺められるように、次へ行くまで間を置く（SKIP で起きる）
+    if (!skipped && i < total - 1) {
+      await new Promise((resolve) => {
+        wake = resolve;
+        setTimeout(() => { if (wake === resolve) wake = null; resolve(); }, reduceMotion() ? 60 : 2200);
+      });
+    }
   }
 
   stage.destroy();

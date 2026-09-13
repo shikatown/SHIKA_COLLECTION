@@ -12,6 +12,7 @@ import { el, clear, toast, vibrate, coinIcon } from './ui.js';
 import { coinCfg, titles, COMPLETE_TITLE } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
+import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
 
 /** ミッションの賞金。config.json の mission で上書きできる。 */
 function cfg() {
@@ -140,10 +141,13 @@ export function renderMissions(view) {
     on: {
       click: () => {
         unlock();
+        const from = all.getBoundingClientRect();   // ここからコインが飛び立つ
+        holdCoins();
         const r = claimAll();
-        if (!r.count) { toast('いま受け取れるものはありません'); return; }
+        if (!r.count) { releaseCoins(); toast('いま受け取れるものはありません'); return; }
         sfx.coin(); vibrate([12, 30, 18]);
         toast(`${r.count} 件で +${r.coins} SHIKA COIN`);
+        flyCoins(from, r.coins);
         renderMissions(view);
       },
     },
@@ -231,12 +235,15 @@ function row(m, view) {
     r.append(el('button', {
       class: 'btn btn--primary missionrow__go', attrs: { type: 'button' }, text: '受け取る',
       on: {
-        click: () => {
+        click: (e) => {
           unlock();
+          const from = e.currentTarget.getBoundingClientRect();   // ここからコインが飛び立つ
+          holdCoins();
           const got = claim(m.id);
-          if (!got) return;
+          if (!got) { releaseCoins(); return; }
           sfx.coin(); vibrate(12);
           toast(`+${got} SHIKA COIN`);
+          flyCoins(from, got);
           renderMissions(view);
         },
       },
