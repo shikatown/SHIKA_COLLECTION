@@ -321,10 +321,11 @@
   padding:9px 28px 11px;
   border:3px solid #f4c84d;
   border-radius:999px;
-  color:#f4c84d;
+  /* v1.33.2: 文字は白。枠の内側の上に入れていた白い光は、枠と同じ金に塗る */
+  color:#fff;
   background:linear-gradient(180deg,#2e9fe3 0%,#0960bd 52%,#06469c 100%);
   box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.72),
+    inset 0 2px 0 #f4c84d,
     inset 0 -3px 0 rgba(2,40,105,.46),
     0 4px 0 #b97808,
     0 8px 0 #063a75,
@@ -347,7 +348,7 @@
 .opening__start:active{
   transform:translate3d(-50%,5px,0) scale(.985);
   box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.58),
+    inset 0 2px 0 #f4c84d,
     inset 0 -2px 0 rgba(2,40,105,.4),
     0 2px 0 #b97808,
     0 4px 0 #063a75,

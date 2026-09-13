@@ -183,14 +183,6 @@ a{color:var(--accent)}
 .hero__lead{font-size:12px;color:var(--ink-3);margin:0 0 2px;letter-spacing:.14em}
 .hero__title{font-size:21px;margin:0 0 12px;letter-spacing:.06em;font-weight:800}
 .hero--first{padding-top:2px}
-/* 初回のホームだけに出す SHIKA COLLECTION のロゴ */
-.hero__logo{
-  position:relative;display:block;width:min(66%,250px);margin:0 auto 2px;
-  aspect-ratio:320/213;      /* ロゴの形。読む前から場所を取って、あとで動かない */
-}
-.hero__logoimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
-.hero__logoimg--hi{opacity:0;transition:opacity .2s linear}
-.hero__logoimg--hi.is-on{opacity:1}
 
 /* 「志賀町を、あつめよう。」のロゴ（支給画像 assets/icons/tagline*.png、縦横比 1469:864）。
    読む前から場所を取っておき、あとで下の要素が動かないようにする。 */
@@ -201,9 +193,6 @@ a{color:var(--accent)}
 .tagline__img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 .tagline__img--hi{opacity:0;transition:opacity .2s linear}
 .tagline__img--hi.is-on{opacity:1}
-/* 初回のホームは SHIKA COLLECTION のロゴとポップも並ぶので、少し小さくする */
-.hero--first .tagline{width:min(78%,280px)}
-.hero--first .hero__logo{width:min(50%,190px)}
 
 /* ホームのボタンは3つ。遊び方と設定は歯車へ移したので、
    残った場所の真ん中に置いて、下が空きすぎないようにする。 */

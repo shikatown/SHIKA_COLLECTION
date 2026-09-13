@@ -276,11 +276,10 @@ function renderHome(view) {
   view.append(page);
   view = page;
 
-  /* 初めての人（初回の10連をまだ引いていない人）には、ロゴと「10連ガチャ」のポップを出す。
+  /* 初めての人（初回の10連をまだ引いていない人）には、カードの代わりに「10連ガチャ」のポップを出す。
      引いたあとは、ロゴの代わりに持っているカードを大きく見せる。 */
   const first = !s.flags.firstFreeTenDone;
   const hero = el('div', { class: `hero${first ? ' hero--first' : ''}` });
-  if (first) hero.append(homeLogo());
   hero.append(taglineLogo());
   view.append(hero);
 
@@ -320,25 +319,6 @@ function renderHome(view) {
 
 
 /* ===== ホームの見出し・ロゴ・初回ポップ ===== */
-
-/** SHIKA COLLECTION のロゴ（初回のホームだけ）。小さい方を先に出し、原寸は読み終わってから重ねて現す */
-function homeLogo() {
-  const logo = el('div', { class: 'hero__logo' });
-  logo.append(el('img', {
-    class: 'hero__logoimg',
-    attrs: { src: './assets/frames/thumb/logo.png', alt: 'SHIKA COLLECTION', decoding: 'async' },
-  }));
-  const hi = el('img', {
-    class: 'hero__logoimg hero__logoimg--hi',
-    attrs: { src: './assets/frames/logo.png', alt: '', decoding: 'async' },
-  });
-  const show = () => hi.classList.add('is-on');
-  if (hi.complete && hi.naturalWidth) show();
-  else hi.addEventListener('load', show, { once: true });
-  hi.addEventListener('error', () => hi.remove(), { once: true });
-  logo.append(hi);
-  return logo;
-}
 
 /** 「志賀町を、あつめよう。」のロゴ（支給画像）。
     小さい方を先に出し、原寸は読み終わってから重ねて現す（差し替えるとちらつく）。 */
