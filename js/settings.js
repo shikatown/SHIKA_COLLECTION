@@ -86,7 +86,7 @@ export function renderSettings(view) {
   view.append(el('h3', { text: 'このアプリについて' }));
   const about = el('div', { class: 'list' });
   about.append(link('遊び方', '#/help'));
-  about.append(link('プライバシーについて', '#/privacy'));
+  // 「プライバシーについて」は「その他」の一覧に1つだけ置く（ここにも置くと重なって見える）
   view.append(about);
 
   const reset = el('div', { style: { marginTop: '26px' } });
@@ -183,7 +183,7 @@ export function renderHelp(view) {
     '設定からバックアップを保存しておくと、機種変更や再インストールのときに復元できます。',
   ]));
 
-  view.append(el('a', { class: 'btn btn--block', text: 'プライバシーについて', attrs: { href: '#/privacy' }, style: { marginTop: '16px' } }));
+  // 「プライバシーについて」は「その他」の一覧から開く（ここには置かない）
 }
 
 function section(title, lines) {
