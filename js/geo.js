@@ -3,7 +3,7 @@
    ・緯度経度は保存も送信もしない（メモリ上にだけ置き、結果だけ保存する）
    ・保存するのは spotId / 初訪問済み / 最終訪問日 / 初訪ボーナス取得日 */
 
-import { app, commit, gpsCards, todayKey, isOwned, isVisited, eventActive } from './state.js';
+import { app, commit, saveOk, gpsCards, todayKey, isOwned, isVisited, eventActive } from './state.js';
 import { coinCfg } from './rewards.js';
 
 let fix = null;          // { lat, lng, acc, at }  ← 保存しない
@@ -168,6 +168,8 @@ export function checkIn() {
     s.coins += coins;
   });
 
+  // 保存できなければ、チェックインしなかったことにする（案内は app.js が出す）
+  if (!saveOk()) return { checkins: [], coins: 0, out: false, saveFailed: true, nearest: [] };
   return { checkins, coins, out: inRange.length === 0, nearest: nearestUnvisited(3) };
 }
 

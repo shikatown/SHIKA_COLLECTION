@@ -83,7 +83,8 @@ export async function restoreFromFile(file) {
     '復元する'
   );
   if (!ok) return false;
-  setState(s);
+  // 保存できたときだけ「復元しました」と出す（失敗の案内は app.js が出し、いまの進行はそのまま残る）
+  if (!setState(s)) return false;
   toast('復元しました');
   return true;
 }

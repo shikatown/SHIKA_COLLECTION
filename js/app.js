@@ -2,10 +2,10 @@
 
 import {
   app, initState, loadPublicData, subscribe, publishedCards, isOwned,
-  categoryStats, CATEGORIES, todayKey,
+  categoryStats, CATEGORIES, todayKey, onSaveFailed,
 } from './state.js';
 import * as router from './router.js';
-import { el, clear, sleep, cardFace, cardBack } from './ui.js';
+import { el, clear, sleep, cardFace, cardBack, dialog, toast } from './ui.js';
 import { renderGacha, showResults, offerDaily } from './gacha.js';
 import { renderCollection } from './collection.js';
 import { renderCardDetail } from './card-detail.js';
@@ -45,7 +45,12 @@ async function boot() {
   }
 
   initState();
+  onSaveFailed(showSaveFailed);   // 保存に失敗したら知らせる（変更は state.js が取り消している）
   startOfflineWatch();
+  /* オフラインでも開けるように、Service Worker はいちばん最初に登録する。
+     入った時点でアプリ本体と公開データ（cards.json など）を控えるので、
+     初めて開いたあと通信が切れても、次から起動できる。 */
+  registerSW();
   warmHomeImages();       // ホームで使う絵を、起動画面のうちに読んでおく
 
   /* 起動演出（js/opening.js）。
@@ -105,9 +110,33 @@ async function boot() {
   // 起動後のお知らせ類（順番に1つずつ）
   await offerDaily();
   await checkDataUpdate(dataVersion);
-  registerSW();
   await maybeSuggestInstall();
   await maybeSuggestBackup();
+}
+
+/* ===== 保存に失敗したとき ===== */
+let saveFailedAt = 0;
+function showSaveFailed() {
+  const now = Date.now();
+  if (now - saveFailedAt < 8000) return;   // 続けて失敗しても、何度も出さない
+  saveFailedAt = now;
+  const ov = document.getElementById('overlay');
+  const bootEl = document.getElementById('boot');
+  const busy = (ov && !ov.hidden) || (bootEl && !bootEl.hidden) || document.body.classList.contains('is-drawing');
+  const msg = '保存できませんでした。いまの変更は取り消しました。';
+  if (busy) {   // ほかのお知らせや演出の最中は、それを消さないよう画面下の知らせにする
+    toast(`${msg}設定からバックアップを保存してください`, 6000);
+    return;
+  }
+  dialog({
+    title: '保存できませんでした',
+    body: [
+      '端末の空き容量が足りないなどの理由で、いまの変更を保存できませんでした。',
+      'いまの変更は取り消しました（カードやコインは増えていません）。',
+      '設定から、バックアップを保存しておくと安心です。',
+    ],
+    actions: [{ label: '閉じる', value: null }, { label: '設定を開く', value: 'settings', primary: true }],
+  }).then((v) => { if (v === 'settings') router.go('#/settings'); });
 }
 
 /* ===== 起動演出 ===== */

@@ -47,6 +47,14 @@ export async function registerSW() {
 }
 
 async function promptUpdate(worker) {
+  /* Service Worker は起動のいちばん最初に登録するので、起動画面やほかのお知らせの最中に
+     ここへ来ることがある。同じ場所に重ねると先のお知らせが消えるので、空くまで待つ。 */
+  for (let i = 0; i < 1200; i += 1) {
+    const boot = document.getElementById('boot');
+    const ov = document.getElementById('overlay');
+    if ((!boot || boot.hidden) && (!ov || ov.hidden)) break;
+    await new Promise((r) => setTimeout(r, 500));
+  }
   const ok = await dialog({
     title: '新しいバージョンがあります',
     body: ['更新すると最新の内容で開き直します。'],

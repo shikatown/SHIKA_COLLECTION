@@ -431,6 +431,7 @@ async function runCheckIn(view, status, btn) {
   status.textContent = '現在地: たった今 確認';
 
   const res = geo.checkIn();
+  if (res.saveFailed) return;   // 保存できなかった。チェックインの成功は知らせない
   if (res.out) {
     sfx.error();
     await dialog({

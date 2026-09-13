@@ -8,6 +8,7 @@ export const SCHEMA_VERSION = 1;
 
 let memoryFallback = null;   // localStorage が使えないときの受け皿
 let warned = false;
+let writeFailed = false;     // 直近の書き込みが失敗したか（容量不足など）
 
 function ls() {
   try {
@@ -21,7 +22,8 @@ function ls() {
   }
 }
 
-export function isPersistent() { return ls() !== null; }
+/** 進行を保存できる状態か。小さな試し書きが通っても、本体の書き込みに失敗していれば false */
+export function isPersistent() { return ls() !== null && !writeFailed; }
 
 export function defaultState() {
   return {
@@ -135,16 +137,24 @@ function migrate(state) {
   return state;
 }
 
+/**
+ * 保存する。結果は3通り。
+ *   'ok'     … 保存できた
+ *   'memory' … この端末は localStorage が使えない。メモリ上だけで続ける（以前からの動き）
+ *   'failed' … 使えるはずなのに書き込めなかった（容量不足など）。呼び出し側は変更を取り消す
+ */
 export function save(state) {
   const s = ls();
-  memoryFallback = state;
-  if (!s) return false;
+  if (!s) { memoryFallback = state; return 'memory'; }
   try {
     s.setItem(STORAGE_KEY, JSON.stringify(state));
-    return true;
+    memoryFallback = state;
+    writeFailed = false;
+    return 'ok';
   } catch (e) {
+    writeFailed = true;
     console.warn('保存に失敗しました（容量不足の可能性）', e);
-    return false;
+    return 'failed';
   }
 }
 

@@ -2,8 +2,8 @@
    演出は「すでに確定した結果」を見せるだけ。押した瞬間に
    コイン消費・抽選・保存・ボーナス確定まで終わらせる。 */
 
-import { app, commit, publishedCards, CATEGORIES, CATEGORY_LABEL } from './state.js';
-import { applyDraw, duplicateGaugeInfo, categoryProgress, dailyAvailable, claimDaily, coinCfg } from './rewards.js';
+import { app, commit, saveOk, publishedCards, CATEGORIES, CATEGORY_LABEL } from './state.js';
+import { applyDrawTo, duplicateGaugeInfo, categoryProgress, dailyAvailable, claimDaily, coinCfg } from './rewards.js';
 import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dialog, coinAmount, coinIcon } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
@@ -77,15 +77,18 @@ export function commitDraw(kind) {
     for (let i = results.length - TEN_BONUS; i < results.length; i++) results[i].bonus = true;
   }
 
+  /* コインの消費・カードの獲得・ボーナス・未確認の結果を、1回の保存にまとめる。
+     以前は3回に分けて保存していたので、途中だけ保存されて食い違うことがあり得た。
+     保存できなかったら、引かなかったことにする（演出も始めない）。 */
+  let payload = null;
   commit((s) => {
     if (cost) s.coins -= cost;
     if (kind === 'free10') s.flags.firstFreeTenDone = true;
+    const bonus = applyDrawTo(s, results);
+    payload = { kind, results, bonus, at: new Date().toISOString() };
+    s.pendingResult = payload;
   });
-
-  const bonus = applyDraw(results);
-
-  const payload = { kind, results, bonus, at: new Date().toISOString() };
-  commit((s) => { s.pendingResult = payload; });
+  if (!saveOk()) return null;   // 案内は app.js（onSaveFailed）が出す
   return payload;
 }
 

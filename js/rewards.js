@@ -5,7 +5,7 @@
    ・カテゴリ収集       ミッション画面で受け取る（js/missions.js）
    ・現地訪問           初訪問 +3 / 再訪 1日1回 +1 / 町初訪問 +5（1回限り） */
 
-import { app, commit, todayKey, CATEGORIES, CATEGORY_LABEL, categoryStats, eventActive, publishedCards, isOwned, gpsCards, isVisited } from './state.js';
+import { app, commit, saveOk, todayKey, CATEGORIES, CATEGORY_LABEL, categoryStats, eventActive, publishedCards, isOwned, gpsCards, isVisited } from './state.js';
 
 export function coinCfg() {
   return (app.config && app.config.coin) || {
@@ -20,7 +20,7 @@ export function claimDaily() {
   if (app.state.dailyBonusDate === today) return 0;
   const amount = coinCfg().daily;
   commit((s) => { s.dailyBonusDate = today; s.coins += amount; });
-  return amount;
+  return saveOk() ? amount : 0;   // 保存できなければ、受け取ったことにしない
 }
 
 export function dailyAvailable() { return app.state.dailyBonusDate !== todayKey(); }
@@ -29,12 +29,16 @@ export function dailyAvailable() { return app.state.dailyBonusDate !== todayKey(
  * 抽選結果を確定保存し、発生したボーナスを返す。
  * @param {Array<{id:string,isNew:boolean}>} results 抽選済み結果（順序も確定済み）
  */
-export function applyDraw(results) {
+/**
+ * 抽選結果を、渡された状態の写しに書き込み、発生したボーナスを返す（保存はしない）。
+ * ガチャはコインの消費・獲得・ボーナス・結果を1回の保存にまとめるので、ここは書き込むだけ。
+ */
+export function applyDrawTo(s, results) {
   const cfg = coinCfg();
   const items = [];
   let total = 0;
 
-  commit((s) => {
+  {
     const owned = new Set(s.ownedCardIds);
     let dup = 0;
     const newSake = [];
@@ -72,9 +76,16 @@ export function applyDraw(results) {
 
     /* ジャンル収集のコインは、ここでは渡さない。
        ミッション画面で「受け取る」を押して受け取る（js/missions.js）。 */
-  });
+  }
 
   return { items, total };
+}
+
+/** 抽選結果を確定保存し、発生したボーナスを返す。保存できなければ何も無かったことにする。 */
+export function applyDraw(results) {
+  let out = { items: [], total: 0 };
+  commit((s) => { out = applyDrawTo(s, results); });
+  return saveOk() ? out : { items: [], total: 0 };
 }
 
 function eventSakeDisabled() {
@@ -127,7 +138,7 @@ export function titles() {
 export function grantCoins(amount, reasonLabel) {
   if (amount <= 0) return 0;
   commit((s) => { s.coins += amount; });
-  return amount;
+  return saveOk() ? amount : 0;
 }
 
 export { CATEGORY_LABEL };

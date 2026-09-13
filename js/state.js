@@ -23,17 +23,44 @@ export const app = {
 export function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 export function emit() { for (const fn of listeners) fn(app.state); }
 
+/* ===== 変更と保存 =====
+   変更は、いまの状態の写しに対して行い、保存できたときだけ本物と入れ替える。
+   保存に失敗したとき（容量不足など）は、画面にも保存データにも変更を残さない。
+   以前は先に本物を書き換えてから保存していたので、保存に失敗しても
+   その場では獲得できたように見え、開き直すと元に戻っていた。 */
+let lastSaveOk = true;
+let saveFailedHandler = null;
+
+/** 保存に失敗したときに呼ぶ処理を登録する（利用者への案内は app.js が出す） */
+export function onSaveFailed(fn) { saveFailedHandler = fn; }
+/** 直前の commit / setState が保存できたか。報酬を渡す処理は、これで成否を確かめてから知らせる */
+export function saveOk() { return lastSaveOk; }
+
+const cloneState = (st) => (typeof structuredClone === 'function'
+  ? structuredClone(st)
+  : JSON.parse(JSON.stringify(st)));
+
+function failed() {
+  lastSaveOk = false;
+  if (saveFailedHandler) { try { saveFailedHandler(); } catch (_) { /* 案内の失敗で止めない */ } }
+}
+
 export function commit(mutator) {
-  const r = mutator(app.state);
-  storage.save(app.state);
+  const next = cloneState(app.state);
+  const r = mutator(next);
+  if (storage.save(next) === 'failed') { failed(); return r; }
+  lastSaveOk = true;
+  app.state = next;
   emit();
   return r;
 }
 
 export function setState(next) {
+  if (storage.save(next) === 'failed') { failed(); return false; }
+  lastSaveOk = true;
   app.state = next;
-  storage.save(app.state);
   emit();
+  return true;
 }
 
 /* ===== データ読み込み ===== */

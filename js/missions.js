@@ -7,7 +7,7 @@
    ・達成しても勝手にコインは入らない。この画面で「受け取る」を押して受け取る。
    ・受け取った記録は state.rewardClaims.missions（ミッションの id の並び）。 */
 
-import { app, commit, CATEGORIES, categoryStats } from './state.js';
+import { app, commit, saveOk, CATEGORIES, categoryStats } from './state.js';
 import { el, clear, toast, vibrate, coinIcon } from './ui.js';
 import { coinCfg, titles, COMPLETE_TITLE } from './rewards.js';
 import { visitStats } from './geo.js';
@@ -106,7 +106,7 @@ export function claim(id) {
     s.rewardClaims.missions.push(id);
     s.coins += m.coins;
   });
-  return m.coins;
+  return saveOk() ? m.coins : 0;   // 保存できなければ、受け取ったことにしない
 }
 
 /** 達成しているものをまとめて受け取る。受け取った合計を返す。 */
@@ -118,6 +118,7 @@ export function claimAll() {
     for (const m of ready) s.rewardClaims.missions.push(m.id);
     s.coins += coins;
   });
+  if (!saveOk()) return { count: 0, coins: 0, failed: true };
   return { count: ready.length, coins };
 }
 
@@ -145,6 +146,7 @@ export function renderMissions(view) {
         const from = all.getBoundingClientRect();   // ここからコインが飛び立つ
         holdCoins();
         const r = claimAll();
+        if (r.failed) { releaseCoins(); return; }   // 保存できなかった（案内は app.js が出す）
         if (!r.count) { releaseCoins(); toast('いま受け取れるものはありません'); return; }
         sfx.coin(); vibrate([12, 30, 18]);
         toast(`${r.count} 件で +${r.coins} SHIKA COIN`);

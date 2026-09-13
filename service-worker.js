@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.34.5';
+const APP_VERSION = '1.35.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -58,10 +58,21 @@ const SHELL = [
   './assets/icons/tagline.png',
 ];
 
+/* 公開データ。入った時点で控えておく。
+   アプリは起動時に通信優先でこれを読むが、初めて開いたときは Service Worker が
+   まだ動いておらず、控えが作られなかった。そのため初回利用のあと通信が切れると起動できなかった。 */
+const DATA_FILES = ['./data/version.json', './data/cards.json', './data/config.json'];
+
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
     await Promise.allSettled(SHELL.map((u) => cache.add(new Request(u, { cache: 'reload' }))));
+    // 公開データは、通信優先で読むときと同じ名前（? を外した URL）で控える
+    const data = await caches.open(DATA_CACHE);
+    await Promise.allSettled(DATA_FILES.map(async (u) => {
+      const res = await fetch(new Request(u, { cache: 'reload' }));
+      if (res && res.ok) await data.put(new URL(u, self.location.href).href, res);
+    }));
   })());
 });
 
@@ -141,6 +152,10 @@ async function cacheFirst(req, cacheName, limit) {
   const cache = await caches.open(cacheName);
   const hit = await cache.match(req, { ignoreSearch: false });
   if (hit) return hit;
+  /* 本体の控え（SHELL）に入れてある絵（カードの裏・コイン・ロゴなど）も探す。
+     ここを見ないと、通信が切れたときにそれらの絵だけ出なかった。 */
+  const shared = await caches.match(req, { ignoreSearch: false });
+  if (shared) return shared;
   try {
     const res = await fetch(req);
     if (res && (res.ok || res.type === 'opaque')) {
