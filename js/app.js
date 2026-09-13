@@ -5,7 +5,7 @@ import {
   categoryStats, CATEGORIES, todayKey,
 } from './state.js';
 import * as router from './router.js';
-import { el, clear, cardBack, toast, sleep, reduceMotion } from './ui.js';
+import { el, clear, sleep } from './ui.js';
 import { renderGacha, showResults, offerDaily } from './gacha.js';
 import { renderCollection } from './collection.js';
 import { renderCardDetail } from './card-detail.js';
@@ -18,6 +18,7 @@ import { registerSW, checkDataUpdate, maybeSuggestInstall } from './update.js';
 import { maybeSuggestBackup } from './backup.js';
 import { categoryProgress, dailyAvailable, coinCfg } from './rewards.js';
 import * as geo from './geo.js';
+import { createOpening } from './opening.js';
 import { shareApp } from './share.js';
 
 /* ===== 動作環境の確認 ===== */
@@ -47,14 +48,22 @@ async function boot() {
   startOfflineWatch();
   warmHomeImages();       // ホームで使う絵を、起動画面のうちに読んでおく
 
-  const intro = playIntro();
+  /* 起動演出（js/opening.js）。
+     必須の絵とカードデータを並行して読み、2.2秒以内にそろわない初回は短い版にする。 */
+  const opening = createOpening();
+  const dataLoad = loadPublicData();
+  const readyInTime = await Promise.race([
+    Promise.all([opening.critical, dataLoad.then(() => true, () => false)]).then(([a, b]) => a && b),
+    sleep(2200).then(() => false),
+  ]);
 
   let dataVersion = '';
   try {
-    const r = await loadPublicData();
+    const r = await dataLoad;
     dataVersion = r.dataVersion;
   } catch (e) {
     console.error(e);
+    opening.cancel();
     document.getElementById('boot').hidden = true;
     const note = document.getElementById('filenote');
     note.querySelector('h1').textContent = 'データを読み込めませんでした';
@@ -68,6 +77,12 @@ async function boot() {
     return;
   }
 
+  // 周りの8枚は、公開カードから既存の描画機能で作る
+  opening.setCards(publishedCards());
+  let mode = opening.preferredMode;
+  if (mode === 'full' && !readyInTime) mode = 'short';
+  opening.start(mode);
+
   setupRoutes();
   bindTabPop();
   document.getElementById('btnBack').addEventListener('click', () => router.back());
@@ -80,7 +95,8 @@ async function boot() {
   router.start();
   updateChrome();
 
-  await intro;
+  // 「スタート」か「スキップ」を押すまで待つ
+  await opening.done;
   document.getElementById('boot').hidden = true;
 
   // 起動後のお知らせ類（順番に1つずつ）
@@ -105,39 +121,6 @@ function warmHomeImages() {
   }
 }
 
-function playIntro() {
-  const stage = document.getElementById('bootStage');
-  const bootEl = document.getElementById('boot');
-  const skip = document.getElementById('bootSkip');
-  const spread = [
-    { tx: '-64%', ty: '-8%', rot: '-16deg', d: '0s' },
-    { tx: '52%', ty: '-14%', rot: '14deg', d: '.06s' },
-    { tx: '-22%', ty: '16%', rot: '-6deg', d: '.12s' },
-    { tx: '26%', ty: '10%', rot: '7deg', d: '.18s' },
-    { tx: '0%', ty: '0%', rot: '0deg', d: '.24s' },
-  ];
-  for (const s of spread) {
-    const c = el('div', { class: 'bootcard' });
-    c.style.setProperty('--tx', s.tx);
-    c.style.setProperty('--ty', s.ty);
-    c.style.setProperty('--rot', s.rot);
-    c.style.setProperty('--d', s.d);
-    c.append(cardBack());
-    stage.append(c);
-  }
-
-  return new Promise((resolve) => {
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      bootEl.classList.add('is-out');
-      setTimeout(resolve, 380);
-    };
-    skip.addEventListener('click', finish);
-    setTimeout(finish, reduceMotion() ? 400 : 2100);
-  });
-}
 
 /* ===== ルート ===== */
 function setupRoutes() {

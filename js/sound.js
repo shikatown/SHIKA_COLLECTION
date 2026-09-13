@@ -17,6 +17,9 @@ function ac() {
 /** ユーザー操作の中で一度呼んでおくと iOS でも鳴るようになる */
 export function unlock() { ac(); }
 
+/** 音が鳴らせる状態か（ユーザー操作で解錠済みか）。起動演出の「音を有効にする」表示に使う */
+export function isUnlocked() { return !!ctx && ctx.state === 'running'; }
+
 function tone(freq, start, dur, gain = 0.09, type = 'sine', slideTo = null) {
   const c = ac();
   if (!c) return;
@@ -71,4 +74,33 @@ export const sfx = {
   },
   checkin()  { tone(587.33, 0, 0.12, 0.06); tone(880, 0.1, 0.22, 0.06); },
   error()    { tone(220, 0, 0.16, 0.05, 'sawtooth', 160); },
+
+  /* ===== 起動演出（js/opening.js）=====
+     どれも短く、音量は控えめ。設定で音をONにしたときだけ鳴る。 */
+  /** 音を有効にした合図。やわらかい2音 */
+  openingWake()    { tone(880, 0, 0.18, 0.04, 'sine'); tone(1318.5, 0.09, 0.26, 0.035, 'sine'); },
+  /** 波が寄せる。ざっと広がる */
+  openingWave()    { noise(0, 0.9, 0.022); tone(196, 0, 0.8, 0.018, 'sine', 247); },
+  /** 光の粒。高い音をぱらぱらと */
+  openingSparkle() {
+    tone(2093, 0,    0.10, 0.022, 'triangle');
+    tone(2637, 0.07, 0.10, 0.02,  'triangle');
+    tone(3136, 0.14, 0.14, 0.018, 'triangle');
+  },
+  /** カードが浮かび上がる。すっと上がる音 */
+  openingLift()    { tone(330, 0, 0.45, 0.03, 'sine', 660); },
+  /** カードの裏が正面を向く */
+  openingCard()    { noise(0, 0.07, 0.03); tone(523.25, 0.01, 0.16, 0.04, 'triangle'); },
+  /** 周りの8枚が配られる。紙のめくれを8回 */
+  openingDeal()    { for (let i = 0; i < 8; i += 1) noise(i * 0.045, 0.05, 0.022); },
+  /** カードが真ん中に集まる */
+  openingGather()  { noise(0, 0.35, 0.02); tone(988, 0, 0.35, 0.025, 'sine', 494); },
+  /** ロゴが出る。明るい和音 */
+  openingLogo()    {
+    tone(523.25, 0,    0.42, 0.04,  'triangle');
+    tone(659.25, 0.05, 0.42, 0.035, 'triangle');
+    tone(783.99, 0.10, 0.46, 0.035, 'triangle');
+    tone(1046.5, 0.16, 0.55, 0.04,  'sine');
+    tone(2093,   0.24, 0.30, 0.015, 'sine');
+  },
 };

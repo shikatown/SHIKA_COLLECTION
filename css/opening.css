@@ -1,0 +1,1022 @@
+/* SHIKA COLLECTION — light cinematic opening
+   Existing card faces and the supplied card back remain untouched. The opening
+   only positions and animates the app's own card DOM and artwork. */
+
+/* ===== Stage ============================================================= */
+#boot.opening{
+  --opening-card-w:min(68%,32vh,282px);
+  --opening-card-w:min(68%,32dvh,282px);
+  --opening-fan-w:min(24vw,13.2vh,104px);
+  --opening-fan-w:min(24vw,13.2dvh,104px);
+  --opening-gold:#d7a43a;
+  --opening-ink:#16465c;
+  --opening-toy-font:"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Noto Sans JP",Meiryo,sans-serif;
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:grid;
+  place-items:center;
+  min-width:0;
+  min-height:100vh;
+  min-height:100dvh;
+  padding:0;
+  gap:0;
+  overflow:hidden;
+  isolation:isolate;
+  color:var(--opening-ink);
+  background:linear-gradient(135deg,#fbfdf8 0%,#e4f5f4 48%,#fff5df 100%);
+  font-family:var(--font);
+  line-height:1.5;
+  opacity:1;
+  visibility:visible;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* Light, static surround on wide screens; no full-screen blur/compositing. */
+#boot.opening::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 24% 16%,rgba(255,228,159,.5),transparent 31%),
+    radial-gradient(circle at 78% 26%,rgba(176,226,232,.65),transparent 35%),
+    linear-gradient(145deg,#f9fcf7,#e2f2f1 52%,#fff4dd);
+}
+
+#boot.opening::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:rgba(255,255,255,.02);
+}
+
+#boot.opening [hidden]{display:none !important}
+
+.opening__viewport{
+  position:relative;
+  z-index:0;
+  width:min(100vw,500px);
+  height:100vh;
+  height:100dvh;
+  min-height:100svh;
+  overflow:hidden;
+  perspective:1100px;
+  perspective-origin:50% 48%;
+  contain:layout paint;
+  background:#eef8f5;
+  box-shadow:0 14px 48px rgba(55,101,112,.16);
+}
+
+.opening__viewport > *{
+  position:absolute;
+  pointer-events:none;
+}
+
+.opening__shore{
+  inset:-1.5%;
+  z-index:0;
+  opacity:1;
+  transform:scale(1);
+  transform-origin:50% 43%;
+  background-image:
+    url("../assets/photos/035.jpeg"),
+    url("../assets/photos/thumb/035.jpg");
+  background-position:center center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  filter:saturate(1.18) contrast(1.1) brightness(.92);
+}
+
+/* Reuse the real Masuhoura photograph and move only its surf band. The soft
+   mask prevents the moving layer from turning into a synthetic foreground sea. */
+.opening__shore::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-image:inherit;
+  background-position:inherit;
+  background-size:inherit;
+  background-repeat:inherit;
+  opacity:.24;
+  transform:translate3d(0,-1vh,0) scale3d(1.006,.995,1);
+  transform:translate3d(0,-1dvh,0) scale3d(1.006,.995,1);
+  transform-origin:50% 14%;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.12) 4%,#000 9%,#000 19%,rgba(0,0,0,.62) 24%,transparent 33%);
+  mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.12) 4%,#000 9%,#000 19%,rgba(0,0,0,.62) 24%,transparent 33%);
+}
+
+/* Airy daylight grading: ivory sun, pale aqua sky, no dark cinema tint. */
+.opening__twilight{
+  inset:0;
+  z-index:1;
+  opacity:.5;
+  background:
+    radial-gradient(circle at 27% 11%,rgba(255,239,188,.32) 0 5%,rgba(255,214,134,.13) 16%,transparent 34%),
+    linear-gradient(180deg,rgba(186,231,237,.12) 0%,transparent 45%,rgba(255,219,159,.12) 100%);
+}
+
+.opening__vignette{
+  inset:-1px;
+  z-index:2;
+  opacity:.58;
+  background:
+    linear-gradient(180deg,rgba(255,248,220,.05),transparent 30%,transparent 65%,rgba(92,59,36,.08)),
+    radial-gradient(105% 86% at 50% 44%,transparent 58%,rgba(24,72,77,.1) 100%);
+}
+
+.opening__particles{
+  inset:0;
+  z-index:3;
+  width:100%;
+  height:100%;
+  opacity:0;
+}
+
+/* ===== Sakura shells ===================================================== */
+.opening__shells{
+  inset:0;
+  z-index:4;
+  opacity:0;
+}
+
+.opening__shell{
+  position:absolute;
+  left:var(--x,50%);
+  top:var(--y,74%);
+  width:18px;
+  aspect-ratio:1.08;
+  opacity:.88;
+  border:1px solid rgba(255,255,255,.78);
+  border-radius:55% 44% 58% 42% / 64% 62% 38% 36%;
+  background:
+    linear-gradient(72deg,transparent 45%,rgba(255,255,255,.58) 48%,transparent 52%),
+    linear-gradient(108deg,transparent 47%,rgba(150,77,90,.15) 49%,transparent 53%),
+    radial-gradient(circle at 47% 78%,#fff8f4 0 8%,#f2c8ca 31%,#d6959f 68%,#ac6875 100%);
+  box-shadow:0 2px 5px rgba(92,63,54,.18),inset 0 0 5px rgba(255,255,255,.5);
+  transform:translate3d(-50%,-50%,0) rotate(var(--r,0deg)) scale(var(--s,1));
+}
+
+.opening__shell::before{
+  content:"";
+  position:absolute;
+  left:48%;
+  top:8%;
+  bottom:6%;
+  width:1px;
+  opacity:.42;
+  background:linear-gradient(180deg,rgba(128,62,75,.4),rgba(255,255,255,.35));
+  transform:rotate(2deg);
+  transform-origin:50% 100%;
+}
+
+.opening__shell::after{
+  content:"";
+  position:absolute;
+  inset:-70%;
+  border-radius:50%;
+  opacity:0;
+  background:radial-gradient(circle,rgba(255,247,210,.65),rgba(255,226,158,.18) 32%,transparent 67%);
+  transform:scale(.45);
+}
+
+.opening__shell.is-glowing::after{animation:openingShellGlow 1.8s ease-out both}
+
+/* ===== Hero and collection cards ======================================== */
+.opening__card-zone{
+  inset:0;
+  z-index:9;
+  perspective:1200px;
+  perspective-origin:50% 47%;
+}
+
+.opening__hero-card{
+  position:absolute;
+  left:50%;
+  top:51%;
+  width:var(--opening-card-w);
+  aspect-ratio:4/5;
+  opacity:0;
+  transform:translate3d(-50%,8vh,0) rotateX(46deg) rotateZ(-2deg) scale(.8);
+  transform-origin:50% 50%;
+  border-radius:clamp(7px,2.4vw,12px);
+  box-shadow:0 15px 31px rgba(57,84,89,.25);
+}
+
+.opening__hero-card::after{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  z-index:4;
+  pointer-events:none;
+  border:1px solid rgba(255,218,115,.76);
+  border-radius:inherit;
+  opacity:0;
+  box-shadow:0 0 13px rgba(255,215,111,.46),0 0 27px rgba(112,201,211,.18);
+  transform:scale(.99);
+}
+
+.opening__hero-inner{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  border-radius:inherit;
+}
+
+.opening__side{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  border-radius:inherit;
+  background:rgba(255,255,255,.9);
+}
+
+.opening__side--featured{
+  opacity:1;
+  transform:none;
+}
+
+.opening__side > .card,
+.opening__fan-card > .card{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  max-width:none;
+  margin:0;
+  display:block;
+}
+
+.opening__side > img,
+.opening__fan-card > img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  max-width:none;
+  margin:0;
+  display:block;
+  border-radius:inherit;
+  box-shadow:none;
+  object-fit:contain;
+}
+
+.opening__card-sheen{
+  position:absolute;
+  top:-22%;
+  bottom:-22%;
+  left:-45%;
+  z-index:5;
+  width:24%;
+  opacity:0;
+  pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.18) 29%,rgba(255,252,226,.88) 50%,rgba(255,255,255,.16) 71%,transparent);
+  mix-blend-mode:screen;
+  transform:translate3d(-150%,0,0) skewX(-15deg);
+}
+
+.opening__fan{
+  inset:0;
+  z-index:8;
+  perspective:1200px;
+  transform-style:preserve-3d;
+}
+
+.opening__fan-card{
+  position:absolute;
+  left:50%;
+  top:49%;
+  z-index:var(--i,1);
+  width:var(--opening-fan-w);
+  aspect-ratio:4/5;
+  overflow:hidden;
+  opacity:0;
+  border-radius:clamp(6px,2vw,10px);
+  background:#fff;
+  box-shadow:0 11px 24px rgba(55,82,87,.24);
+  transform:translate3d(-50%,-44%,calc(var(--z,0px) - 60px)) rotateY(0deg) rotateZ(0deg) scale(.82);
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+}
+
+.opening__flash{
+  inset:-4%;
+  z-index:20;
+  opacity:0;
+  transform:scale(.84);
+  background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.78) 0 22%,rgba(255,247,211,.72) 39%,rgba(184,229,225,.4) 61%,transparent 80%);
+}
+
+/* ===== Final title ======================================================= */
+.opening__title{
+  inset:0;
+  z-index:21;
+  display:grid;
+  place-items:center;
+  min-width:0;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  overflow:hidden;
+  opacity:0;
+  pointer-events:none;
+  text-align:center;
+  transform:translate3d(0,8px,0);
+}
+
+.opening__title::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:radial-gradient(ellipse 78% 56% at 50% 46%,rgba(255,241,188,.16),rgba(255,226,160,.08) 40%,transparent 76%);
+}
+
+.opening__logo{
+  position:relative;
+  width:min(102%,470px);
+  max-height:40vh;
+  max-height:40dvh;
+  object-fit:contain;
+  display:block;
+  opacity:0;
+  transform:translate3d(0,7px,0) scale(.97);
+  filter:drop-shadow(0 5px 8px rgba(43,83,94,.17));
+}
+
+.opening__start{
+  font-family:var(--opening-toy-font);
+  font-weight:900;
+  font-feature-settings:"palt" 1;
+  -webkit-font-smoothing:antialiased;
+}
+
+.opening__start{
+  position:absolute;
+  left:50%;
+  bottom:calc(clamp(120px,18vh,164px) + env(safe-area-inset-bottom));
+  bottom:calc(clamp(120px,18dvh,164px) + env(safe-area-inset-bottom));
+  width:min(60vw,230px);
+  max-width:calc(100% - 40px);
+  min-height:58px;
+  margin:0;
+  padding:9px 28px 11px;
+  border:3px solid #f4c84d;
+  border-radius:999px;
+  color:#f4c84d;
+  background:linear-gradient(180deg,#2e9fe3 0%,#0960bd 52%,#06469c 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.72),
+    inset 0 -3px 0 rgba(2,40,105,.46),
+    0 4px 0 #b97808,
+    0 8px 0 #063a75,
+    0 13px 22px rgba(28,61,82,.24);
+  font-size:clamp(21px,5.8vw,27px);
+  line-height:1;
+  letter-spacing:.09em;
+  text-indent:.09em;
+  -webkit-text-stroke:.9px #063d7c;
+  paint-order:stroke fill;
+  text-shadow:0 2px 0 #d68e0c,0 4px 0 #073b75;
+  opacity:0;
+  transform:translate3d(-50%,7px,0);
+  cursor:pointer;
+  pointer-events:none;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+.opening__start:active{
+  transform:translate3d(-50%,5px,0) scale(.985);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.58),
+    inset 0 -2px 0 rgba(2,40,105,.4),
+    0 2px 0 #b97808,
+    0 4px 0 #063a75,
+    0 7px 12px rgba(28,61,82,.2);
+}
+
+.opening__start:focus-visible,
+.opening__skip:focus-visible,
+.opening__sound:focus-visible{
+  outline:2px solid rgba(35,111,140,.85);
+  outline-offset:3px;
+}
+
+/* Buttons sit against the central stage edge even on desktop. */
+.opening__skip,
+.opening__sound{
+  position:absolute;
+  z-index:40;
+  top:calc(10px + env(safe-area-inset-top));
+  min-height:36px;
+  border:1px solid rgba(36,94,116,.18);
+  border-radius:999px;
+  color:rgba(24,73,93,.78);
+  background:rgba(255,255,255,.78);
+  box-shadow:0 3px 12px rgba(49,94,104,.08);
+  cursor:pointer;
+  opacity:.9;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+.opening__skip{
+  right:max(calc(11px + env(safe-area-inset-right)),calc(50vw - 239px + env(safe-area-inset-right)));
+  padding:7px 12px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.08em;
+}
+
+.opening__sound{
+  left:max(calc(11px + env(safe-area-inset-left)),calc(50vw - 239px + env(safe-area-inset-left)));
+  width:36px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  font-size:15px;
+}
+
+.opening__sound svg{
+  grid-area:1/1;
+  width:19px;
+  height:19px;
+}
+
+.opening__sound span{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+}
+
+.opening__sound:not(.is-on)::after{
+  content:"";
+  grid-area:1/1;
+  width:20px;
+  height:1px;
+  border-radius:1px;
+  background:currentColor;
+  transform:rotate(-45deg);
+}
+
+.opening__sound.is-on{
+  color:#b07a18;
+  border-color:rgba(190,137,32,.3);
+}
+
+.opening__skip:active,
+.opening__sound:active{
+  opacity:1;
+  background:rgba(238,249,247,.98);
+}
+
+/* ===== Full, brisk first-run performance ================================ */
+#boot.opening--full.is-running .opening__shore{
+  animation:openingShoreFull 9.35s ease-in-out both;
+  will-change:transform;
+}
+
+#boot.opening--full.is-running .opening__shore::before{
+  animation:openingTide 4.8s cubic-bezier(.37,0,.23,1) .1s both;
+  will-change:transform,opacity;
+}
+
+#boot.opening--full.is-running .opening__twilight{
+  animation:openingDaylightFull 9.35s ease-in-out both;
+}
+
+#boot.opening--full.is-running .opening__particles{
+  animation:openingParticlesFull 3.8s ease .55s both;
+}
+
+#boot.opening--full.is-running .opening__shells{
+  animation:openingShellsIn .6s ease-out .65s both;
+}
+
+#boot.opening--full.is-running .opening__hero-card{
+  animation:openingHeroFull 6.3s cubic-bezier(.2,.72,.24,1) 1s both;
+  will-change:transform,opacity;
+}
+
+#boot.opening--full.is-running .opening__hero-card::after{
+  animation:openingHeroRimFull 2.4s ease-out 1.15s both;
+}
+
+#boot.opening--full.is-running .opening__card-sheen{
+  animation:openingCardSheenFull .85s ease-in-out 2.2s both;
+}
+
+#boot.opening--full.is-running .opening__fan-card{
+  animation:openingFanFull 4.55s cubic-bezier(.2,.68,.22,1) 2.9s both;
+  will-change:transform,opacity;
+}
+
+#boot.opening--full.is-running .opening__fan-card:nth-child(2){animation-delay:2.915s}
+#boot.opening--full.is-running .opening__fan-card:nth-child(3){animation-delay:2.93s}
+#boot.opening--full.is-running .opening__fan-card:nth-child(4){animation-delay:2.945s}
+#boot.opening--full.is-running .opening__fan-card:nth-child(5){animation-delay:2.96s}
+#boot.opening--full.is-running .opening__fan-card:nth-child(6){animation-delay:2.975s}
+#boot.opening--full.is-running .opening__fan-card:nth-child(7){animation-delay:2.99s}
+#boot.opening--full.is-running .opening__fan-card:nth-child(8){animation-delay:3.005s}
+
+#boot.opening--full.is-running .opening__flash{
+  animation:openingFlashFull 1.2s ease-in-out 6.52s both;
+}
+
+#boot.opening--full.is-running .opening__title{
+  animation:openingTitleIn .22s ease-out 6.78s both;
+}
+
+#boot.opening--full.is-running .opening__logo{
+  animation:openingLogoRush .56s cubic-bezier(.12,.82,.2,1) 6.98s both;
+}
+
+#boot.opening--full.is-running .opening__start{
+  animation:openingStartPiece .42s ease-out 7.78s both;
+}
+
+/* ===== Four-second returning-user performance =========================== */
+#boot.opening--short.is-running .opening__shore{
+  animation:openingShoreShort 4.1s ease-in-out both;
+}
+
+#boot.opening--short.is-running .opening__shore::before{
+  animation:openingTide 3.45s cubic-bezier(.37,0,.23,1) both;
+  will-change:transform,opacity;
+}
+
+#boot.opening--short.is-running .opening__twilight{
+  animation:openingDaylightShort 4.1s ease both;
+}
+
+#boot.opening--short.is-running .opening__shells{
+  animation:openingShellsIn .5s ease-out .2s both;
+}
+
+#boot.opening--short.is-running .opening__hero-card{
+  animation:openingHeroShort 1.7s cubic-bezier(.22,.7,.18,1) .1s both;
+  will-change:transform,opacity;
+}
+
+#boot.opening--short.is-running .opening__hero-card::after{
+  animation:openingHeroRimShort .72s ease-out .22s both;
+}
+
+#boot.opening--short.is-running .opening__card-sheen{
+  animation:openingCardSheenFull .55s ease-out .5s both;
+}
+
+#boot.opening--short.is-running .opening__fan-card{
+  animation:openingFanShort 1.75s cubic-bezier(.2,.68,.22,1) .55s both;
+  will-change:transform,opacity;
+}
+
+#boot.opening--short.is-running .opening__fan-card:nth-child(2){animation-delay:.565s}
+#boot.opening--short.is-running .opening__fan-card:nth-child(3){animation-delay:.58s}
+#boot.opening--short.is-running .opening__fan-card:nth-child(4){animation-delay:.595s}
+#boot.opening--short.is-running .opening__fan-card:nth-child(5){animation-delay:.61s}
+#boot.opening--short.is-running .opening__fan-card:nth-child(6){animation-delay:.625s}
+#boot.opening--short.is-running .opening__fan-card:nth-child(7){animation-delay:.64s}
+#boot.opening--short.is-running .opening__fan-card:nth-child(8){animation-delay:.655s}
+
+#boot.opening--short.is-running .opening__flash{
+  animation:openingFlashShort 1s ease-in-out 1.65s both;
+}
+
+#boot.opening--short.is-running .opening__title{
+  animation:openingTitleIn .22s ease-out 2.05s both;
+}
+
+#boot.opening--short.is-running .opening__logo{
+  animation:openingLogoRush .56s cubic-bezier(.12,.82,.2,1) 2.2s both;
+}
+
+#boot.opening--short.is-running .opening__start{
+  animation:openingStartPiece .42s ease-out 2.92s both;
+}
+
+/* ===== Application-controlled states ==================================== */
+#boot.opening--loading .opening__shore{
+  opacity:.86;
+  transform:scale(1.01);
+}
+
+#boot.opening--loading .opening__twilight{opacity:.55}
+
+#boot.opening--loading:not(.is-running) .opening__hero-card,
+#boot.opening--loading:not(.is-running) .opening__title{opacity:0}
+
+/* JS applies this only after the timeline has fully reached its end state. */
+#boot.opening.is-title .opening__shore{
+  animation:none !important;
+  opacity:1;
+  transform:scale(1.026);
+}
+
+#boot.opening.is-title .opening__shore::before{
+  animation:openingTideIdle 5.8s ease-in-out infinite;
+  will-change:transform,opacity;
+}
+
+#boot.opening.is-title .opening__twilight{
+  animation:none !important;
+  opacity:.58;
+}
+
+#boot.opening.is-title .opening__shells{
+  animation:none !important;
+  opacity:1;
+}
+
+#boot.opening.is-title .opening__card-zone,
+#boot.opening.is-title .opening__fan,
+#boot.opening.is-title .opening__particles,
+#boot.opening.is-title .opening__flash{
+  animation:none !important;
+  opacity:0 !important;
+}
+
+#boot.opening.is-title .opening__title,
+#boot.opening.is-title .opening__logo{
+  opacity:1;
+  transform:none;
+}
+
+#boot.opening.is-title .opening__start{
+  opacity:1;
+  transform:translate3d(-50%,0,0);
+}
+
+#boot.opening.is-title .opening__title,
+#boot.opening.is-title .opening__start{pointer-events:auto}
+
+#boot.opening.is-title .opening__hero-card,
+#boot.opening.is-title .opening__fan-card,
+#boot.opening.is-title .opening__shore{will-change:auto}
+
+#boot.opening.is-waiting .opening__start,
+#boot.opening.is-waiting .opening__start:disabled{
+  opacity:.48;
+  cursor:wait;
+  pointer-events:none;
+}
+
+/* A skip during exceptionally slow data loading must reveal the waiting title
+   immediately instead of inheriting the normal delayed title timeline. */
+#boot.opening.is-title.is-waiting .opening__title,
+#boot.opening.is-title.is-waiting .opening__logo,
+#boot.opening.is-title.is-waiting .opening__start{
+  animation:none !important;
+  opacity:1;
+}
+
+#boot.opening.is-title.is-waiting .opening__title,
+#boot.opening.is-title.is-waiting .opening__logo{transform:none}
+
+#boot.opening.is-title.is-waiting .opening__start{transform:translate3d(-50%,0,0)}
+
+#boot.opening.is-out{
+  pointer-events:none;
+  animation:openingExit .42s ease forwards !important;
+}
+
+/* ===== Explicit reduced-motion presentation ============================= */
+#boot.opening--reduced .opening__shore{
+  opacity:1;
+  transform:scale(1.012);
+}
+
+#boot.opening--reduced .opening__twilight{opacity:.58}
+
+#boot.opening--reduced .opening__particles,
+#boot.opening--reduced .opening__fan,
+#boot.opening--reduced .opening__flash{display:none}
+
+#boot.opening--reduced.is-running:not(.is-title) .opening__shells{opacity:1}
+
+#boot.opening--reduced.is-running:not(.is-title) .opening__hero-card{
+  opacity:1;
+  transform:translate3d(-50%,-50%,0) rotateX(0deg) rotateZ(-1deg) scale(.9);
+}
+
+#boot.opening--reduced:not(.is-title) .opening__title{opacity:0}
+
+/* ===== Low-power mode ==================================================== */
+#boot.opening--lite .opening__particles{display:none}
+
+#boot.opening--lite .opening__fan-card:nth-child(n+7){display:none}
+
+#boot.opening--lite .opening__hero-card,
+#boot.opening--lite .opening__fan-card{box-shadow:0 8px 18px rgba(57,84,89,.2)}
+
+/* ===== Motion ============================================================ */
+@keyframes openingShoreFull{
+  0%{transform:scale(1)}
+  42%{transform:scale(1.012)}
+  72%{transform:scale(1.021)}
+  100%{transform:scale(1.026)}
+}
+
+@keyframes openingTide{
+  0%{
+    opacity:.24;
+    transform:translate3d(0,-1vh,0) scale3d(1.006,.995,1);
+    transform:translate3d(0,-1dvh,0) scale3d(1.006,.995,1);
+  }
+  14%{opacity:.38}
+  52%{
+    opacity:.7;
+    transform:translate3d(0,2.4vh,0) scale3d(1.012,1.018,1);
+    transform:translate3d(0,2.4dvh,0) scale3d(1.012,1.018,1);
+  }
+  62%{
+    opacity:.64;
+    transform:translate3d(0,1.8vh,0) scale3d(1.01,1.014,1);
+    transform:translate3d(0,1.8dvh,0) scale3d(1.01,1.014,1);
+  }
+  100%{
+    opacity:.22;
+    transform:translate3d(0,-.5vh,0) scale3d(1.006,.997,1);
+    transform:translate3d(0,-.5dvh,0) scale3d(1.006,.997,1);
+  }
+}
+
+@keyframes openingTideIdle{
+  0%,100%{
+    opacity:.34;
+    transform:translate3d(0,-4px,0) scale3d(1.005,.996,1);
+  }
+  50%{
+    opacity:.62;
+    transform:translate3d(0,8px,0) scale3d(1.007,1.008,1);
+  }
+}
+
+@keyframes openingDaylightFull{
+  0%{opacity:.48}
+  38%{opacity:.53}
+  70%{opacity:.57}
+  100%{opacity:.6}
+}
+
+@keyframes openingParticlesFull{
+  0%,100%{opacity:0}
+  22%{opacity:.36}
+  62%{opacity:.44}
+}
+
+@keyframes openingShellsIn{
+  0%{opacity:0;transform:translate3d(0,4px,0)}
+  100%{opacity:1;transform:translate3d(0,0,0)}
+}
+
+@keyframes openingHeroFull{
+  0%{opacity:0;transform:translate3d(-50%,8vh,0) rotateX(46deg) rotateZ(-2deg) scale(.8)}
+  9%{opacity:.78}
+  24%{opacity:1;transform:translate3d(-50%,-45%,18px) rotateX(8deg) rotateZ(-.5deg) scale(.95)}
+  34%{opacity:1;transform:translate3d(-50%,-50%,28px) rotateX(0deg) rotateZ(0deg) scale(1)}
+  50%{opacity:1;transform:translate3d(-50%,-51%,31px) rotateX(0deg) rotateZ(.2deg) scale(.72)}
+  64%{opacity:1;transform:translate3d(-50%,-50%,29px) rotateX(0deg) rotateZ(0deg) scale(.66)}
+  80%{opacity:1;transform:translate3d(-50%,-50%,20px) rotateX(0deg) rotateZ(0deg) scale(.64)}
+  92%{opacity:.78;transform:translate3d(-50%,-50%,7px) rotateX(0deg) rotateZ(0deg) scale(.62)}
+  100%{opacity:0;transform:translate3d(-50%,-50%,0) rotateX(0deg) rotateZ(0deg) scale(.58)}
+}
+
+@keyframes openingHeroRimFull{
+  0%,100%{opacity:0;transform:scale(.99)}
+  12%{opacity:.76;transform:scale(1.008)}
+  27%{opacity:.08;transform:scale(1.026)}
+  68%{opacity:0;transform:scale(.995)}
+  79%{opacity:.34;transform:scale(1.006)}
+}
+
+@keyframes openingCardSheenFull{
+  0%{opacity:0;transform:translate3d(-150%,0,0) skewX(-15deg)}
+  18%{opacity:.72}
+  100%{opacity:0;transform:translate3d(650%,0,0) skewX(-15deg)}
+}
+
+@keyframes openingFanFull{
+  0%{opacity:0;transform:translate3d(-50%,-46%,calc(var(--z,0px) - 60px)) rotateY(0deg) rotateZ(0deg) scale(.82)}
+  14%{opacity:.92}
+  42%{opacity:1;transform:translate3d(calc(-50% + var(--x,0px)),calc(-50% + var(--y,0px)),var(--z,0px)) rotateY(var(--ry,0deg)) rotateZ(var(--rz,0deg)) scale(1)}
+  70%{opacity:1;transform:translate3d(calc(-50% + var(--x,0px)),calc(-50% + var(--y,0px)),var(--z,0px)) rotateY(var(--ry,0deg)) rotateZ(var(--rz,0deg)) scale(1)}
+  82%{opacity:.96;transform:translate3d(-50%,-50%,0) rotateY(0deg) rotateZ(0deg) scale(.94)}
+  100%{opacity:0;transform:translate3d(-50%,-50%,0) rotateY(0deg) rotateZ(0deg) scale(.87)}
+}
+
+@keyframes openingFlashFull{
+  0%{opacity:0;transform:scale(.84)}
+  43%{opacity:.92;transform:scale(1.02)}
+  68%{opacity:.82;transform:scale(1.08)}
+  100%{opacity:0;transform:scale(1.14)}
+}
+
+@keyframes openingTitleIn{
+  0%{opacity:0;transform:translate3d(0,8px,0)}
+  100%{opacity:1;transform:translate3d(0,0,0)}
+}
+
+@keyframes openingStartPiece{
+  0%{opacity:0;transform:translate3d(-50%,7px,0) scale(.985)}
+  100%{opacity:1;transform:translate3d(-50%,0,0) scale(1)}
+}
+
+@keyframes openingLogoRush{
+  0%{opacity:0;transform:translate3d(0,0,0) scale(.05)}
+  6%{opacity:1;transform:translate3d(0,0,0) scale(.16)}
+  46%{opacity:1;transform:translate3d(0,0,0) scale(1.27)}
+  64%{opacity:1;transform:translate3d(0,0,0) scale(.93)}
+  80%{opacity:1;transform:translate3d(0,0,0) scale(1.07)}
+  100%{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+
+@keyframes openingShoreShort{
+  from{transform:scale(1.008)}
+  to{transform:scale(1.024)}
+}
+
+@keyframes openingDaylightShort{
+  from{opacity:.5}
+  to{opacity:.6}
+}
+
+@keyframes openingHeroShort{
+  0%{opacity:0;transform:translate3d(-50%,3.8vh,0) rotateX(32deg) rotateZ(-1.5deg) scale(.76)}
+  14%{opacity:.85}
+  40%{opacity:1;transform:translate3d(-50%,-50%,22px) rotateX(0deg) rotateZ(0deg) scale(.98)}
+  64%{opacity:1;transform:translate3d(-50%,-50%,25px) rotateX(0deg) rotateZ(0deg) scale(.66)}
+  100%{opacity:0;transform:translate3d(-50%,-50%,7px) rotateX(0deg) rotateZ(0deg) scale(.6)}
+}
+
+@keyframes openingFanShort{
+  0%{opacity:0;transform:translate3d(-50%,-46%,calc(var(--z,0px) - 50px)) rotateY(0deg) rotateZ(0deg) scale(.78)}
+  12%{opacity:.88}
+  40%{opacity:1;transform:translate3d(calc(-50% + var(--x,0px)),calc(-50% + var(--y,0px)),var(--z,0px)) rotateY(var(--ry,0deg)) rotateZ(var(--rz,0deg)) scale(.94)}
+  68%{opacity:1;transform:translate3d(calc(-50% + var(--x,0px)),calc(-50% + var(--y,0px)),var(--z,0px)) rotateY(var(--ry,0deg)) rotateZ(var(--rz,0deg)) scale(.94)}
+  82%{opacity:.92;transform:translate3d(-50%,-50%,0) rotateY(0deg) rotateZ(0deg) scale(.9)}
+  100%{opacity:0;transform:translate3d(-50%,-50%,0) rotateY(0deg) rotateZ(0deg) scale(.84)}
+}
+
+@keyframes openingHeroRimShort{
+  0%,100%{opacity:0;transform:scale(.99)}
+  28%{opacity:.62;transform:scale(1.008)}
+  66%{opacity:.1;transform:scale(1.026)}
+}
+
+@keyframes openingFlashShort{
+  0%{opacity:0;transform:scale(.84)}
+  45%{opacity:.9;transform:scale(1.03)}
+  100%{opacity:0;transform:scale(1.14)}
+}
+
+@keyframes openingShellGlow{
+  0%{opacity:0;transform:scale(.45)}
+  42%{opacity:.68;transform:scale(.9)}
+  100%{opacity:0;transform:scale(1.15)}
+}
+
+@keyframes openingExit{
+  0%{opacity:1}
+  100%{opacity:0}
+}
+
+/* ===== Small screens and landscape ====================================== */
+@media (max-width:500px){
+  #boot.opening::before{display:none}
+  .opening__viewport{box-shadow:none}
+}
+
+@media (max-height:700px){
+  #boot.opening{
+    --opening-card-w:min(66%,35vh,250px);
+    --opening-card-w:min(66%,35dvh,250px);
+    --opening-fan-w:min(24vw,13.2vh,96px);
+    --opening-fan-w:min(24vw,13.2dvh,96px);
+  }
+  .opening__title{
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .opening__logo{width:min(102%,440px);max-height:40vh;max-height:40dvh}
+  .opening__start{
+    bottom:calc(96px + env(safe-area-inset-bottom));
+    min-height:52px;
+    padding-block:8px;
+    font-size:clamp(19px,5.3vw,23px);
+  }
+}
+
+@media (orientation:landscape) and (max-height:600px){
+  #boot.opening{
+    --opening-card-w:min(38vh,220px);
+    --opening-card-w:min(38dvh,220px);
+    --opening-fan-w:min(25vh,124px);
+    --opening-fan-w:min(25dvh,124px);
+  }
+  .opening__shore{background-position:center 43%}
+  .opening__title{
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .opening__logo{width:min(72vw,360px);max-height:42vh;max-height:42dvh}
+  .opening__start{
+    bottom:calc(48px + env(safe-area-inset-bottom));
+    width:min(42vw,190px);
+    min-height:44px;
+    padding:7px 20px 9px;
+    font-size:18px;
+  }
+}
+
+@media (max-width:359px){
+  #boot.opening{
+    --opening-card-w:min(68%,32vh,244px);
+    --opening-card-w:min(68%,32dvh,244px);
+    --opening-fan-w:min(24vw,13.2vh,92px);
+    --opening-fan-w:min(24vw,13.2dvh,92px);
+  }
+  .opening__title{
+    padding-left:calc(20px + env(safe-area-inset-left));
+    padding-right:calc(20px + env(safe-area-inset-right));
+  }
+}
+
+/* animations.css globally collapses every animation under this preference.
+   Explicit end states keep the reduced version complete and predictable. */
+@media (prefers-reduced-motion:reduce){
+  #boot.opening .opening__shore,
+  #boot.opening .opening__shore::before,
+  #boot.opening .opening__twilight,
+  #boot.opening .opening__vignette,
+  #boot.opening .opening__particles,
+  #boot.opening .opening__shells,
+  #boot.opening .opening__hero-card,
+  #boot.opening .opening__hero-card::after,
+  #boot.opening .opening__side--featured,
+  #boot.opening .opening__card-sheen,
+  #boot.opening .opening__fan-card,
+  #boot.opening .opening__flash,
+  #boot.opening .opening__title,
+  #boot.opening .opening__logo,
+  #boot.opening .opening__start{
+    animation:none !important;
+    transition:none !important;
+  }
+
+  #boot.opening .opening__shell.is-glowing::after{
+    animation:none !important;
+    opacity:0;
+  }
+
+  #boot.opening.is-running:not(.is-title) .opening__shore{
+    opacity:1;
+    transform:scale(1.012);
+  }
+  #boot.opening .opening__shore::before{
+    opacity:.28;
+    transform:none;
+  }
+  #boot.opening.is-running:not(.is-title) .opening__twilight{opacity:.58}
+  #boot.opening.is-running:not(.is-title) .opening__shells{opacity:1}
+  #boot.opening.is-running:not(.is-title) .opening__hero-card{
+    opacity:1;
+    transform:translate3d(-50%,-50%,0) rotateX(0deg) rotateZ(-1deg) scale(.9);
+  }
+  #boot.opening.is-running:not(.is-title) .opening__title{
+    opacity:0;
+    pointer-events:none;
+  }
+  #boot.opening.is-title .opening__title,
+  #boot.opening.is-title .opening__logo{
+    opacity:1;
+    transform:none;
+  }
+  #boot.opening.is-title .opening__start{
+    opacity:1;
+    transform:translate3d(-50%,0,0);
+  }
+  #boot.opening.is-title .opening__title,
+  #boot.opening.is-title .opening__start{pointer-events:auto}
+}
+
+@media (forced-colors:active){
+  #boot.opening .opening__start{
+    color:ButtonText;
+    -webkit-text-stroke:0;
+    text-shadow:none;
+  }
+  #boot.opening .opening__start{
+    border:2px solid ButtonText;
+    background:ButtonFace;
+    box-shadow:none;
+  }
+}

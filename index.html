@@ -18,13 +18,22 @@
 <link rel="stylesheet" href="./css/animations.css">
 <link rel="stylesheet" href="./css/card-art.css">
 <link rel="stylesheet" href="./css/card-3d.css">
+<!-- 起動演出。既存のカードCSSより後に読む -->
+<link rel="stylesheet" href="./css/opening.css">
 </head>
 <body>
 
-<div id="boot" class="boot">
-  <div class="boot__stage" id="bootStage" aria-hidden="true"></div>
-  <p class="boot__copy" id="bootCopy">志賀町を、あつめよう。</p>
-  <button class="boot__skip" id="bootSkip" type="button">スキップ</button>
+<!-- 起動演出（js/opening.js）。中身は opening.js が組み立てる -->
+<div id="boot" class="boot opening opening--loading">
+  <div class="opening__viewport" id="bootStage"></div>
+  <button class="opening__sound" id="bootSound" type="button" aria-pressed="false" aria-label="起動音をつける" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 10v4h3l4 3V7l-4 3H5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M15 9.2a4 4 0 0 1 0 5.6M17.6 6.8a7.3 7.3 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <span>音なし</span>
+  </button>
+  <button class="opening__skip" id="bootSkip" type="button" hidden>スキップ</button>
 </div>
 
 <noscript><p class="notice">このアプリはJavaScriptが必要です。</p></noscript>

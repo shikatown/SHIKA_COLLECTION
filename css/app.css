@@ -851,21 +851,8 @@ a{color:var(--accent)}
 .fullnote pre{background:#f3efe8;padding:10px;border-radius:8px;font-size:12px;overflow-x:auto}
 .notice{padding:24px;text-align:center}
 
-/* ===== 起動演出 ===== */
-.boot{
-  position:fixed;inset:0;z-index:100;background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
-}
-.boot__stage{position:relative;width:min(78vw,300px);aspect-ratio:1;perspective:900px}
-.boot__copy{
-  font-size:18px;font-weight:800;letter-spacing:.1em;opacity:0;margin:8px 0 0;
-  animation:bootCopy .8s ease .9s forwards;
-}
-.boot__skip{
-  position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top));
-  background:transparent;border:0;color:var(--ink-3);font-size:12px;cursor:pointer;padding:8px;
-}
-.boot.is-out{animation:fadeOut .45s ease forwards}
+/* ===== 起動演出 =====
+   見た目と動きはすべて css/opening.css（js/opening.js が組み立てる）。 */
 
 .empty{padding:36px 12px;text-align:center;color:var(--ink-3);font-size:13px}
 .badgegrid{display:flex;flex-wrap:wrap;gap:6px}
