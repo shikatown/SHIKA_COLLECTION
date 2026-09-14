@@ -161,10 +161,13 @@ export function renderCollection(view, params) {
     まだ持っていないカードの名前は、検索でも当てられないようにする。 */
 const nameVisible = (c) => isOwned(c.id) || c.gps.enabled;
 
-/** 検索のために文字をそろえる。全角・半角、大文字・小文字、カタカナ・ひらがな、空白の違いを無視する。 */
+/** 検索のために文字をそろえる。全角・半角、大文字・小文字、カタカナ・ひらがな、空白、
+    濁点・半濁点（「カニ」で「加能ガニ」、「はし」で「ばし」「ぱし」）の違いを無視する。 */
 function foldText(s) {
   return String(s || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '')
-    .replace(/[ァ-ヶ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+    .replace(/[ァ-ヶ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60))
+    // 「が」を「か」＋濁点に分けてから、濁点・半濁点を外す
+    .normalize('NFD').replace(/[゙゚]/g, '').normalize('NFC');
 }
 
 /** ジャンルで分けたあとの一覧を、取得状況と検索語でさらに絞る。 */
