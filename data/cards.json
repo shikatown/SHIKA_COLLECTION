@@ -1,5 +1,5 @@
 {
- "dataVersion": "20260911-5",
+ "dataVersion": "20260914-1",
  "generatedAt": "2026-09-11T13:29:04",
  "cards": [
   {
@@ -1006,8 +1006,8 @@
    "sakeSnack": false,
    "gps": {
     "enabled": true,
-    "lat": 37.150038,
-    "lng": 136.707409,
+    "lat": 37.13942168208599,
+    "lng": 136.72402758326442,
     "radius": 200
    },
    "purchase": {
@@ -1151,8 +1151,8 @@
    "sakeSnack": false,
    "gps": {
     "enabled": true,
-    "lat": 37.206952,
-    "lng": 136.724368,
+    "lat": 37.19203617709108,
+    "lng": 136.717235868344,
     "radius": 200
    },
    "purchase": {
