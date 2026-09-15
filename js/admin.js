@@ -10,6 +10,7 @@ import { app, commit, isOwned, publishedCards, CATEGORY_LABEL, CATEGORIES } from
 import { el, clear, toast, dialog, confirm2 } from './ui.js';
 import { go } from './router.js';
 import { celebrateComplete } from './title-complete.js';
+import { TITLE_MAX_CHARS } from './card-render.js';
 import { gpsCards } from './state.js';
 
 export function isAdmin() {
@@ -81,6 +82,8 @@ function summary(all, pub) {
     ? Array.from({ length: nums[nums.length - 1] }, (_, i) => i + 1).filter((n) => !nums.includes(n))
     : [];
   const longText = pub.filter((c) => [...(c.cardText || c.description || '')].length > 78);
+  // 名前が長いと、そのカードだけ名前の文字が小さくなり、ほかのカードとそろわない
+  const longName = pub.filter((c) => [...(c.name || '')].length > TITLE_MAX_CHARS);
   const noPhoto = pub.filter((c) => !c.photo);
   const noCat = all.filter((c) => !c.category);
   const unpub = all.filter((c) => !c.published);
@@ -94,6 +97,7 @@ function summary(all, pub) {
     ['ジャンル未設定', listOf(noCat)],
     ['非公開', listOf(unpub)],
     ['カードの文が長い', listOf(longText)],
+    [`名前が${TITLE_MAX_CHARS}字を超える`, listOf(longName)],
     ['チェックイン対象', `${pub.filter((c) => c.gps.enabled).length} 件`],
     ['座標あり', `${pub.filter((c) => c.gps.lat != null).length} 件`],
     ['購入検索', `${pub.filter((c) => c.purchase.enabled).length} 件`],
@@ -225,6 +229,8 @@ function row(c) {
   add(c.photo ? '写真' : '写真なし', c.photo ? 'ok' : 'ng');
   const len = [...(c.cardText || c.description || '')].length;
   add(`文 ${len}字`, len > 78 ? 'warn' : 'ok');
+  const nameLen = [...(c.name || '')].length;
+  add(`名前 ${nameLen}字`, nameLen > TITLE_MAX_CHARS ? 'warn' : 'ok');
   if (c.gps.lat != null) add('座標', 'ok');
   if (c.gps.enabled) add('チェックイン', 'ok');
   if (c.purchase.enabled) add('購入検索', 'ok');

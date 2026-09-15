@@ -27,12 +27,13 @@ export const ART_H = 1350;
 
 const GENRES = new Set(['gourmet', 'spot', 'culture']);
 
-/** カード名の長さに応じてタイトルの詰め方を変える（長い名前でも枠から出さない） */
-function titleClass(name) {
+/* カード名の文字の大きさは、すべてのカードで同じ（css/card-art.css の 6.5cqw）。
+   その大きさで1行に収まるのは12文字まで（名前の枠は幅 82.87cqw）。
+   13文字以上の名前だけ、そのカードの文字を1行に収まる大きさまで縮める（変換ツールが警告を出す）。 */
+export const TITLE_MAX_CHARS = 12;
+function titleStyle(name) {
   const n = [...(name || '')].length;
-  if (n <= 9) return '';
-  if (n <= 13) return ' cardart__title--mid';
-  return ' cardart__title--long';
+  return n > TITLE_MAX_CHARS ? { fontSize: `${(78 / n).toFixed(2)}cqw` } : null;
 }
 
 export function photoUrl(file) {
@@ -162,7 +163,7 @@ export function renderCardArt(card, { total = 0, locked = false, thumb = false }
 
   // ⑤ 名前
   const name = locked ? '???' : (card.name || '');
-  root.append(el('div', { class: `cardart__title${locked ? '' : titleClass(name)}`, text: name }));
+  root.append(el('div', { class: 'cardart__title', style: locked ? null : titleStyle(name), text: name }));
 
   // ⑥ 説明
   if (!locked) {

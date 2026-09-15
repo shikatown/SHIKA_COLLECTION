@@ -480,6 +480,14 @@ async function convert(rows) {
     // カード表示用の短い説明
     const description = get(r, '説明文');
     const cardText = get(r, 'カード説明文');
+    /* カードの名前は、すべてのカードで同じ大きさ。12文字までが1行に収まる（js/card-render.js の TITLE_MAX_CHARS）。
+       それより長いと、そのカードだけ名前の文字が小さくなって、ほかのカードとそろわない。 */
+    if (published && [...name].length > 12) {
+      msgs.push({
+        level: 'warn',
+        text: `${id} ${name}: 名前が長いため、このカードだけ名前の文字が小さくなります（${[...name].length}字）。12字までにするとほかのカードとそろいます。`,
+      });
+    }
     const shown = cardText || description;
     if (published && [...shown].length > 78) {
       msgs.push({

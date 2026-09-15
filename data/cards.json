@@ -1,5 +1,5 @@
 {
- "dataVersion": "20260914-1",
+ "dataVersion": "20260915-1",
  "generatedAt": "2026-09-11T13:29:04",
  "cards": [
   {
@@ -845,7 +845,7 @@
   },
   {
    "id": "030",
-   "name": "お汁（お祭り）",
+   "name": "お汁",
    "reading": "",
    "category": "gourmet",
    "subCategory": "郷土料理",
@@ -1193,7 +1193,7 @@
   },
   {
    "id": "042",
-   "name": "日本遺産　北前船寄港地福浦港",
+   "name": "福浦港",
    "reading": "",
    "category": "spot",
    "subCategory": "スポット",
@@ -1251,7 +1251,7 @@
   },
   {
    "id": "044",
-   "name": "道の駅　ころ柿の里しか（みちのえき旬菜館）",
+   "name": "道の駅　ころ柿の里しか",
    "reading": "",
    "category": "spot",
    "subCategory": "スポット",
@@ -1367,7 +1367,7 @@
   },
   {
    "id": "048",
-   "name": "大島キャンプ場（海水浴場）",
+   "name": "大島キャンプ場",
    "reading": "",
    "category": "spot",
    "subCategory": "スポット",

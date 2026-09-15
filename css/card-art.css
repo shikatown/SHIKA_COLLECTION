@@ -98,25 +98,25 @@
 .cardart__num b{ font-weight:800 }
 .cardart__num span{ font-size:.677em; font-weight:600; opacity:.82; margin-left:.26em }
 
-/* ⑤ 名前 */
+/* ⑤ 名前
+   文字の大きさは、すべてのカードで同じにする（v1.39）。
+   以前は文字数で3段階（6.5／5.1／3.7cqw で2行）に変えていて、カードによって名前の大きさがばらばらに見えた。
+   12文字（いまいちばん長い名前）まで、この大きさで1行に収まる。
+   13文字以上の名前だけ、js/card-render.js がそのカードの文字を1行に収まる大きさまで縮める。 */
 .cardart__title{
   position:absolute; left:8.796%; top:58.519%; width:82.87%; height:6.519%;
   display:flex; align-items:center;
   color:#fff; font-weight:800; font-size:6.5cqw; line-height:1.1;
   white-space:nowrap; overflow:hidden;
 }
-.cardart__title--mid{ font-size:5.1cqw }
-.cardart__title--long{
-  font-size:3.7cqw; line-height:1.1; white-space:normal;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-}
 
-/* ⑥ 説明 */
+/* ⑥ 説明
+   太さは通常（v1.39 で太字から戻した）。大きさ・行間はすべてのカードで同じ。 */
 .cardart__desc{
   position:absolute; left:8.796%; top:65.926%; width:82.87%;
   /* ちょうど3行分の高さにして、4行目が半分だけ覗くのを防ぐ */
   height:3.78em; max-height:11.481%;
-  color:#fff; font-weight:700; font-size:3.6cqw; line-height:1.26;
+  color:#fff; font-weight:400; font-size:3.6cqw; line-height:1.26;
   overflow:hidden;
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
 }
