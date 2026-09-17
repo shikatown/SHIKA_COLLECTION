@@ -9,10 +9,7 @@
 
 import { app, commit, saveOk, CATEGORIES, categoryStats } from './state.js';
 import { el, clear, toast, vibrate, coinIcon } from './ui.js';
-import { coinCfg, titles, COMPLETE_TITLE, loginInfo } from './rewards.js';
-import { shareImage, prepareShareImage, SHARE_ICON } from './share.js';
-import { titleImage } from './share-image.js';
-import { titleInfos, openTitleDialog } from './titles.js';
+import { coinCfg, loginInfo } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
 import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
@@ -161,7 +158,7 @@ export function renderMissions(view) {
   all.disabled = ready.length === 0;
   head.append(all);
 
-  // 並びは ログインボーナス → まとめて受け取る → カード → まち巡り → 称号
+  // 並びは ログインボーナス → まとめて受け取る → カード → まち巡り（称号は v1.44 でホームへ移した）
   view.append(el('h3', { class: 'missions__first', text: 'ログインボーナス' }));
   view.append(loginPanel());
   view.append(head);
@@ -179,8 +176,6 @@ export function renderMissions(view) {
     view.append(box);
   }
 
-  view.append(el('h3', { text: '称号' }));
-  view.append(titlesPanel());
 
   // 初めて開いたときだけの案内
   showGuide('missionsGuideShown', {
@@ -189,7 +184,6 @@ export function renderMissions(view) {
     lines: [
       'カードを集めたり、まちを巡ったりすると、ミッションを達成します。',
       '達成したら「受け取る」で SHIKA COIN がもらえます。「まとめて受け取る」で一度にもらうこともできます。',
-      'いちばん下の称号も、ぜんぶ集めてみよう。',
     ],
   });
 }
@@ -433,84 +427,6 @@ function celebrateLogin(panel, logo, still) {
     sparks.remove();
     shine.remove();
   }, 2600);
-}
-
-/** 称号をシェアするボタン（獲得した称号だけ）。称号の絵とアプリのURLを共有する。 */
-function shareTitleButton(name, icons) {
-  const opts = {
-    key: `title:${name}`,
-    make: () => titleImage({ name, icons }),
-    fileName: 'shika-collection-title.jpg',
-    title: `SHIKA COLLECTION 称号「${name}」`,
-    text: `志賀町で称号「${name}」を獲得しました！ #SHIKACOLLECTION #志賀町`,
-  };
-  const btn = el('button', {
-    class: 'titlebadge__share', attrs: { type: 'button', 'aria-label': `称号「${name}」をSNSでシェア` },
-    html: `${SHARE_ICON}<span>シェア</span>`,
-  });
-  btn.addEventListener('click', async () => {
-    if (btn.disabled) return;
-    btn.disabled = true;
-    try { await shareImage(opts); } finally { btn.disabled = false; }
-  });
-  setTimeout(() => { if (btn.isConnected) prepareShareImage(opts.key, opts.make, opts.fileName).catch(() => {}); }, 1500);
-  return btn;
-}
-
-/* 称号。ミッションと同じ「達成したことが分かるもの」なので、ここにまとめる。
-   （以前はカード画面のコレクション欄に置いていた） */
-function titlesPanel() {
-  const got = titles();
-  const box = el('div', { class: 'panel titlegrid' });
-  // 称号を押すと、獲得条件・あといくつか・ガチャ／マップへの案内・シェアを出す（js/titles.js）
-  const infos = new Map(titleInfos().map((t) => [t.name, t]));
-  const tappable = (node, name) => {
-    node.classList.add('is-tap');
-    node.setAttribute('role', 'button');
-    node.setAttribute('tabindex', '0');
-    node.setAttribute('aria-label', `称号「${name}」。押すと獲得条件を表示`);
-    const open = (e) => {
-      if (e.target.closest('.titlebadge__share')) return;   // シェアのボタンはそのまま
-      const t = infos.get(name);
-      if (t) openTitleDialog(t);
-    };
-    node.addEventListener('click', open);
-    node.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(e); } });
-  };
-  // big はシェアの絵に使う大きい絵（先に読めたもの）
-  const all = [
-    ...CATEGORIES.map((x) => ({ name: x.master, icon: `./assets/frames/thumb/icon-${x.key}.png`, big: [`./assets/frames/icon-${x.key}.png`] })),
-    { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png', big: ['./assets/frames/web/logo.webp', './assets/frames/logo.png'] },
-  ];
-  for (const { name, icon, big } of all) {
-    const on = got.includes(name);
-    const b = el('div', { class: `titlebadge${on ? ' is-on' : ''}` });
-    b.append(el('div', { class: 'titlebadge__ring' }, [
-      el('img', { class: 'titlebadge__i', attrs: { src: icon, alt: '', decoding: 'async' } }),
-    ]));
-    b.append(el('div', { class: 'titlebadge__n', text: name }));
-    b.append(el('div', { class: 'titlebadge__s', text: on ? '達成' : '未達成' }));
-    if (on) b.append(shareTitleButton(name, big));
-    tappable(b, name);
-    box.append(b);
-  }
-
-  /* いちばん上の称号「志賀町コンプリート」。4つの下の真ん中に置く。
-     名前は最初から出すが、絵は獲得するまで「？？？」にしておく。
-     獲得の演出（js/title-complete.js）は、この枠に .is-on を付けて絵を現す。 */
-  // 獲得の演出を見終わるまでは「？？？」のまま（演出で枠にはまった瞬間に絵が出る）
-  const done = got.includes(COMPLETE_TITLE) && app.state.flags.completeCelebrated;
-  const c = el('div', { class: `titlebadge titlebadge--complete${done ? ' is-on' : ''}` });
-  c.append(el('div', { class: 'titlebadge__ring' }, [
-    el('img', { class: 'titlebadge__i', attrs: { src: './assets/icons/title-complete.png', alt: '', decoding: 'async' } }),
-    el('span', { class: 'titlebadge__q', text: '？？？' }),
-  ]));
-  c.append(el('div', { class: 'titlebadge__n', text: COMPLETE_TITLE }));
-  c.append(el('div', { class: 'titlebadge__s', text: done ? '達成' : 'すべてのカードとチェックインで獲得' }));
-  if (done) c.append(shareTitleButton(COMPLETE_TITLE, ['./assets/icons/title-complete.png']));
-  tappable(c, COMPLETE_TITLE);
-  box.append(c);
-  return box;
 }
 
 function row(m, view) {

@@ -2,10 +2,10 @@
    すべてのカードを集め、すべてのスポットでチェックインした瞬間に1回だけ出す。
 
    流れ（カードが枠にはまる演出と同じ考え方）
-     ① ミッション画面へ移り、画面を暗くする
+     ① ホームへ移り、画面を暗くする（称号は v1.44 でミッション画面からホームへ移した）
      ② 真ん中に「？？？」の称号が飛び出す
      ③ くるくる回って表になり、光が広がって「称号獲得！」
-     ④ ミッション画面の称号の枠へ飛んでいき、パチーンとはまる
+     ④ ホームの称号の枠へ飛んでいき、パチーンとはまる
 
    管理モードからは celebrateComplete({ preview: true }) で、状態を変えずに見られる。 */
 
@@ -51,21 +51,20 @@ function loadImage(src, ms) {
   ]);
 }
 
-/** 演出が終わるまで、称号の枠を「？？？」の見た目にしておく。
-    ミッション画面は保存データ（すでに達成）から描くので、何もしないと先に絵が見えてしまう。 */
+/** 演出が終わるまで、ホームの称号の枠を「？」の見た目にしておく（先に絵が見えてしまわないように） */
 function lockSlot(slot) {
   if (!slot) return;
   slot.classList.remove('is-on');
-  const st = slot.querySelector('.titlebadge__s');
-  if (st) st.textContent = 'すべてのカードとチェックインで獲得';
+  const ring = slot.querySelector('.hometitle__ring');
+  if (ring) ring.replaceChildren(el('span', { class: 'hometitle__q', text: '？' }));
 }
 
-/** 称号の枠の見た目を「獲得済み」にする */
+/** 称号の枠の見た目を「獲得済み」にする（絵を入れる） */
 function markSlot(slot) {
   if (!slot) return;
   slot.classList.add('is-on');
-  const st = slot.querySelector('.titlebadge__s');
-  if (st) st.textContent = '達成';
+  const ring = slot.querySelector('.hometitle__ring');
+  if (ring) ring.replaceChildren(el('img', { attrs: { src: COMPLETE_IMG, alt: '' } }));
 }
 
 export async function celebrateComplete({ preview = false } = {}) {
@@ -74,10 +73,10 @@ export async function celebrateComplete({ preview = false } = {}) {
   const quick = reduceMotion();
   await loadImage(COMPLETE_IMG, 3000);
 
-  // ① ミッション画面へ（すでに開いていても描き直す）
-  go('#/missions');
+  // ① ホームへ（すでに開いていても描き直す）
+  go('#/home');
   await sleep(380);
-  const slot = document.querySelector('.titlebadge--complete');
+  const slot = document.querySelector('.hometitle--complete');
   lockSlot(slot);
   if (slot) slot.scrollIntoView({ block: 'center' });
   document.body.classList.add('is-drawing');
@@ -110,7 +109,7 @@ export async function celebrateComplete({ preview = false } = {}) {
   const land = async () => {
     if (landed) return;
     landed = true;
-    const box = slot && slot.querySelector('.titlebadge__ring');
+    const box = slot && slot.querySelector('.hometitle__ring');
     const r = box ? box.getBoundingClientRect() : null;
     const b = badge.getBoundingClientRect();
     if (r && b.width && !quick) {
@@ -147,7 +146,7 @@ export async function celebrateComplete({ preview = false } = {}) {
     running = false;
     if (preview) {
       // 確認用なので、少し見せたら本当の状態に戻す
-      setTimeout(() => { if (location.hash === '#/missions') go('#/missions', true); }, 2600);
+      setTimeout(() => { if (location.hash === '#/home') go('#/home', true); }, 2600);
     }
   };
 

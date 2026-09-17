@@ -18,8 +18,8 @@ const MAP_FILTERS = [
   { key: 'all', label: 'すべて' },
   { key: 'unvisited', label: '未訪問' },
   { key: 'visited', label: '訪問済み' },
-  { key: 'history', label: '歴史と絶景を巡るモデルコース', ids: ['045', '041', '036', '035', '042', '046'] },
-  { key: 'scenic', label: '絶景スポットを巡るモデルコース', ids: ['043', '041', '038', '037', '036', '035', '033', '034'] },
+  { key: 'history', label: '歴史と絶景を巡る志賀町観光モデルコース', ids: ['045', '041', '036', '035', '042', '046'] },
+  { key: 'scenic', label: '絶景スポットを巡る志賀町観光モデルコース', ids: ['043', '041', '038', '037', '036', '035', '033', '034'] },
 ];
 let mapFilter = 'all';   // 画面を移っても覚えておく
 
@@ -299,9 +299,11 @@ export function renderMap(view, params) {
   clear(view);
   if (mapApi) { mapApi.destroy(); mapApi = null; }
 
-  /* 絞り込み（横にスクロールできるボタン）。選んだものに当てはまるスポットのピンだけを地図に出す。
-     ピンは今までどおり、訪問済みは金の星、まだの所はピン。 */
-  const chips = el('div', { class: 'tabs mapfilter', attrs: { role: 'group', 'aria-label': 'スポットを絞り込む' } });
+  /* 絞り込み。3段（1段目：すべて・未訪問・訪問済み／2段目・3段目：モデルコース）。横にスクロールさせない。
+     選んだものに当てはまるスポットのピンだけを地図に出す。ピンは今までどおり、訪問済みは金の星、まだの所はピン。 */
+  const chips = el('div', { class: 'mapfilter', attrs: { role: 'group', 'aria-label': 'スポットを絞り込む' } });
+  const chipRow = el('div', { class: 'mapfilter__row' });
+  chips.append(chipRow);
   view.append(chips);
 
   const box = el('div', { class: 'mapwrap' });
@@ -334,7 +336,7 @@ export function renderMap(view, params) {
 
   const chipBtns = MAP_FILTERS.map((f) => {
     const b = el('button', {
-      class: `chip${mapFilter === f.key ? ' is-active' : ''}`,
+      class: `mapchip${f.ids ? ' mapchip--wide' : ''}${mapFilter === f.key ? ' is-active' : ''}`,
       attrs: { type: 'button', 'aria-pressed': String(mapFilter === f.key) },
       text: f.label,
     });
@@ -345,17 +347,12 @@ export function renderMap(view, params) {
         x.classList.toggle('is-active', on);
         x.setAttribute('aria-pressed', String(on));
       });
-      b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
       drawPins(true);
     });
-    chips.append(b);
+    (f.ids ? chips : chipRow).append(b);
     return b;
   });
   drawPins(mapFilter !== 'all');
-  if (mapFilter !== 'all') {
-    const active = chipBtns[MAP_FILTERS.findIndex((f) => f.key === mapFilter)];
-    if (active) requestAnimationFrame(() => active.scrollIntoView({ block: 'nearest', inline: 'center' }));
-  }
   const me = geo.myPosition();
   if (me) mapApi.setMe(me.lat, me.lng);
 

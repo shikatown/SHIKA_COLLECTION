@@ -139,19 +139,19 @@ export function openTitleDialog(t) {
   dialog({ title: t.name, body: [body], actions: [{ label: '閉じる', value: null }] });
 }
 
-/** 称号の並び（ホーム用の横一列）。押すと案内が開く */
+/** 称号の並び（ホーム用。1段に3つずつ、2段）。押すと案内が開く */
 export function titleRow() {
   const list = titleInfos();
   const wrap = el('div', { class: 'hometitles' });
   const got = list.filter((t) => t.earned).length;
-  wrap.append(el('div', { class: 'hometitles__head' }, [
+  wrap.append(el('div', { class: 'homehead' }, [
     el('span', { text: '称号' }),
     el('b', { text: `${got} / ${list.length}` }),
   ]));
   const row = el('div', { class: 'hometitles__row' });
   for (const t of list) {
     const b = el('button', {
-      class: `hometitle${t.earned && t.shown ? ' is-on' : ''}`,
+      class: `hometitle${t.kind === 'complete' ? ' hometitle--complete' : ''}${t.earned && t.shown ? ' is-on' : ''}`,
       attrs: { type: 'button', 'aria-label': `称号「${t.name}」${t.earned ? '（獲得済み）' : ''}。押すと獲得条件を表示` },
     });
     const ring = el('span', { class: 'hometitle__ring' });

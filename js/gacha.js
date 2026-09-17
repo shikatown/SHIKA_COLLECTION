@@ -12,6 +12,7 @@ import { photoUrl, thumbUrl, webUrl } from './card-render.js';
 import { createGachaStage } from './gacha-anim.js';
 import { isAdmin } from './admin.js';
 import { isValidPendingResult } from './storage.js';
+import { showGuide } from './guide.js';
 
 export const SINGLE_COST = 1;
 export const TEN_COST = 10;
@@ -159,6 +160,19 @@ export function renderGacha(view) {
     showResults(view, s.pendingResult);
     return;
   }
+
+  /* 初回の10連を引いたあと、いつものガチャ画面に戻ってきたときに1回だけ出す案内。
+     次からはコインが要るので、コインはミッションでもらえることを伝え、ミッション画面へ案内する。
+     初回の10連を引く前（はじめましての画面）では出さない。 */
+  if (s.flags.firstFreeTenDone) showGuide('gachaGuideShown', {
+    icon: 'coin',
+    title: 'ミッションをクリアしてSHIKA COINをもらおう！',
+    lines: [
+      'ガチャは SHIKA COIN で引けます（シングルガチャ 1枚・10連ガチャ 10枚）。',
+      'ミッションをクリアすると、SHIKA COIN がもらえます。ログインボーナスや、現地でのチェックインでももらえます。',
+    ],
+    action: { label: 'ミッションを見る', onClick: () => go('#/missions') },
+  });
 
   if (!s.flags.firstFreeTenDone) {
     view.append(firstTimePanel(view));

@@ -329,6 +329,13 @@ function renderHome(view) {
      初めての人はまだカードが無いので、代わりに「10連ガチャ」のポップ。
      その下に称号をならべる（押すと獲得条件とあといくつかを出す）。画面の高さに収めて、スクロールさせない。 */
   const main = el('div', { class: 'home__main' });
+  // カードの見出しと、53種類のうちいくつ集めたか
+  const pub = publishedCards();
+  const have = pub.filter((c) => isOwned(c.id)).length;
+  main.append(el('div', { class: 'homehead' }, [
+    el('span', { text: first ? 'カードを集めよう' : '最近手に入れたカード' }),
+    el('b', { html: `${pub.length}種類中 <em>${have}</em>種類あつめた` }),
+  ]));
   main.append(first ? firstGachaPop() : homeTrio());
   main.append(titleRow());
 

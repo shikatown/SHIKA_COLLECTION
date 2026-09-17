@@ -193,11 +193,7 @@ a{color:var(--accent)}
   background:#cfe3e6 center / cover no-repeat;box-shadow:var(--shadow-1);
 }
 .view .homevideo{width:calc(100% + 24px);max-width:none;margin:0 -12px 6px}
-.hero--first .homevideo{
-  aspect-ratio:4 / 3;
-  /* 下に「10連ガチャ」のポップと称号を置くので、画面に収まる高さまで（スクロールさせない） */
-  max-height:calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - env(safe-area-inset-bottom) - 300px);
-}
+.hero--first .homevideo{aspect-ratio:4 / 3}
 
 /* ホーム：最近手に入れたカード3枚（js/app.js の homeTrio） */
 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;flex:none}
@@ -216,25 +212,32 @@ a{color:var(--accent)}
 
 /* ホーム：称号の列（js/titles.js の titleRow） */
 .hometitles{width:100%;flex:none}
-.hometitles__head{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 6px;font-size:12.5px;font-weight:800;color:var(--ink-3)}
-.hometitles__head b{color:var(--coin);font-variant-numeric:tabular-nums}
-.hometitles__row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+/* ホームの見出し（カード・称号）：左に名前、右に数 */
+.homehead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;width:100%;margin:0 2px;font-size:12.5px;font-weight:800;color:var(--ink-3)}
+.homehead b{color:var(--ink-3);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.homehead b em{font-style:normal;font-size:15px;font-weight:900;color:var(--coin);margin:0 1px}
+.hometitles .homehead{margin-bottom:5px}
+.hometitles .homehead b{color:var(--coin)}
+/* 称号は1段に3つずつ、2段（3つ・2つ）。丸い絵の右に名前を2行で置き、高さを抑える */
+.hometitles__row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
 .hometitle{
-  display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;
-  padding:7px 2px 6px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);
-  cursor:pointer;font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;
+  flex:0 0 calc((100% - 12px) / 3);display:flex;align-items:center;gap:5px;min-width:0;
+  padding:5px 6px 5px 5px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);
+  cursor:pointer;font:inherit;color:inherit;text-align:left;-webkit-tap-highlight-color:transparent;
 }
 .hometitle:active{transform:scale(.96)}
-.hometitle__ring{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#f1eee7;border:2px solid var(--line)}
-.hometitle__ring img{width:36px;height:36px;object-fit:contain;display:block;filter:grayscale(1) opacity(.45)}
+.hometitle__ring{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#f1eee7;border:2px solid var(--line)}
+.hometitle__ring img{width:31px;height:31px;object-fit:contain;display:block;filter:grayscale(1) opacity(.45)}
+.hometitle--complete.is-snapped .hometitle__ring{animation:titleSnap .55s cubic-bezier(.2,1.6,.35,1)}
+.hometitle--complete.is-snapped{animation:titleGlow 1.4s ease-out}
 .hometitle.is-on{background:var(--coin-soft);border-color:#efe1c2}
 .hometitle.is-on .hometitle__ring{background:#fff;border-color:#e3c789}
 .hometitle.is-on .hometitle__ring img{filter:none}
-.hometitle__q{font-size:17px;font-weight:900;color:#b9b2a5}
-.hometitle__n{font-size:clamp(8.5px, 2.6vw, 10.5px);font-weight:800;line-height:1.25;text-align:center;color:var(--ink-3);letter-spacing:-.02em}
+.hometitle__q{font-size:16px;font-weight:900;color:#b9b2a5}
+.hometitle__n{min-width:0;font-size:clamp(9.5px, 2.8vw, 11.5px);font-weight:800;line-height:1.25;color:var(--ink-3);letter-spacing:-.02em}
 .hometitle__n > span{display:block;white-space:nowrap}
-/* カード3枚と称号は、動画の下に残った高さの中で上下に均等にあける（下だけが空かないように） */
-.home__main{justify-content:space-evenly}
+
+
 .hometitle.is-on .hometitle__n{color:var(--ink)}
 
 /* 称号を押したときの案内（js/titles.js の openTitleDialog） */
@@ -261,7 +264,18 @@ a{color:var(--accent)}
 .titlebadge.is-tap:active{transform:scale(.98)}
 
 /* まち巡り：絞り込みのボタンと、当てはまるスポットが無いときの知らせ */
-.mapfilter{margin:0 -16px 8px;padding:2px 16px 8px}
+/* 3段：1段目は3つを同じ幅で、2段目・3段目はモデルコースを1つずつ。横にスクロールさせない。
+   文字は、はみ出さない範囲で大きく。選んだボタンは「近くのスポットを探す」と同じ色 */
+.mapfilter{display:grid;gap:6px;margin:0 0 10px}
+.mapfilter__row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mapchip{
+  min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:999px;padding:9px 6px;cursor:pointer;
+  font:inherit;font-size:clamp(12.5px, 4vw, 16px);font-weight:700;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-align:center;-webkit-tap-highlight-color:transparent;
+}
+.mapchip:active{transform:scale(.98)}
+.mapchip.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
 .mapwrap{position:relative}
 .map__empty{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
@@ -1353,6 +1367,8 @@ a{color:var(--accent)}
 /* 説明文は読みやすいよう左揃え（見出し・絵・「タップして閉じる」は真ん中のまま） */
 .guide__line{margin:0;font-size:13.5px;line-height:1.7;opacity:.95;text-align:left;justify-self:stretch}
 .guide__tap{margin-top:12px;font-size:12px;opacity:.7;letter-spacing:.08em}
+.guide__btn{margin-top:14px;justify-self:stretch;font-size:15px;padding:12px 18px}
+.guide__demo img{width:48px;height:48px;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 @media (prefers-reduced-motion: reduce){
   .guide,.guide.is-out,.guide__demo{animation:none}
 }
@@ -1465,3 +1481,19 @@ a{color:var(--accent)}
 .badge__i{width:18px;height:18px;object-fit:contain;flex:none;filter:saturate(.15) opacity(.5)}
 .badge--on{background:var(--coin-soft);border-color:#efe1c2;color:var(--coin);font-weight:700}
 .badge--on .badge__i{filter:none}
+
+/* ===== ホームの並べ方（v1.44） =====
+   前のほうにある .home > .hero／.home__main／.home__main > .firstpop の指定を上書きするので、ファイルの最後に置く。
+   ホームは余白を必要な分だけにして、上から詰めて並べる。
+   動画は幅いっぱいで 16:9（初めての人は 4:3）を目安に、画面に余りがあれば 4:3 まで伸ばし、足りなければ縮める。
+   カード3枚・称号は大きさを変えない。これで背の低い画面でもスクロールしない。 */
+.home{gap:8px}
+.home > .hero{
+  flex:1 1 calc((min(100vw, 480px) - 8px) * 9 / 16);min-height:110px;
+  max-height:calc((min(100vw, 480px) - 8px) * 3 / 4);display:flex;
+}
+.home > .hero--first{flex-basis:calc((min(100vw, 480px) - 8px) * 3 / 4)}
+.home .homevideo{height:auto;align-self:stretch;aspect-ratio:auto;margin:0 -12px}
+.home__main{flex:0 0 auto;gap:6px}
+.home__main > .firstpop{margin:2px 0 12px}
+.home__main > .trio{margin-bottom:6px}

@@ -54,6 +54,7 @@ export function defaultState() {
       swipeHintShown: false,   // カード詳細で左右に払える案内
       mapGuideShown: false,    // まち巡り画面の初回の案内を見せたか
       missionsGuideShown: false, // ミッション画面の初回の案内を見せたか
+      gachaGuideShown: false,  // ガチャ画面の初回の案内（ミッションでコインをもらおう）を見せたか
       openingPlayed: false,    // 起動演出の長い版を一度見たか（2回目からは短い版）
       completeCelebrated: false, // 「志賀町コンプリート」の獲得演出を見せたか（1回だけ出す）
       admin: false,          // 管理者の確認用モード（公開前の点検だけに使う）
