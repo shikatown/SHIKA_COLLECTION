@@ -64,6 +64,7 @@ export function defaultState() {
     unseenCardIds: [],       // 取得したが、まだ一覧で枠にはめる演出を見せていないカード
     dataVersion: '',
     pendingResult: null,     // 未確認のガチャ結果（確定済み）
+    titlesCelebrated: null,  // 獲得の演出を見せた称号の名前（null = 記録を始める前。js/title-complete.js）
   };
 }
 
@@ -145,6 +146,7 @@ export function normalize(raw) {
 
   // 形の壊れた結果は捨てる（結果画面が落ちないように）
   out.pendingResult = isValidPendingResult(raw.pendingResult) ? raw.pendingResult : null;
+  out.titlesCelebrated = Array.isArray(raw.titlesCelebrated) ? Array.from(new Set(arr(raw.titlesCelebrated))) : null;
   return out;
 }
 

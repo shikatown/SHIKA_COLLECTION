@@ -15,6 +15,7 @@ import { sfx, unlock } from './sound.js';
 import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
 import { showGuide } from './guide.js';
 import { FANCLUB_TITLE, isFanclubMember, fanclubButton } from './fanclub.js';
+import { maybeCelebrateTitles } from './title-complete.js';
 
 /** ミッションの賞金。config.json の mission で上書きできる。 */
 function cfg() {
@@ -474,6 +475,8 @@ function openFanclubHelp(view) {
 function afterJoin(view) {
   toast(`ファンクラブに登録しました！ 称号「${FANCLUB_TITLE}」を獲得。ミッションの報酬を受け取れます`, 4200);
   if (view.isConnected) renderMissions(view);
+  // LINE から戻ってきたら、称号「志賀町ファンクラブ」の獲得演出を出す
+  setTimeout(maybeCelebrateTitles, 600);
 }
 
 /** ミッションの下に置く、登録ボタンのまとまり */

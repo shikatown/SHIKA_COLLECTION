@@ -9,10 +9,11 @@
 import { app, commit, isOwned, publishedCards, CATEGORY_LABEL, CATEGORIES } from './state.js';
 import { el, clear, toast, dialog, confirm2 } from './ui.js';
 import { go } from './router.js';
-import { celebrateComplete } from './title-complete.js';
+import { celebrateTitle } from './title-complete.js';
+import { titleInfos } from './titles.js';
 import { TITLE_MAX_CHARS } from './card-render.js';
 import { gpsCards, todayKey } from './state.js';
-import { loginInfo } from './rewards.js';
+import { loginInfo, titles } from './rewards.js';
 import { offerDaily } from './gacha.js';
 
 export function isAdmin() {
@@ -242,6 +243,8 @@ function operations(pub) {
         commit((s) => {
           s.flags.fanclubJoined = false;
           s.rewardClaims.missions = s.rewardClaims.missions.filter((id) => id !== 'fanclub');
+          // もう一度登録したときに、称号の獲得演出が出るように
+          if (Array.isArray(s.titlesCelebrated)) s.titlesCelebrated = s.titlesCelebrated.filter((n) => n !== '志賀町ファンクラブ');
         });
         toast('ファンクラブの登録とミッションの受け取りを取り消しました');
         go('#/missions');
@@ -249,12 +252,28 @@ function operations(pub) {
     },
   }));
 
-  // 称号「志賀町コンプリート」の確認用
+  // 称号の獲得演出の確認用（保存データは変えずに、演出だけを流す。終わると元の表示に戻る）
+  const pick = el('select', { class: 'admin__select', attrs: { 'aria-label': '演出を見る称号' } },
+    titleInfos().map((t) => el('option', { attrs: { value: t.name }, text: t.name })));
+  pick.value = '志賀町コンプリート';
+  g.append(pick);
   g.append(el('button', {
-    class: 'btn', attrs: { type: 'button' }, text: 'コンプリート演出を見る',
+    class: 'btn', attrs: { type: 'button' }, text: '称号の演出を見る',
     on: {
-      // 保存データは変えずに、演出だけを流す（終わると元の表示に戻る）
-      click: () => celebrateComplete({ preview: true }),
+      click: () => {
+        const t = titleInfos().find((x) => x.name === pick.value);
+        if (t) celebrateTitle(t, { preview: true });
+      },
+    },
+  }));
+  g.append(el('button', {
+    class: 'btn', attrs: { type: 'button' }, text: '獲得済みの称号の演出をもう一度出す',
+    on: {
+      click: () => {
+        commit((s) => { s.titlesCelebrated = []; s.flags.completeCelebrated = false; });
+        toast('ホームへ移ると、獲得済みの称号の演出が順に出ます');
+        go('#/home');
+      },
     },
   }));
   g.append(el('button', {
@@ -263,11 +282,14 @@ function operations(pub) {
       click: async () => {
         if (!await confirm2('コンプリート状態にしますか', [
           '全カードを取得済みにし、すべてのスポットを訪問済みにします。',
-          'このあと「志賀町コンプリート」の獲得演出が本番と同じ流れで出ます。',
+          'このあと、新しく獲得した称号の演出が本番と同じ流れで1つずつ出ます。',
         ], 'コンプリートにする')) return;
         const now = new Date().toISOString();
         const today = now.slice(0, 10);
+        const before = titles();
         commit((s) => {
+          // これから獲得する称号は、本番と同じように1つずつ演出が出るようにする
+          if (Array.isArray(s.titlesCelebrated)) s.titlesCelebrated = s.titlesCelebrated.filter((n) => before.includes(n));
           s.ownedCardIds = pub.map((c) => c.id);
           s.unseenCardIds = [];
           for (const c of gpsCards()) {

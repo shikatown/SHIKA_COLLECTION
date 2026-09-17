@@ -31,7 +31,8 @@
   },
   "knownCardIds": ["001", "002"],
   "dataVersion": "20260910",
-  "pendingResult": null
+  "pendingResult": null,
+  "titlesCelebrated": null
 }
 ```
 
@@ -56,6 +57,7 @@
 | `knownCardIds` | 前回起動時に見えていた公開カードID。差分が新カード通知になる |
 | `dataVersion` | 最後に読んだ公開データのバージョン |
 | `pendingResult` | 未確認のガチャ結果（**すでに確定・保存済み**）。結果画面を閉じると null |
+| `titlesCelebrated` | 獲得の演出を見せた称号の名前（v1.46）。null は記録を始める前で、はじめて確かめたときに、その時点で持っている称号（見せていないコンプリートを除く）を入れる |
 
 ## 壊れたデータへの備え
 

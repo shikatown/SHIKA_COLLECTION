@@ -228,8 +228,14 @@ a{color:var(--accent)}
 .hometitle:active{transform:scale(.96)}
 .hometitle__ring{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#f1eee7;border:2px solid var(--line)}
 .hometitle__ring img{width:31px;height:31px;object-fit:contain;display:block;filter:grayscale(1) opacity(.45)}
-.hometitle--complete.is-snapped .hometitle__ring{animation:titleSnap .55s cubic-bezier(.2,1.6,.35,1)}
-.hometitle--complete.is-snapped{animation:titleGlow 1.4s ease-out}
+.hometitle__ring{position:relative}
+.hometitle.is-snapped .hometitle__ring{animation:titleSnap .55s cubic-bezier(.2,1.6,.35,1);will-change:transform}
+.hometitle.is-snapped .hometitle__ring::after{
+  content:"";position:absolute;inset:-4px;border-radius:50%;pointer-events:none;
+  border:3px solid rgba(242,182,50,.9);box-shadow:0 0 12px rgba(255,208,90,.8);
+  animation:titleRing .9s cubic-bezier(.15,.7,.3,1) both;will-change:transform,opacity;
+}
+@keyframes titleRing{0%{opacity:1;transform:scale(.8)}100%{opacity:0;transform:scale(2.3)}}
 .hometitle.is-on{background:var(--coin-soft);border-color:#efe1c2}
 .hometitle.is-on .hometitle__ring{background:#fff;border-color:#e3c789}
 .hometitle.is-on .hometitle__ring img{filter:none}
@@ -242,11 +248,11 @@ a{color:var(--accent)}
 
 /* 称号を押したときの案内（js/titles.js の openTitleDialog） */
 .titledlg{text-align:center}
-.titledlg__medal{width:104px;height:104px;margin:0 auto 6px;border-radius:50%;display:grid;place-items:center;background:#f1eee7;border:3px solid var(--line)}
-.titledlg__medal img{width:84px;height:84px;object-fit:contain;display:block;filter:grayscale(1) opacity(.5)}
+.titledlg__medal{width:min(172px,46vw);height:min(172px,46vw);margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;background:#f1eee7;border:3px solid var(--line)}
+.titledlg__medal img{width:88%;height:88%;object-fit:contain;display:block;filter:grayscale(1) opacity(.5)}
 .titledlg__medal.is-on{background:#fff;border-color:#e3c789;box-shadow:0 2px 10px rgba(184,134,43,.25)}
 .titledlg__medal.is-on img{filter:none}
-.titledlg__q{font-size:22px;font-weight:900;color:#b9b2a5}
+.titledlg__q{font-size:30px;font-weight:900;color:#b9b2a5}
 .titledlg__state{display:inline-block;margin:0 0 10px;padding:2px 12px;border-radius:999px;background:#eeeae2;color:var(--ink-3);font-size:12px;font-weight:800}
 .titledlg__state.is-on{background:var(--coin-soft);color:var(--coin)}
 .titledlg__h{margin:4px 0 4px;font-size:12px;color:var(--ink-3);text-align:left}
@@ -1148,21 +1154,19 @@ a{color:var(--accent)}
   opacity:0;transition:opacity .35s ease;
 }
 .titlefly.is-in .titlefly__veil{opacity:1}
-/* 枠へ飛ぶあいだと、はまった直後は、幕を下ろしたまま枠のところだけ丸く照らす */
-.titlefly.is-fly .titlefly__veil{
-  opacity:1;
-  background:radial-gradient(circle at var(--hx,50%) var(--hy,50%),
-    rgba(10,8,4,0) 0 var(--hr,80px),
-    rgba(10,8,4,.45) calc(var(--hr,80px) + 10px),
-    rgba(10,8,4,.84) calc(var(--hr,80px) + 60px));
+.titlefly__veil,.titlefly__spot{will-change:opacity}
+/* 枠へ飛ぶあいだと、はまった直後は、枠のところだけ丸く照らす。
+   幕のグラデーションを描き直すと重いので、丸い部品（まわりは大きな影で暗くする）を透明度だけで入れ替える */
+.titlefly__spot{
+  position:absolute;left:50%;top:50%;width:120px;height:120px;border-radius:50%;
+  transform:translate(-50%,-50%);opacity:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,226,140,.1) 0 48%,rgba(10,8,4,.5) 62%,rgba(10,8,4,.84) 70.7%);
+  box-shadow:0 0 0 250vmax rgba(10,8,4,.84);
+  transition:opacity .45s ease;
 }
-.titlefly.is-landed .titlefly__veil{
-  background:radial-gradient(circle at var(--hx,50%) var(--hy,50%),
-    rgba(255,226,140,.18) 0 var(--hr,80px),
-    rgba(10,8,4,.45) calc(var(--hr,80px) + 10px),
-    rgba(10,8,4,.84) calc(var(--hr,80px) + 60px));
-}
-.titlefly.is-out .titlefly__veil{opacity:0;transition:opacity .5s ease}
+.titlefly.is-fly .titlefly__veil{opacity:0;transition:opacity .45s ease}
+.titlefly.is-fly .titlefly__spot{opacity:1}
+.titlefly.is-out .titlefly__veil,.titlefly.is-out .titlefly__spot{opacity:0;transition:opacity .5s ease}
 /* 幕の下にある称号の枠をタップで邪魔しないよう、はまったあとは幕を素通しにする */
 .titlefly.is-landed{pointer-events:none}
 .titlefly__rays{
@@ -1174,14 +1178,16 @@ a{color:var(--accent)}
   mask-image:radial-gradient(circle,#000 0 18%,transparent 52%);
 }
 .titlefly.is-reveal .titlefly__rays{opacity:1;transform:scale(1);animation:titleRays 9s linear infinite}
-.titlefly.is-fly .titlefly__rays{opacity:0}
+.titlefly__rays{will-change:transform,opacity}
+/* 飛ぶあいだは光を止めて消す（回したままだと、飛ぶ動きと描き直しが重なってカクつく） */
+.titlefly.is-fly .titlefly__rays{opacity:0;animation-play-state:paused;transition:opacity .25s ease}
 @keyframes titleRays{to{transform:scale(1) rotate(360deg)}}
 
 .titlefly__badge{
   --size:min(72vw,46svh,320px);
   position:absolute;left:50%;top:45%;width:var(--size);height:var(--size);
   margin:calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
-  transform:scale(.2);opacity:0;
+  transform:scale(.2);opacity:0;will-change:transform,opacity;
   transition:transform .55s cubic-bezier(.2,1.5,.4,1), opacity .25s ease;
 }
 .titlefly.is-in .titlefly__badge{transform:scale(1);opacity:1}
@@ -1193,6 +1199,8 @@ a{color:var(--accent)}
 .titlefly__face--back span{font-size:calc(var(--size) * .16);font-weight:900;color:#7a5200;letter-spacing:.06em}
 .titlefly__face--front{visibility:hidden}
 .titlefly__face--front img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 30px rgba(0,0,0,.45))}
+/* 志賀町ファンクラブの絵は四隅が白い正方形なので、丸く切り抜く */
+.titlefly__face--front.is-round img{border-radius:50%}
 /* 回る：横につぶして戻す、を3回。最後に表になる */
 .titlefly.is-spin .titlefly__badge{animation:titleSpin 1.5s cubic-bezier(.45,.05,.55,.95) both}
 .titlefly.is-spin .titlefly__face--back{animation:titleFaceBack 1.5s linear both}
@@ -1223,12 +1231,11 @@ a{color:var(--accent)}
   40%{transform:scale(1.02)}
   100%{transform:scale(1.06)}
 }
-/* 枠へ飛ぶ */
-.titlefly.is-fly .titlefly__badge{
-  animation:none;
-  transform:translate(var(--fx,0),var(--fy,0)) scale(var(--fs,.3));
-  transition:transform .62s cubic-bezier(.55,0,.2,1);
-}
+/* 枠へ飛ぶ（動きは js/title-complete.js が Web Animations で付ける） */
+.titlefly.is-fly .titlefly__badge{animation:none}
+/* 飛ぶあいだは影を外す（影付きの絵を縮めながら描き直すと重い） */
+.titlefly.is-fly .titlefly__face--front img{filter:none}
+.titlefly.is-fly .titlefly__sparks{display:none}
 .titlefly.is-out .titlefly__badge{opacity:0;transition:opacity .3s ease}
 
 .titlefly__sparks{position:absolute;left:50%;top:45%;width:0;height:0}

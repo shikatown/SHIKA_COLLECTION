@@ -10,7 +10,7 @@ import { coinCfg } from './rewards.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
-import { maybeCelebrateComplete } from './title-complete.js';
+import { maybeCelebrateTitles } from './title-complete.js';
 import { showGuide } from './guide.js';
 
 /* 地図の絞り込み。モデルコースは、巡る順に並べたカード番号 */
@@ -536,8 +536,8 @@ async function runCheckIn(view, status, btn) {
   vibrate([20, 50, 30]);
   await showCheckinResult(res);
   renderMap(view, null);
-  // 最後のスポットでそろったら、称号「志賀町コンプリート」の獲得演出へ
-  maybeCelebrateComplete();
+  // チェックインで称号がそろったら、獲得演出へ
+  maybeCelebrateTitles();
 }
 
 function showCheckinResult(res) {

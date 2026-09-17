@@ -19,7 +19,7 @@ import { maybeSuggestBackup } from './backup.js';
 import { dailyAvailable } from './rewards.js';
 import { createOpening } from './opening.js';
 import { thumbUrl } from './card-render.js';
-import { maybeCelebrateComplete } from './title-complete.js';
+import { maybeCelebrateTitles } from './title-complete.js';
 import { titleRow } from './titles.js';
 
 /* ===== 動作環境の確認 ===== */
@@ -105,8 +105,10 @@ async function boot() {
 
   // 「スタート」か「スキップ」を押すまで待つ
   await opening.done;
+  // 「スタート」を押したら、どの画面のアドレスで開いても必ずホームから始める
+  if (location.hash !== '#/home') router.go('#/home', true);
   document.getElementById('boot').hidden = true;
-  setTimeout(maybeCelebrateComplete, 450);
+  setTimeout(maybeCelebrateTitles, 450);
 
   // 起動後のお知らせ類（順番に1つずつ）
   await offerDaily();
@@ -271,8 +273,8 @@ function onRouteChange(route) {
   // 画面が出そろってから戻すと、持ち上がりが最後まで見える
   requestAnimationFrame(() => requestAnimationFrame(unpopTabs));
   updateChrome();
-  // 「志賀町コンプリート」を達成していたら、画面が落ち着いてから獲得演出を出す（1回だけ）
-  setTimeout(maybeCelebrateComplete, 450);
+  // 称号を獲得していたら、画面が落ち着いてから獲得演出を出す（称号ごとに1回だけ）
+  setTimeout(maybeCelebrateTitles, 450);
   // 日付が変わっていたら、ログインボーナスを受け取る（開いたまま日をまたいだとき用）
   maybeDailyBonus();
 }

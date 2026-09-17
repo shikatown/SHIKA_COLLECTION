@@ -16,8 +16,21 @@ import { FANCLUB_TITLE, FANCLUB_ICON, FANCLUB_IMAGE, isFanclubMember, fanclubBut
 import { toast } from './ui.js';
 
 /**
+ * その称号の獲得演出を見せたか（js/title-complete.js）。
+ * 記録を始める前（titlesCelebrated が無い）は、コンプリート以外は見せたことにする（すぐに記録が作られる）。
+ */
+export function titleCelebrated(name) {
+  const s = app.state;
+  if (!s) return true;
+  if (name === COMPLETE_TITLE && s.flags.completeCelebrated) return true;
+  if (!Array.isArray(s.titlesCelebrated)) return name !== COMPLETE_TITLE;
+  return s.titlesCelebrated.includes(name);
+}
+
+/**
  * 称号の一覧と、それぞれの進み具合。
  * @returns {Array<{key,name,icon,big,earned,shown,kind,label,owned,total,visited,spots}>}
+ *   on    = 獲得して、演出も見せた（枠を「獲得済み」の見た目にする。演出の前は未獲得の見た目のまま）
  *   shown = 絵を見せてよいか（志賀町コンプリートは獲得の演出を見るまで「？？？」）
  */
 export function titleInfos() {
@@ -48,7 +61,10 @@ export function titleInfos() {
     icon: './assets/icons/title-complete.png', big: ['./assets/icons/title-complete.png'],
     earned: done, owned: allOwned, total: allTotal, visited: v.visited, spots: v.total,
   });
-  for (const t of list) t.shown = t.kind === 'complete' ? (t.earned && app.state.flags.completeCelebrated) : true;
+  for (const t of list) {
+    t.on = t.earned && titleCelebrated(t.name);
+    t.shown = t.kind === 'complete' ? t.on : true;
+  }
   return list;
 }
 
@@ -127,7 +143,8 @@ export function openTitleDialog(t) {
       onJoined: (first) => {
         closeDialog();
         if (first) toast(`称号「${FANCLUB_TITLE}」を獲得しました！ ミッションでコインも受け取れます`, 4200);
-        if (location.hash === '#/home' || location.hash === '' || location.hash === '#/') go('#/home', true);
+        // 画面を描き直すと、称号の獲得演出が出る（LINE から戻ってきてから）
+        go(location.hash || '#/home', true);
       },
     }));
   } else if (!t.earned) {
@@ -173,8 +190,8 @@ export function titleRow() {
   const row = el('div', { class: 'hometitles__row' });
   for (const t of list) {
     const b = el('button', {
-      class: `hometitle${t.kind === 'complete' ? ' hometitle--complete' : ''}${t.earned && t.shown ? ' is-on' : ''}`,
-      attrs: { type: 'button', 'aria-label': `称号「${t.name}」${t.earned ? '（獲得済み）' : ''}。押すと獲得条件を表示` },
+      class: `hometitle${t.kind === 'complete' ? ' hometitle--complete' : ''}${t.on ? ' is-on' : ''}`,
+      attrs: { type: 'button', 'data-title': t.name, 'aria-label': `称号「${t.name}」${t.earned ? '（獲得済み）' : ''}。押すと獲得条件を表示` },
     });
     const ring = el('span', { class: 'hometitle__ring' });
     if (t.shown) ring.append(el('img', { attrs: { src: t.icon, alt: '', decoding: 'async' } }));
