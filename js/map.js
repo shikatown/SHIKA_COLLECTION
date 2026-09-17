@@ -3,8 +3,8 @@
    利用条件により、画面のすみに出典（© OpenStreetMap contributors）を必ず出す。
    経路・所要時間・ナビは Google Maps へ外部リンクで渡す。 */
 
-import { app, isVisited, isOwned, gpsCards, mapCards, commit } from './state.js';
-import { el, clear, toast, dialog, confirm2, externalLink, mapsSearchUrl, mapsRouteUrl, cardFace, vibrate, pinIcon, checkIcon } from './ui.js';
+import { app, isVisited, mapCards, commit } from './state.js';
+import { el, clear, toast, dialog, cardFace, vibrate } from './ui.js';
 import * as geo from './geo.js';
 import { coinCfg } from './rewards.js';
 import { sfx, unlock } from './sound.js';
@@ -12,6 +12,26 @@ import { go } from './router.js';
 import { openViewer } from './card-3d.js';
 import { maybeCelebrateComplete } from './title-complete.js';
 import { showGuide } from './guide.js';
+
+/* 地図の絞り込み。モデルコースは、巡る順に並べたカード番号 */
+const MAP_FILTERS = [
+  { key: 'all', label: 'すべて' },
+  { key: 'unvisited', label: '未訪問' },
+  { key: 'visited', label: '訪問済み' },
+  { key: 'history', label: '歴史と絶景を巡るモデルコース', ids: ['045', '041', '036', '035', '042', '046'] },
+  { key: 'scenic', label: '絶景スポットを巡るモデルコース', ids: ['043', '041', '038', '037', '036', '035', '033', '034'] },
+];
+let mapFilter = 'all';   // 画面を移っても覚えておく
+
+/** 絞り込みに当てはまるスポット */
+function filteredSpots(key) {
+  const all = mapCards();
+  const f = MAP_FILTERS.find((x) => x.key === key) || MAP_FILTERS[0];
+  if (f.ids) return f.ids.map((id) => all.find((c) => c.id === id)).filter(Boolean);
+  if (key === 'unvisited') return all.filter((c) => c.gps.enabled && !isVisited(c.id));
+  if (key === 'visited') return all.filter((c) => isVisited(c.id));
+  return all;
+}
 
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTR = 'OpenStreetMap contributors';
@@ -230,6 +250,34 @@ export function createMap(container, { center, zoom }) {
       schedule();
       return node;
     },
+    /** ピンを全部はずす（絞り込みを変えたとき） */
+    clearMarkers() {
+      for (const m of markers) m.node.remove();
+      markers = [];
+      schedule();
+    },
+    /** いくつかの地点が全部入るように、真ん中と拡大を合わせる（近づきすぎないよう 15 まで） */
+    fitBounds(points, pad = 36) {
+      if (!points.length) return;
+      const { w, h } = size();
+      const box = (nz) => {
+        const ps = points.map((p) => project(p.lat, p.lng, nz));
+        const xs = ps.map((p) => p.x);
+        const ys = ps.map((p) => p.y);
+        return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+      };
+      let nz = Math.min(15, MAX_Z);
+      for (; nz > MIN_Z; nz -= 1) {
+        const b = box(nz);
+        // ピンは先が地点を指して上に伸びるので、上は多めにあける
+        if (b.maxX - b.minX <= w - pad * 2 && b.maxY - b.minY <= h - pad * 2 - 30) break;
+      }
+      const b = box(nz);
+      z = nz;
+      c = { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 - 15 };
+      tilesLayer.replaceChildren();
+      schedule();
+    },
     setMe(lat, lng) {
       if (!me) { me = { node: el('div', { class: 'map__me' }) }; markerLayer.append(me.node); }
       me.lat = lat; me.lng = lng;
@@ -251,25 +299,62 @@ export function renderMap(view, params) {
   clear(view);
   if (mapApi) { mapApi.destroy(); mapApi = null; }
 
-  // 見出しはアプリバーに出ているので、ここでは繰り返さない（訪問数のバーは v1.40.1 で外した）
-  const head = el('div', { style: { marginBottom: '12px' } });
-  head.append(el('p', { class: 'muted', style: { margin: 0 }, text: '石川県志賀町' }));
-  view.append(head);
+  /* 絞り込み（横にスクロールできるボタン）。選んだものに当てはまるスポットのピンだけを地図に出す。
+     ピンは今までどおり、訪問済みは金の星、まだの所はピン。 */
+  const chips = el('div', { class: 'tabs mapfilter', attrs: { role: 'group', 'aria-label': 'スポットを絞り込む' } });
+  view.append(chips);
 
   const box = el('div', { class: 'mapwrap' });
   view.append(box);
+  const empty = el('div', { class: 'map__empty', attrs: { hidden: '' } });
 
   const cfg = app.config || {};
-  mapApi = createMap(box, { center: cfg.mapCenter || { lat: 37.1057, lng: 136.7376 }, zoom: cfg.mapZoom || 11 });
-  for (const c of mapCards()) {
-    const visited = isVisited(c.id);
-    const target = c.gps.enabled;
-    mapApi.addMarker(c.gps.lat, c.gps.lng, {
-      color: target ? '#2f6f8f' : '#a29a8c',
-      star: visited,
-      label: c.name,
-      onClick: () => go(`#/card/${c.id}`),
+  const home = cfg.mapCenter || { lat: 37.1057, lng: 136.7376 };
+  mapApi = createMap(box, { center: home, zoom: cfg.mapZoom || 11 });
+  box.append(empty);
+
+  const drawPins = (fit) => {
+    mapApi.clearMarkers();
+    const list = filteredSpots(mapFilter);
+    for (const c of list) {
+      mapApi.addMarker(c.gps.lat, c.gps.lng, {
+        color: c.gps.enabled ? '#2f6f8f' : '#a29a8c',
+        star: isVisited(c.id),
+        label: c.name,
+        onClick: () => go(`#/card/${c.id}`),
+      });
+    }
+    empty.hidden = list.length > 0;
+    empty.textContent = mapFilter === 'visited' ? 'まだ訪問したスポットはありません' : 'すべてのスポットを訪問しました！';
+    if (!fit) return;
+    // 「すべて」はいつもの位置。ほかは選んだピンが全部入るように合わせる
+    if (mapFilter === 'all' || !list.length) mapApi.setCenter(home.lat, home.lng, cfg.mapZoom || 11);
+    else mapApi.fitBounds(list.map((c) => ({ lat: c.gps.lat, lng: c.gps.lng })));
+  };
+
+  const chipBtns = MAP_FILTERS.map((f) => {
+    const b = el('button', {
+      class: `chip${mapFilter === f.key ? ' is-active' : ''}`,
+      attrs: { type: 'button', 'aria-pressed': String(mapFilter === f.key) },
+      text: f.label,
     });
+    b.addEventListener('click', () => {
+      mapFilter = f.key;
+      chipBtns.forEach((x, i) => {
+        const on = MAP_FILTERS[i].key === mapFilter;
+        x.classList.toggle('is-active', on);
+        x.setAttribute('aria-pressed', String(on));
+      });
+      b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+      drawPins(true);
+    });
+    chips.append(b);
+    return b;
+  });
+  drawPins(mapFilter !== 'all');
+  if (mapFilter !== 'all') {
+    const active = chipBtns[MAP_FILTERS.findIndex((f) => f.key === mapFilter)];
+    if (active) requestAnimationFrame(() => active.scrollIntoView({ block: 'nearest', inline: 'center' }));
   }
   const me = geo.myPosition();
   if (me) mapApi.setMe(me.lat, me.lng);
@@ -288,11 +373,6 @@ export function renderMap(view, params) {
   });
   view.append(btn);
 
-  /* スポットの一覧は、あとから作り直せるように囲んでおく。
-     チェックインで現在地が分かると、近い順に並べ替えるため。 */
-  const lists = el('div', { class: 'spotlists' });
-  view.append(lists);
-  fillSpotLists(lists);
 
   if (params && params.checkin) setTimeout(() => runCheckIn(view, status, btn), 60);
 
@@ -302,73 +382,11 @@ export function renderMap(view, params) {
     title: 'まち巡りのあそびかた',
     lines: [
       '地図のピンが、チェックインできるスポットです。',
+      '上のボタンで、未訪問・訪問済み・モデルコースのスポットに絞り込めます。',
       'スポットの近くで「近くのスポットを探す」を押すと、チェックインして SHIKA COIN がもらえます。',
       '行った場所は、金の星に変わります。',
     ],
   });
-}
-
-/** スポットの一覧を作り直す。現在地が分かっていれば近い順に並ぶ。 */
-function fillSpotLists(lists) {
-  clear(lists);
-  lists.append(listSection('未訪問', gpsCards().filter((c) => !isVisited(c.id))));
-  lists.append(listSection('訪問済み', gpsCards().filter((c) => isVisited(c.id))));
-
-  const other = mapCards().filter((c) => !c.gps.enabled);
-  if (other.length) {
-    lists.append(el('h3', { text: '地図に載っている場所（チェックイン対象外）' }));
-    const p = el('div', { class: 'panel' });
-    for (const c of other) p.append(spotRow(c, false));
-    lists.append(p);
-  }
-}
-
-/** いま出ているスポットの一覧を作り直す。 */
-function refreshSpotLists(view) {
-  const lists = view.querySelector('.spotlists');
-  if (lists) fillSpotLists(lists);
-}
-
-function listSection(title, list) {
-  const sec = el('div');
-  sec.append(el('h3', { text: `${title}（${list.length}）` }));
-  const p = el('div', { class: 'panel' });
-  if (!list.length) p.append(el('p', { class: 'muted', style: { margin: 0 }, text: '—' }));
-  const withDist = list.map((c) => ({ c, d: geo.distanceFromMe(c.gps.lat, c.gps.lng) }));
-  if (geo.hasFix()) withDist.sort((a, b) => (a.d ?? Infinity) - (b.d ?? Infinity));
-  withDist.forEach(({ c, d }, i) => {
-    p.append(spotRow(c, isVisited(c.id), d, geo.hasFix() && title === '未訪問' && i < 3));
-  });
-  sec.append(p);
-  return sec;
-}
-
-function spotRow(c, visited, dist = null, highlight = false) {
-  const row = el('div', { class: 'spotrow' });
-  /* 目印は、まだならタブと同じピン、行ったならミッション達成と同じ「✓」。
-     近い順の上位は、ピンを少し目立たせる。 */
-  const mark = el('div', {
-    class: `spotrow__i${visited ? ' spotrow__i--done' : ''}${!visited && highlight ? ' spotrow__i--near' : ''}`,
-  });
-  mark.append(visited ? checkIcon() : pinIcon());
-  row.append(mark);
-  const t = el('div', { class: 'spotrow__t' });
-  t.append(el('div', { class: 'spotrow__n', text: c.name }));
-  const sub = [];
-  if (dist != null) sub.push(`${geo.formatDistance(dist)}（直線・目安）`);
-  if (!c.gps.enabled) sub.push('チェックイン対象外');
-  t.append(el('div', { class: 'spotrow__d', text: sub.join(' / ') }));
-  row.append(t);
-  if (c.gps.lat != null) {
-    const a = externalLink('経路', mapsRouteUrl(c.gps.lat, c.gps.lng), 'spotrow__go');
-    if (a) {
-      a.title = '経路検索（Googleマップ）';
-      a.addEventListener('click', (e) => e.stopPropagation());   // 行のタップに吸われないように
-      row.append(a);
-    }
-  }
-  row.addEventListener('click', () => go(`#/card/${c.id}`));
-  return row;
 }
 
 /* ===== チェックイン ===== */
@@ -496,7 +514,6 @@ async function runCheckIn(view, status, btn) {
     sfx.error();
     const retry = await geoFailDialog('inaccurate');
     if (!btn.isConnected) return;   // 案内を見ているあいだに別の画面へ移った
-    refreshSpotLists(view);
     if (retry) return runCheckIn(view, status, btn);
     return;
   }
@@ -515,7 +532,6 @@ async function runCheckIn(view, status, btn) {
       actions: [{ label: '閉じる', value: null, primary: true }],
     });
     showNearest(view, res.nearest);
-    refreshSpotLists(view);   // 現在地が分かったので、近い順に並べ直す
     return;
   }
 

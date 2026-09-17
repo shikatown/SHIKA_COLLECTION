@@ -12,6 +12,7 @@ import { el, clear, toast, vibrate, coinIcon } from './ui.js';
 import { coinCfg, titles, COMPLETE_TITLE, loginInfo } from './rewards.js';
 import { shareImage, prepareShareImage, SHARE_ICON } from './share.js';
 import { titleImage } from './share-image.js';
+import { titleInfos, openTitleDialog } from './titles.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
 import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
@@ -461,6 +462,21 @@ function shareTitleButton(name, icons) {
 function titlesPanel() {
   const got = titles();
   const box = el('div', { class: 'panel titlegrid' });
+  // 称号を押すと、獲得条件・あといくつか・ガチャ／マップへの案内・シェアを出す（js/titles.js）
+  const infos = new Map(titleInfos().map((t) => [t.name, t]));
+  const tappable = (node, name) => {
+    node.classList.add('is-tap');
+    node.setAttribute('role', 'button');
+    node.setAttribute('tabindex', '0');
+    node.setAttribute('aria-label', `称号「${name}」。押すと獲得条件を表示`);
+    const open = (e) => {
+      if (e.target.closest('.titlebadge__share')) return;   // シェアのボタンはそのまま
+      const t = infos.get(name);
+      if (t) openTitleDialog(t);
+    };
+    node.addEventListener('click', open);
+    node.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(e); } });
+  };
   // big はシェアの絵に使う大きい絵（先に読めたもの）
   const all = [
     ...CATEGORIES.map((x) => ({ name: x.master, icon: `./assets/frames/thumb/icon-${x.key}.png`, big: [`./assets/frames/icon-${x.key}.png`] })),
@@ -475,6 +491,7 @@ function titlesPanel() {
     b.append(el('div', { class: 'titlebadge__n', text: name }));
     b.append(el('div', { class: 'titlebadge__s', text: on ? '達成' : '未達成' }));
     if (on) b.append(shareTitleButton(name, big));
+    tappable(b, name);
     box.append(b);
   }
 
@@ -491,6 +508,7 @@ function titlesPanel() {
   c.append(el('div', { class: 'titlebadge__n', text: COMPLETE_TITLE }));
   c.append(el('div', { class: 'titlebadge__s', text: done ? '達成' : 'すべてのカードとチェックインで獲得' }));
   if (done) c.append(shareTitleButton(COMPLETE_TITLE, ['./assets/icons/title-complete.png']));
+  tappable(c, COMPLETE_TITLE);
   box.append(c);
   return box;
 }

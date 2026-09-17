@@ -20,6 +20,7 @@ import { dailyAvailable } from './rewards.js';
 import { createOpening } from './opening.js';
 import { thumbUrl } from './card-render.js';
 import { maybeCelebrateComplete } from './title-complete.js';
+import { titleRow } from './titles.js';
 
 /* ===== 動作環境の確認 ===== */
 function unsupportedReason() {
@@ -324,11 +325,12 @@ function renderHome(view) {
   hero.append(homeVideo());
   view.append(hero);
 
-  /* 持っているカードを1枚ずつ大きく見せる。5秒ごとに入れ替え、
-     最近手に入れたカードほど出やすくする。押すとそのカードの詳細へ。
-     大きさはガチャ画面のカードと同じ（画面の高さの46%まで）。 */
+  /* 動画の下に、最近手に入れたカードを3枚ならべる（10秒ごとに入れ替え、押すと詳細へ）。
+     初めての人はまだカードが無いので、代わりに「10連ガチャ」のポップ。
+     その下に称号をならべる（押すと獲得条件とあといくつかを出す）。画面の高さに収めて、スクロールさせない。 */
   const main = el('div', { class: 'home__main' });
-  main.append(first ? firstGachaPop() : homeShowcase());
+  main.append(first ? firstGachaPop() : homeTrio());
+  main.append(titleRow());
 
   // SNSでシェアは、カード画面のコレクション欄へ移した（js/collection.js）。ここはカードを大きく見せる
 
@@ -455,58 +457,74 @@ function firstGachaPop() {
 }
 
 /* ===== ホームのカード ===== */
-const SHOWCASE_MS = 5000;   // 次のカードに入れ替えるまで
-let showcaseTimer = 0;
+/* ===== ホームのカード（3枚） =====
+   はじめは新しく手に入れた順に3枚。10秒ごとに、前と違うカードを優先して3枚えらび直す。
+   新しく手に入れたカードほど出やすい（いちばん新しい6枚は4倍、次の9枚は2倍）。
+   持っているカードが3枚以下のときは入れ替えない。足りない枠はカードの裏（押すとガチャへ）。 */
+const TRIO_MS = 10000;
+let trioTimer = 0;
 
-/** ホームに大きく出すカードの置き場。持っていなければカードの裏（押すとガチャへ）。 */
-function homeShowcase() {
-  clearInterval(showcaseTimer);
-  const box = el('div', { class: 'showcase' });
+function homeTrio() {
+  clearInterval(trioTimer);
+  const box = el('div', { class: 'trio' });
   const owned = publishedCards().filter((c) => isOwned(c.id));
-  if (!owned.length) {
-    const back = el('button', { class: 'showcase__card', attrs: { type: 'button', 'aria-label': 'ガチャを引く' } }, [cardBack()]);
-    back.addEventListener('click', () => router.go('#/gacha'));
-    box.append(back);
-    return box;
-  }
-
-  // 新しく手に入れた順。上位ほど出やすい重みを付ける（いちばん新しい5枚は4倍、次の10枚は2倍）
   const at = app.state.obtainedAt || {};
   const sorted = owned.slice().sort((a, b) => String(at[b.id] || '').localeCompare(String(at[a.id] || '')));
-  const weight = (i) => (i < 5 ? 4 : (i < 15 ? 2 : 1));
-  let current = null;
-  const pickNext = () => {
-    const pool = sorted.length > 1 ? sorted.filter((c) => c !== current) : sorted;
-    const total = pool.reduce((a, c) => a + weight(sorted.indexOf(c)), 0);
-    let r = Math.random() * total;
-    for (const c of pool) { r -= weight(sorted.indexOf(c)); if (r <= 0) return c; }
-    return pool[pool.length - 1];
-  };
+  const slots = [0, 1, 2].map(() => {
+    const s = el('div', { class: 'trio__slot' });
+    box.append(s);
+    return s;
+  });
 
-  const show = (card, first) => {
+  const put = (slot, card, first, delay) => {
     const btn = el('button', {
-      class: `showcase__card${first ? ' is-in' : ''}`,
-      attrs: { type: 'button', 'aria-label': `${card.name} の詳細を見る` },
-    }, [cardFace(card)]);
-    btn.addEventListener('click', () => router.go(`#/card/${card.id}`));
-    const old = box.querySelector('.showcase__card:not(.is-out)');
-    box.append(btn);
-    if (!first) requestAnimationFrame(() => requestAnimationFrame(() => btn.classList.add('is-in')));
-    if (old) {
-      old.classList.add('is-out');
-      setTimeout(() => old.remove(), 700);
-    }
-    current = card;
+      class: `trio__card${first ? ' is-in' : ''}`,
+      attrs: { type: 'button', 'aria-label': card ? `${card.name} の詳細を見る` : 'ガチャを引く' },
+    }, [card ? cardFace(card, { small: true }) : cardBack({ small: true })]);
+    btn.addEventListener('click', () => router.go(card ? `#/card/${card.id}` : '#/gacha'));
+    const old = slot.querySelector('.trio__card:not(.is-out)');
+    if (first) { slot.append(btn); return; }
+    setTimeout(() => {
+      if (!box.isConnected) return;
+      slot.append(btn);
+      requestAnimationFrame(() => requestAnimationFrame(() => btn.classList.add('is-in')));
+      if (old) {
+        old.classList.add('is-out');
+        setTimeout(() => old.remove(), 700);
+      }
+    }, delay);
   };
 
-  // 最初はいちばん新しいカードから
-  show(sorted[0], true);
-  showcaseTimer = setInterval(() => {
-    // ホームを離れたら止める
-    if (!box.isConnected) { clearInterval(showcaseTimer); return; }
+  let current = sorted.slice(0, 3);
+  slots.forEach((s, i) => put(s, current[i] || null, true, 0));
+  if (sorted.length <= 3) return box;
+
+  const weight = (c) => { const i = sorted.indexOf(c); return i < 6 ? 4 : (i < 15 ? 2 : 1); };
+  const takeWeighted = (pool) => {
+    const total = pool.reduce((a, c) => a + weight(c), 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < pool.length; i += 1) {
+      r -= weight(pool[i]);
+      if (r <= 0) return pool.splice(i, 1)[0];
+    }
+    return pool.pop();
+  };
+  const pickSet = () => {
+    const before = new Set(current.map((c) => c.id));
+    const chosen = [];
+    let pool = sorted.filter((c) => !before.has(c.id));          // まず前回と違うカードから
+    while (chosen.length < 3 && pool.length) chosen.push(takeWeighted(pool));
+    pool = sorted.filter((c) => !chosen.includes(c));             // 足りなければ前回のカードも
+    while (chosen.length < 3 && pool.length) chosen.push(takeWeighted(pool));
+    return chosen;
+  };
+
+  trioTimer = setInterval(() => {
+    if (!box.isConnected) { clearInterval(trioTimer); return; }   // ホームを離れたら止める
     if (document.hidden) return;
-    show(pickNext(), false);
-  }, SHOWCASE_MS);
+    current = pickSet();
+    slots.forEach((s, i) => put(s, current[i], false, i * 140));   // 左から少しずつずらして入れ替える
+  }, TRIO_MS);
   return box;
 }
 

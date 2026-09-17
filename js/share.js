@@ -22,9 +22,10 @@ function shareText() {
     : `志賀町をカードであつめよう！ #SHIKACOLLECTION #志賀町`;
 }
 
-export async function shareApp() {
+/** アプリをシェアする。text を渡すと、その文でシェアする（称号の「あと○種類！」など） */
+export async function shareApp(opts = {}) {
   const url = appUrl();
-  const text = shareText();
+  const text = opts.text || shareText();
 
   if (navigator.share) {
     try {
