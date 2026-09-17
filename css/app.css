@@ -261,17 +261,33 @@ a{color:var(--accent)}
 .titledlg__share svg{width:16px;height:16px;flex:none}
 /* ミッション画面の称号も押せる */
 .titlebadge.is-tap{cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* 志賀町ファンクラブ（js/fanclub.js・js/missions.js） */
+.missionrow.is-tap{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.fanclub{padding:10px 12px 12px;border-top:1px solid var(--line-2)}
+/* 称号の絵は丸く切り抜く（志賀町ファンクラブの絵は四隅が白い正方形なので、丸い枠の中に四角が見えないように） */
+.hometitle__ring img,.titledlg__medal img{border-radius:50%}
+.fanclub__text{margin:0 0 8px;font-size:12px;line-height:1.55;color:var(--ink-2)}
+.fanclub__btn{gap:6px;background:#06c755;border-color:#06c755;color:#fff;font-weight:800}
+.fanclub__btn svg{width:18px;height:18px;flex:none}
+.btn--primary.fanclub__btn{background:#06c755;border-color:#06c755}
+.fanclubhelp{text-align:left}
+.dialog .fanclubhelp p{margin:0 0 10px}
+.fanclubhelp__steps{margin:0 0 10px;padding:8px 12px 8px 2em;background:#f3f1ec;border-radius:10px;font-size:13px;line-height:1.6;color:var(--ink-2)}
+.dialog .fanclubhelp__note{font-size:12.5px;color:var(--ink-3)}
+.dialog .fanclubhelp__done{font-size:12.5px;font-weight:800;color:var(--accent)}
 .titlebadge.is-tap:active{transform:scale(.98)}
 
 /* まち巡り：絞り込みのボタンと、当てはまるスポットが無いときの知らせ */
 /* 3段：1段目は3つを同じ幅で、2段目・3段目はモデルコースを1つずつ。横にスクロールさせない。
    文字は、はみ出さない範囲で大きく。選んだボタンは「近くのスポットを探す」と同じ色 */
-.mapfilter{display:grid;gap:6px;margin:0 0 10px}
-.mapfilter__row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mapfilter{display:grid;gap:5px;margin:0 0 8px}
+.mapfilter__row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+/* v1.45：文字が大きすぎて画面がスクロールしていたので、文字と上下の余白を小さく */
 .mapchip{
   min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);
-  border-radius:999px;padding:9px 6px;cursor:pointer;
-  font:inherit;font-size:clamp(12.5px, 4vw, 16px);font-weight:700;line-height:1.2;
+  border-radius:999px;padding:6px 6px;cursor:pointer;
+  font:inherit;font-size:clamp(11.5px, 3.4vw, 13.5px);font-weight:700;line-height:1.2;
   white-space:nowrap;overflow:hidden;text-align:center;-webkit-tap-highlight-color:transparent;
 }
 .mapchip:active{transform:scale(.98)}
@@ -678,7 +694,10 @@ a{color:var(--accent)}
 
 /* ===== まち巡り ===== */
 .mapwrap{
-  position:relative;width:100%;height:min(58vh,420px);border-radius:var(--radius);
+  /* 画面に収まる高さ。上のおび・タブ・絞り込み（3段）・現在地の文・「近くのスポットを探す」・余白（合わせて約262px）を引く。
+     小さい画面でもスクロールしないよう縮め、220px より小さくはしない。大きい画面は 420px まで */
+  position:relative;width:100%;border-radius:var(--radius);
+  height:clamp(220px, calc(100svh - var(--appbar-h) - var(--tabbar-h) - 262px - env(safe-area-inset-bottom)), 420px);
   overflow:hidden;border:1px solid var(--line);background:#e8eae4;touch-action:none;
 }
 .map__tiles{position:absolute;inset:0;will-change:transform}

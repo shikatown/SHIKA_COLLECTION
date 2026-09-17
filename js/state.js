@@ -174,6 +174,7 @@ function withConfigDefaults(cfg) {
       allCards: count(ms.allCards, 30),          // すべてのカード
       visit: Object.keys(visit).length ? visit : { 1: 3, 5: 5, 10: 8 },   // チェックインの箇所数ごと
       visitAll: count(ms.visitAll, 15),          // すべての場所
+      fanclub: count(ms.fanclub, 10),            // 志賀町ファンクラブ会員になる
     },
     event: {
       enabled: ev.enabled === true,

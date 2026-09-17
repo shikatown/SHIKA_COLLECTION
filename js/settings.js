@@ -262,6 +262,7 @@ export function renderRecords(view) {
   // 称号ごとの絵。志賀町マスターは SHIKA COLLECTION のロゴを使う。
   const all = [
     ...CATEGORIES.map((c) => ({ name: c.master, icon: `./assets/frames/thumb/icon-${c.key}.png` })),
+    { name: '志賀町ファンクラブ', icon: './assets/icons/title-fanclub-sm.png' },
     { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png' },
   ];
   for (const { name, icon } of all) {

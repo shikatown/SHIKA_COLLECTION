@@ -8,12 +8,13 @@
    ・受け取った記録は state.rewardClaims.missions（ミッションの id の並び）。 */
 
 import { app, commit, saveOk, CATEGORIES, categoryStats } from './state.js';
-import { el, clear, toast, vibrate, coinIcon } from './ui.js';
+import { el, clear, toast, vibrate, coinIcon, dialog } from './ui.js';
 import { coinCfg, loginInfo } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
 import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
 import { showGuide } from './guide.js';
+import { FANCLUB_TITLE, isFanclubMember, fanclubButton } from './fanclub.js';
 
 /** ミッションの賞金。config.json の mission で上書きできる。 */
 function cfg() {
@@ -24,6 +25,7 @@ function cfg() {
     allCards: c.allCards != null ? c.allCards : 30,
     visit: c.visit || { 1: 3, 5: 5, 10: 8 },
     visitAll: c.visitAll != null ? c.visitAll : 15,
+    fanclub: c.fanclub != null ? c.fanclub : 10,
   };
 }
 
@@ -84,6 +86,13 @@ export function missions() {
       owned: v.visited, need: v.total, coins: k.visitAll,
     });
   }
+
+  // ④ 志賀町ファンクラブ（「ファンクラブに登録」ボタンを押したら達成。js/fanclub.js）
+  list.push({
+    id: 'fanclub', group: 'ファンクラブ',
+    label: '志賀町ファンクラブ会員になる',
+    owned: isFanclubMember() ? 1 : 0, need: 1, coins: k.fanclub,
+  });
 
   const claimed = app.state.rewardClaims.missions || [];
   for (const m of list) {
@@ -163,11 +172,18 @@ export function renderMissions(view) {
   view.append(loginPanel());
   view.append(head);
 
-  for (const group of ['カード', 'まち巡り']) {
+  for (const group of ['ファンクラブ', 'カード', 'まち巡り']) {
     const rows = list.filter((m) => m.group === group);
     if (!rows.length) continue;
     view.append(el('h3', { text: group }));
     const box = el('div', { class: 'panel missionlist' });
+    if (group === 'ファンクラブ') {
+      // ミッションの行（押すと説明）と、「ファンクラブに登録」ボタンをひとまとめに
+      for (const m of rows) box.append(row(m, view));
+      box.append(fanclubPanel(view));
+      view.append(box);
+      continue;
+    }
     // 受け取れるものを先に、次にこれから、最後に受け取り済み
     const rank = (m) => (m.done && !m.claimed ? 0 : (m.claimed ? 2 : 1));
     for (const m of rows.slice().sort((a, b) => rank(a) - rank(b) || a.need - b.need)) {
@@ -429,8 +445,64 @@ function celebrateLogin(panel, logo, still) {
   }, 2600);
 }
 
+/* ===== 志賀町ファンクラブ ===== */
+
+/** ファンクラブのミッションを押したときの説明 */
+function openFanclubHelp(view) {
+  const joined = isFanclubMember();
+  const body = el('div', { class: 'fanclubhelp' });
+  body.append(el('p', { text: 'LINE の「志賀町ファンクラブ」のページを開き、受信設定フォームから志賀町ファンクラブに登録してください。' }));
+  body.append(el('ol', { class: 'fanclubhelp__steps' }, [
+    el('li', { text: '下の「ファンクラブに登録」を押す（LINE が開きます）' }),
+    el('li', { text: 'LINE で友だち追加をする' }),
+    el('li', { text: '受信設定フォームで「志賀町ファンクラブ」を選んで登録する' }),
+  ]));
+  body.append(el('p', { class: 'fanclubhelp__note', text: `「ファンクラブに登録」を押すと、このミッションの達成になります（+${cfg().fanclub} SHIKA COIN）。称号「${FANCLUB_TITLE}」も獲得できます。` }));
+  if (joined) body.append(el('p', { class: 'fanclubhelp__done', text: '登録ボタンは押してあります。ミッションの報酬を受け取れます。' }));
+  body.append(fanclubButton({
+    label: joined ? 'ファンクラブのページを開く' : 'ファンクラブに登録（LINE が開きます）',
+    cls: 'btn btn--primary btn--block fanclub__btn',
+    onJoined: (first) => {
+      const b = [...document.querySelectorAll('#overlay .dialog__acts .btn')].find((x) => x.textContent === '閉じる');
+      if (b) b.click();
+      if (first) afterJoin(view);
+    },
+  }));
+  dialog({ title: '志賀町ファンクラブ会員になる', body: [body], actions: [{ label: '閉じる', value: null }] });
+}
+
+function afterJoin(view) {
+  toast(`ファンクラブに登録しました！ 称号「${FANCLUB_TITLE}」を獲得。ミッションの報酬を受け取れます`, 4200);
+  if (view.isConnected) renderMissions(view);
+}
+
+/** ミッションの下に置く、登録ボタンのまとまり */
+function fanclubPanel(view) {
+  const joined = isFanclubMember();
+  const p = el('div', { class: 'fanclub' });
+  p.append(el('p', {
+    class: 'fanclub__text',
+    text: joined
+      ? '登録ボタンは押してあります。LINE の受信設定フォームから、志賀町ファンクラブへの登録をお忘れなく。'
+      : 'LINE の受信設定フォームから志賀町ファンクラブに登録すると、ミッション達成と称号「志賀町ファンクラブ」をもらえます。',
+  }));
+  p.append(fanclubButton({
+    label: joined ? 'ファンクラブのページを開く' : 'ファンクラブに登録',
+    onJoined: (first) => { if (first) afterJoin(view); },
+  }));
+  return p;
+}
+
 function row(m, view) {
   const r = el('div', { class: `missionrow${m.claimed ? ' is-claimed' : ''}${m.done && !m.claimed ? ' is-ready' : ''}` });
+  if (m.id === 'fanclub') {
+    // 押すと、受信設定フォームから登録する方法を説明する（受け取るボタンはそのまま）
+    r.classList.add('is-tap');
+    r.setAttribute('role', 'button');
+    r.setAttribute('tabindex', '0');
+    r.addEventListener('click', (e) => { if (!e.target.closest('button, a')) openFanclubHelp(view); });
+    r.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === r) { e.preventDefault(); openFanclubHelp(view); } });
+  }
 
   const body = el('div', { class: 'missionrow__b' });
   body.append(el('div', { class: 'missionrow__n', text: m.label }));
@@ -441,6 +513,8 @@ function row(m, view) {
     d.append(el('span', { text: m.claimed ? '受け取り済み ／ ' : '達成 ／ ' }));
     d.append(coinIcon());
     d.append(el('span', { text: `+${m.coins} SHIKA COIN` }));
+  } else if (m.id === 'fanclub') {
+    d.append(el('span', { text: '受信設定フォームから登録 ／ タップで説明' }));
   } else {
     d.append(el('span', { text: `${m.owned} / ${m.need} ／ あと ${m.need - m.owned}` }));
   }

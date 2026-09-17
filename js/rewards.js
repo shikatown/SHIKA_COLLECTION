@@ -5,6 +5,7 @@
    ・カテゴリ収集       ミッション画面で受け取る（js/missions.js）
    ・現地訪問           初訪問 +3 / 再訪 1日1回 +1 / 町初訪問 +5（1回限り） */
 
+import { FANCLUB_TITLE, isFanclubMember } from './fanclub.js';
 import { app, commit, saveOk, todayKey, CATEGORIES, CATEGORY_LABEL, categoryStats, eventActive, publishedCards, isOwned, gpsCards, isVisited } from './state.js';
 
 export function coinCfg() {
@@ -156,6 +157,7 @@ export function isTownComplete() {
 export function titles() {
   const prog = categoryProgress();
   const list = prog.filter((p) => p.complete).map((p) => p.master);
+  if (isFanclubMember()) list.push(FANCLUB_TITLE);
   if (prog.length && prog.every((p) => p.complete)) list.push('志賀町マスター');
   if (isTownComplete()) list.push(COMPLETE_TITLE);
   return list;

@@ -234,6 +234,21 @@ function operations(pub) {
     },
   }));
 
+  // 志賀町ファンクラブの確認用（登録ボタンを押す前に戻す）
+  g.append(el('button', {
+    class: 'btn', attrs: { type: 'button' }, text: 'ファンクラブ登録を取り消す',
+    on: {
+      click: () => {
+        commit((s) => {
+          s.flags.fanclubJoined = false;
+          s.rewardClaims.missions = s.rewardClaims.missions.filter((id) => id !== 'fanclub');
+        });
+        toast('ファンクラブの登録とミッションの受け取りを取り消しました');
+        go('#/missions');
+      },
+    },
+  }));
+
   // 称号「志賀町コンプリート」の確認用
   g.append(el('button', {
     class: 'btn', attrs: { type: 'button' }, text: 'コンプリート演出を見る',

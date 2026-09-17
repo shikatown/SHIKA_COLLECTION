@@ -2,6 +2,7 @@
    ・いまの称号の状況（獲得したか・あといくつか）を1か所で数える
    ・称号を押すと、獲得条件・あといくつで獲得か・ガチャ／マップへの案内・SNSでシェアを出す
    称号の種類：グルメマスター／スポットマスター／文化マスター（そのジャンルのカードをすべて）、
+             志賀町ファンクラブ（LINE の志賀町ファンクラブに登録。js/fanclub.js）、
              志賀町マスター（すべてのカード）、志賀町コンプリート（すべてのカード＋すべてのスポットでチェックイン） */
 
 import { app, CATEGORIES } from './state.js';
@@ -11,6 +12,8 @@ import { visitStats } from './geo.js';
 import { shareImage, shareApp, prepareShareImage, SHARE_ICON } from './share.js';
 import { titleImage } from './share-image.js';
 import { go } from './router.js';
+import { FANCLUB_TITLE, FANCLUB_ICON, FANCLUB_IMAGE, isFanclubMember, fanclubButton } from './fanclub.js';
+import { toast } from './ui.js';
 
 /**
  * 称号の一覧と、それぞれの進み具合。
@@ -28,6 +31,12 @@ export function titleInfos() {
     icon: `./assets/frames/thumb/icon-${p.key}.png`, big: [`./assets/frames/icon-${p.key}.png`],
     earned: got.includes(p.master), owned: p.owned, total: p.total,
   }));
+  // 志賀町ファンクラブは、志賀町マスターの左（ホームでは2段目のいちばん左）
+  list.push({
+    key: 'fanclub', kind: 'fanclub', name: FANCLUB_TITLE,
+    icon: FANCLUB_ICON, big: [FANCLUB_IMAGE],
+    earned: isFanclubMember(), owned: 0, total: 0,
+  });
   list.push({
     key: 'master', kind: 'all', name: '志賀町マスター',
     icon: './assets/frames/thumb/logo.png', big: ['./assets/frames/web/logo.webp', './assets/frames/logo.png'],
@@ -46,6 +55,7 @@ export function titleInfos() {
 /** 獲得条件の文 */
 function conditionText(t) {
   if (t.kind === 'category') return `${t.label}のカードを、すべて（${t.total}種類）集める`;
+  if (t.kind === 'fanclub') return 'LINE の「志賀町ファンクラブ」のページを開き、受信設定フォームから志賀町ファンクラブに登録する';
   if (t.kind === 'all') return `${CATEGORIES.map((c) => c.label).join('・')}のカードを、すべて（${t.total}種類）集める`;
   return `すべてのカード（${t.total}種類）を集めて、すべてのスポット（${t.spots}か所）でチェックインする`;
 }
@@ -53,6 +63,7 @@ function conditionText(t) {
 /** あといくつで獲得か（獲得済みなら null） */
 function goalText(t) {
   if (t.earned) return null;
+  if (t.kind === 'fanclub') return 'ファンクラブに登録すると称号獲得！';
   const cards = Math.max(0, t.total - t.owned);
   if (t.kind !== 'complete') return `あと ${cards} 種類で称号獲得！`;
   const spots = Math.max(0, t.spots - t.visited);
@@ -100,7 +111,7 @@ export function openTitleDialog(t) {
 
   body.append(el('h4', { class: 'titledlg__h', text: '獲得条件' }));
   body.append(el('p', { class: 'titledlg__cond', text: conditionText(t) }));
-  body.append(bar('集めたカード', t.owned, t.total));
+  if (t.kind !== 'fanclub') body.append(bar('集めたカード', t.owned, t.total));
   if (t.kind === 'complete') body.append(bar('チェックインしたスポット', t.visited, t.spots));
 
   const goal = goalText(t);
@@ -108,7 +119,18 @@ export function openTitleDialog(t) {
   else body.append(el('p', { class: 'titledlg__goal is-on', text: 'おめでとうございます！ 称号を獲得しました' }));
 
   const acts = el('div', { class: 'titledlg__acts' });
-  if (!t.earned) {
+  if (!t.earned && t.kind === 'fanclub') {
+    // ファンクラブは、LINE のページを開くボタン。押すと登録したことにして、称号を獲得する
+    acts.append(fanclubButton({
+      label: 'ファンクラブに登録（LINE が開きます）',
+      cls: 'btn btn--primary btn--block fanclub__btn',
+      onJoined: (first) => {
+        closeDialog();
+        if (first) toast(`称号「${FANCLUB_TITLE}」を獲得しました！ ミッションでコインも受け取れます`, 4200);
+        if (location.hash === '#/home' || location.hash === '' || location.hash === '#/') go('#/home', true);
+      },
+    }));
+  } else if (!t.earned) {
     acts.append(el('button', {
       class: 'btn btn--primary btn--block', attrs: { type: 'button' }, text: 'ガチャを引いてカードを集める',
       on: { click: () => { closeDialog(); go('#/gacha'); } },
@@ -159,7 +181,7 @@ export function titleRow() {
     else ring.append(el('span', { class: 'hometitle__q', text: '？' }));
     b.append(ring);
     // 名前は「スポット／マスター」「志賀町／コンプリート」の2行にそろえる（細い画面で「ー」だけが次の行に落ちないように）
-    const cut = ['マスター', 'コンプリート'].find((w) => t.name.endsWith(w) && t.name.length > w.length);
+    const cut = ['マスター', 'コンプリート', 'ファンクラブ'].find((w) => t.name.endsWith(w) && t.name.length > w.length);
     const lines = cut ? [t.name.slice(0, -cut.length), cut] : [t.name];
     b.append(el('span', { class: 'hometitle__n' }, lines.map((x) => el('span', { text: x }))));
     b.addEventListener('click', () => openTitleDialog(t));
