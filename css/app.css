@@ -808,26 +808,110 @@ a{color:var(--accent)}
 
 /* ===== ログインボーナス（ミッション画面のいちばん上） =====
    SHIKA COLLECTION のロゴを、色の無い版の上に色つきの版を重ね、日数のぶんだけ左から見せる。 */
-.loginbonus{margin-bottom:14px;text-align:center}
-.loginbonus__logo{position:relative;width:min(62%,240px);aspect-ratio:3/2;margin:2px auto 6px}
-.loginbonus__logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
-.loginbonus__gray{filter:grayscale(1) opacity(.28)}
+.loginbonus{margin-bottom:14px;text-align:center;overflow:hidden}
+.loginbonus__logo{position:relative;width:min(78%,300px);aspect-ratio:3/2;margin:2px auto 6px}
+.loginbonus__stage{position:absolute;inset:0}
+.loginbonus__logo img,
+.loginbonus__canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.loginbonus__gray{filter:grayscale(1) opacity(.3)}
 .loginbonus__color{clip-path:inset(0 100% 0 0)}
 .loginbonus__color.is-grow{transition:clip-path 1.3s cubic-bezier(.3,.7,.2,1)}
+
+/* 今日の文字：光りながら大きめに出て、ぽんと収まる */
+.loginbonus__pop{opacity:0}
+.loginbonus__pop.is-on{animation:lbPop .95s cubic-bezier(.2,.9,.25,1.2) both}
+@keyframes lbPop{
+  0%  {opacity:0;transform:scale(1.9);filter:brightness(2.2) drop-shadow(0 0 0 rgba(255,214,74,0))}
+  35% {opacity:1;transform:scale(.9);filter:brightness(1.6) drop-shadow(0 0 14px rgba(255,214,74,.95))}
+  60% {transform:scale(1.08);filter:brightness(1.25) drop-shadow(0 0 10px rgba(255,214,74,.7))}
+  100%{opacity:1;transform:scale(1);filter:brightness(1) drop-shadow(0 0 0 rgba(255,214,74,0))}
+}
+.loginbonus__burst{position:absolute;width:0;height:0;pointer-events:none}
+.loginbonus__burst i{
+  position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0 30%,#ffd54a 60%,rgba(255,213,74,0) 72%);opacity:0;
+}
+.loginbonus__burst.is-on i{animation:lbSpark .7s ease-out .15s both}
+@keyframes lbSpark{
+  0%{opacity:0;transform:translate(0,0) scale(.4)}
+  25%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.1)}
+}
+
+/* 15日目の達成 */
+.loginbonus.is-celebrate .loginbonus__stage{animation:lbJump 1.25s cubic-bezier(.3,1.4,.4,1) both}
+@keyframes lbJump{
+  0%  {transform:translateY(0) scale(1) rotate(0)}
+  18% {transform:translateY(6px) scale(.92,.9) rotate(0)}
+  42% {transform:translateY(-16px) scale(1.14) rotate(-3deg)}
+  62% {transform:translateY(2px) scale(.98) rotate(2deg)}
+  80% {transform:translateY(-4px) scale(1.04) rotate(-.6deg)}
+  100%{transform:translateY(0) scale(1) rotate(0)}
+}
+.loginbonus__glow{
+  position:absolute;left:50%;top:50%;width:150%;height:190%;transform:translate(-50%,-50%) scale(.4);
+  background:radial-gradient(closest-side,rgba(255,214,74,.85),rgba(255,190,40,.35) 55%,rgba(255,214,74,0));
+  border-radius:50%;opacity:0;pointer-events:none;
+  animation:lbGlow 1.6s ease-out .1s both;
+}
+.loginbonus__glow.is-rest{animation:none;opacity:.32;transform:translate(-50%,-50%) scale(1);transition:opacity .8s}
+@keyframes lbGlow{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  35%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
+  100%{opacity:.45;transform:translate(-50%,-50%) scale(1)}
+}
+/* 光の筋：ロゴの形だけに、左上から右下へ白い光を走らせる */
+.loginbonus__shine{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.95) 48%,rgba(255,255,255,0) 60%);
+  background-size:260% 100%;background-position:130% 0;
+  -webkit-mask-image:url('../assets/frames/web/logo.webp');mask-image:url('../assets/frames/web/logo.webp');
+  -webkit-mask-size:100% 100%;mask-size:100% 100%;
+  animation:lbShine 1.1s ease-in-out .55s 2 both;
+}
+@keyframes lbShine{ 0%{background-position:130% 0} 100%{background-position:-30% 0} }
+.loginbonus__sparks{position:absolute;left:50%;top:48%;width:0;height:0;pointer-events:none}
+.loginbonus__sparks i{
+  position:absolute;left:0;top:0;width:var(--s);height:var(--s);margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  background:var(--c);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:0;
+  animation:lbBurst 1.2s cubic-bezier(.15,.7,.3,1) calc(.35s + var(--d)) both;
+}
+@keyframes lbBurst{
+  0%{opacity:0;transform:translate(0,0) scale(.3) rotate(0)}
+  15%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.2) rotate(200deg)}
+}
+.loginbonus__complete{
+  display:inline-block;margin:2px 0 6px;padding:5px 16px;border-radius:999px;
+  background:linear-gradient(90deg,#f7c948,#ffe08a,#f0b429);color:#5a3a00;
+  font-size:15px;font-weight:900;letter-spacing:.06em;box-shadow:0 2px 0 #c98f12;
+  animation:lbBadge .7s cubic-bezier(.2,1.6,.4,1) 1.05s both;
+}
+@keyframes lbBadge{ 0%{opacity:0;transform:scale(.3) translateY(8px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
 .loginbonus__count{font-size:13px;color:var(--ink-3);margin-bottom:8px}
 .loginbonus__count b{font-size:26px;font-weight:900;color:var(--coin);font-variant-numeric:tabular-nums;margin-right:2px}
-.loginbonus__track{display:grid;gap:3px;align-items:end;margin:18px 2px 8px}
-.loginbonus__dot{position:relative;height:8px;border-radius:99px;background:#ebe6dc}
-.loginbonus__dot.is-on{background:linear-gradient(90deg,#e7b43c,#f2cf62)}
-.loginbonus__dot.is-reward{height:12px;box-shadow:inset 0 0 0 2px #e3c789}
-.loginbonus__dot.is-reward.is-on{box-shadow:none;background:linear-gradient(90deg,#d99a16,#f0bf2e)}
+/* 目盛りは、ロゴの15文字を並べる。色が付いた日は金色 */
+.loginbonus__track{display:grid;gap:3px;align-items:end;margin:20px 0 8px}
+.loginbonus__dot{
+  position:relative;height:22px;border-radius:6px;background:#eeeae2;color:#b9b2a5;
+  display:grid;place-items:center;font-size:11px;font-weight:900;line-height:1;
+  transition:background .35s ease, color .35s ease, transform .35s ease;
+}
+.loginbonus__dot.is-on{background:linear-gradient(180deg,#f6cf55,#e3a91f);color:#fff;text-shadow:0 1px 0 rgba(120,70,0,.35)}
+.loginbonus__dot.is-reward{box-shadow:inset 0 0 0 2px #e3c789}
+.loginbonus__dot.is-reward.is-on{box-shadow:inset 0 0 0 2px #b77a06}
+.loginbonus__dot.is-today.is-on{animation:lbDot .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes lbDot{ 0%{transform:scale(1)} 45%{transform:scale(1.35)} 100%{transform:scale(1)} }
 .loginbonus__plus{
   position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%);
   font-size:10.5px;font-weight:900;color:var(--coin);white-space:nowrap;
 }
 .loginbonus__note{margin:4px 0 2px;font-size:13px;font-weight:800;color:var(--ink)}
 .loginbonus__sub{margin:0;font-size:11px;color:var(--ink-3)}
-@media (prefers-reduced-motion: reduce){ .loginbonus__color.is-grow{transition:none} }
+@media (prefers-reduced-motion: reduce){
+  .loginbonus__color.is-grow{transition:none}
+  .loginbonus.is-celebrate .loginbonus__stage,.loginbonus__complete,.loginbonus__dot.is-today.is-on{animation:none}
+}
 
 /* ミッション画面は見出し「称号」から始まるので、上の余白を詰める */
 .view > h3.missions__first{margin-top:4px}

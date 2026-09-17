@@ -193,58 +193,245 @@ export function renderMissions(view) {
   });
 }
 
-/* ログインボーナス。SHIKA COLLECTION のロゴは色の無い状態から始まり、
-   ログインした日数のぶんだけ左から色が付いていく。15日で全部に色が付き、翌日からまた1日目。
-   今日はじめて開いたときだけ、前の日の位置から今日の位置まで色が伸びる。 */
+/* ===== ログインボーナス =====
+   SHIKA COLLECTION のロゴは、色の無い状態から始まり、1日目は「S」、2日目は「H」…と
+   ログインした日数ぶんの文字に色が付く。15文字（S H I K A C O L L E C T I O N）で15日。翌日からまた1日目。
+
+   ロゴは1枚の絵なので、どの点がどの文字かを書いた「区分け地図」（assets/frames/web/logo-letters.png）を使う。
+   区分け地図の赤の値 ÷ 16 が文字の番号（1=S … 15=N、0=文字ではない）。ロゴと同じ 960×640。
+   ロゴの絵を差し替えたときは、区分け地図も作り直すこと（作り直すまでは、左から順に色が付く以前の見せ方になる）。 */
+const LOGO_LETTERS = 'SHIKACOLLECTION';
+let logoPixels = null;
+
+function loadImg(srcs) {
+  return new Promise((resolve) => {
+    let i = 0;
+    const next = () => {
+      if (i >= srcs.length) { resolve(null); return; }
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => { i += 1; next(); };
+      img.src = srcs[i];
+    };
+    next();
+  });
+}
+
+/** ロゴと区分け地図の点を読む（1回だけ）。文字ごとの範囲（演出の中心に使う）も数える。 */
+function loadLogoPixels() {
+  if (!logoPixels) {
+    logoPixels = (async () => {
+      const [logo, map] = await Promise.all([
+        loadImg(['./assets/frames/web/logo.webp', './assets/frames/logo.png']),
+        loadImg(['./assets/frames/web/logo-letters.png']),
+      ]);
+      if (!logo || !map) throw new Error('ロゴの区分け地図を読めませんでした');
+      const W = 960;
+      const H = 640;
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const x = c.getContext('2d', { willReadFrequently: true });
+      x.drawImage(logo, 0, 0, W, H);
+      const rgba = x.getImageData(0, 0, W, H).data;
+      x.clearRect(0, 0, W, H);
+      x.drawImage(map, 0, 0, W, H);
+      const m = x.getImageData(0, 0, W, H).data;
+      const labels = new Uint8Array(W * H);
+      const boxes = Array.from({ length: LOGO_LETTERS.length + 1 }, () => [W, H, 0, 0]);
+      for (let i = 0; i < W * H; i += 1) {
+        if (!rgba[i * 4 + 3]) continue;
+        const L = Math.round(m[i * 4] / 16);
+        if (L < 1 || L > LOGO_LETTERS.length) continue;
+        labels[i] = L;
+        const b = boxes[L]; const px = i % W; const py = (i / W) | 0;
+        if (px < b[0]) b[0] = px; if (py < b[1]) b[1] = py; if (px > b[2]) b[2] = px; if (py > b[3]) b[3] = py;
+      }
+      return { W, H, rgba, labels, boxes };
+    })();
+    logoPixels.catch(() => { logoPixels = null; });
+  }
+  return logoPixels;
+}
+
+/** ロゴを描く。mode(文字の番号) が 'color' なら元の色、'gray' なら色の無い薄い姿、'none' なら描かない */
+function paintLogo(canvas, d, mode) {
+  canvas.width = d.W; canvas.height = d.H;
+  const ctx = canvas.getContext('2d');
+  const out = ctx.createImageData(d.W, d.H);
+  const o = out.data;
+  const src = d.rgba;
+  const modes = [];
+  for (let L = 0; L <= LOGO_LETTERS.length; L += 1) modes[L] = mode(L);
+  for (let i = 0; i < d.W * d.H; i += 1) {
+    const a = src[i * 4 + 3];
+    if (!a) continue;
+    const md = modes[d.labels[i]];
+    if (md === 'none') continue;
+    const k = i * 4;
+    if (md === 'color') {
+      o[k] = src[k]; o[k + 1] = src[k + 1]; o[k + 2] = src[k + 2]; o[k + 3] = a;
+    } else {
+      const g = 0.3 * src[k] + 0.59 * src[k + 1] + 0.11 * src[k + 2];
+      o[k] = g; o[k + 1] = g; o[k + 2] = g; o[k + 3] = a * 0.3;
+    }
+  }
+  ctx.putImageData(out, 0, 0);
+}
+
 function loginPanel() {
   const { day, cycle, bonus, next, nextCoins, today } = loginInfo();
   const daily = coinCfg().daily;
-  const p = el('div', { class: 'panel loginbonus' });
-
-  const pct = (d) => `${Math.max(0, Math.min(100, (d / cycle) * 100))}%`;
-  const logo = el('div', { class: 'loginbonus__logo', attrs: { role: 'img', 'aria-label': `ログイン ${day} / ${cycle} 日` } });
-  logo.append(el('img', { class: 'loginbonus__gray', attrs: { src: './assets/frames/web/logo.webp', alt: '', decoding: 'async' } }));
-  const color = el('img', { class: 'loginbonus__color', attrs: { src: './assets/frames/web/logo.webp', alt: '', decoding: 'async' } });
-  for (const img of logo.querySelectorAll('img')) img.addEventListener('error', () => { img.src = './assets/frames/logo.png'; }, { once: true });
-  color.addEventListener('error', () => { color.src = './assets/frames/logo.png'; }, { once: true });
-  logo.append(color);
-  p.append(logo);
-
+  const total = LOGO_LETTERS.length;
+  // 何文字目まで色を付けるか（1周が15日でない設定のときは、日数の割合で文字数を決める）
+  const lettersFor = (d) => (cycle === total ? d : Math.round((d / cycle) * total));
+  const shown = Math.min(total, lettersFor(day));
+  const before = Math.min(total, lettersFor(Math.max(0, day - 1)));
   const shownToday = app.state.loginShownDate === app.state.dailyBonusDate;
   const animate = today && day > 0 && !shownToday;
-  const clip = (d) => `inset(0 calc(100% - ${pct(d)}) 0 0)`;
-  color.style.clipPath = clip(animate ? day - 1 : day);
-  if (animate) {
-    // 画面に出てから、前の日の位置から今日の位置まで色を伸ばす
-    requestAnimationFrame(() => setTimeout(() => {
-      color.classList.add('is-grow');
-      color.style.clipPath = clip(day);
-    }, 350));
-    commit((s) => { s.loginShownDate = s.dailyBonusDate; });
-  }
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const complete = day >= cycle;
+
+  const p = el('div', { class: `panel loginbonus${complete ? ' is-done' : ''}` });
+  const logo = el('div', { class: 'loginbonus__logo', attrs: { role: 'img', 'aria-label': `SHIKA COLLECTION のうち ${shown} 文字に色が付いています（ログイン ${day} / ${cycle} 日）` } });
+  const stage = el('div', { class: 'loginbonus__stage' });
+  logo.append(stage);
+  p.append(logo);
+  if (animate) commit((s) => { s.loginShownDate = s.dailyBonusDate; });
+
+  // 読み込むまでのあいだは、色の無いロゴを出しておく
+  const placeholder = el('img', { class: 'loginbonus__gray', attrs: { src: './assets/frames/web/logo.webp', alt: '', decoding: 'async' } });
+  placeholder.addEventListener('error', () => { placeholder.src = './assets/frames/logo.png'; }, { once: true });
+  stage.append(placeholder);
+
+  loadLogoPixels().then((d) => {
+    const base = el('canvas', { class: 'loginbonus__canvas' });
+    const newLetter = animate && shown > before ? shown : 0;
+    // 下地：色を付ける文字は元の色、ほかは色の無い姿。今日の文字は演出で現すので、下地では色を付けない
+    paintLogo(base, d, (L) => (L === 0 ? 'gray' : (L <= (newLetter ? before : shown) ? 'color' : 'gray')));
+    stage.append(base);
+    placeholder.remove();
+    if (!newLetter) return;
+
+    // 今日の文字：光りながらポンと現れる
+    const pop = el('canvas', { class: 'loginbonus__canvas loginbonus__pop' });
+    paintLogo(pop, d, (L) => (L === newLetter ? 'color' : 'none'));
+    const b = d.boxes[newLetter];
+    const cx = ((b[0] + b[2]) / 2 / d.W) * 100;
+    const cy = ((b[1] + b[3]) / 2 / d.H) * 100;
+    pop.style.transformOrigin = `${cx}% ${cy}%`;
+    stage.append(pop);
+    const burst = el('div', { class: 'loginbonus__burst', style: { left: `${cx}%`, top: `${cy}%` } });
+    for (let i = 0; i < 8; i += 1) {
+      const a = (Math.PI * 2 * i) / 8;
+      burst.append(el('i', { style: { '--dx': `${Math.cos(a) * 34}px`, '--dy': `${Math.sin(a) * 34}px` } }));
+    }
+    logo.append(burst);
+
+    const finishLetter = () => {
+      paintLogo(base, d, (L) => (L === 0 ? 'gray' : (L <= shown ? 'color' : 'gray')));
+      pop.remove();
+      burst.remove();
+    };
+    if (reduce) { finishLetter(); if (complete) celebrateLogin(p, logo, true); return; }
+    setTimeout(() => {
+      if (!p.isConnected) return;
+      pop.classList.add('is-on');
+      burst.classList.add('is-on');
+      sfx.coin();
+      vibrate(12);
+    }, 450);
+    setTimeout(() => {
+      if (!p.isConnected) return;
+      finishLetter();
+      if (complete) celebrateLogin(p, logo, false);
+    }, 450 + 950);
+  }).catch(() => {
+    // 区分け地図が無いときは、以前の見せ方（左から日数の割合ぶん色を付ける）
+    const pct = (dd) => `${Math.max(0, Math.min(100, (dd / cycle) * 100))}%`;
+    const color = el('img', { class: 'loginbonus__color', attrs: { src: './assets/frames/web/logo.webp', alt: '', decoding: 'async' } });
+    color.addEventListener('error', () => { color.src = './assets/frames/logo.png'; }, { once: true });
+    color.style.clipPath = `inset(0 calc(100% - ${pct(animate ? day - 1 : day)}) 0 0)`;
+    stage.append(color);
+    if (animate) {
+      requestAnimationFrame(() => setTimeout(() => {
+        color.classList.add('is-grow');
+        color.style.clipPath = `inset(0 calc(100% - ${pct(day)}) 0 0)`;
+      }, 350));
+    }
+  });
 
   p.append(el('div', { class: 'loginbonus__count' }, [
     el('b', { text: String(day) }),
     el('span', { text: ` / ${cycle} 日` }),
   ]));
 
-  // 1〜15日の目盛り。ごほうびの日には +コイン を添える
+  // 1〜15日の目盛り。ロゴの文字を並べ、ごほうびの日には +コイン を添える
   const track = el('div', { class: 'loginbonus__track', style: { gridTemplateColumns: `repeat(${cycle}, 1fr)` } });
   for (let d = 1; d <= cycle; d += 1) {
     const reward = bonus[d];
-    const dot = el('div', { class: `loginbonus__dot${d <= day ? ' is-on' : ''}${reward ? ' is-reward' : ''}` });
+    const on = d < day || (d === day && !(animate && !reduce));
+    const letter = cycle === total ? LOGO_LETTERS[d - 1] : '';
+    const dot = el('div', {
+      class: `loginbonus__dot${on ? ' is-on' : ''}${reward ? ' is-reward' : ''}${d === day && animate && !reduce ? ' is-today' : ''}`,
+      text: letter,
+    });
     if (reward) dot.append(el('span', { class: 'loginbonus__plus', text: `+${reward}` }));
     track.append(dot);
   }
   p.append(track);
+  // 今日の目盛りは、文字が現れるのに合わせて色を付ける
+  if (animate && !reduce) {
+    setTimeout(() => {
+      const t = track.querySelector('.is-today');
+      if (t) t.classList.add('is-on');
+    }, 450 + 250);
+  }
 
   let note;
-  if (day >= cycle) note = `${cycle}日達成！ 明日からまた1日目です`;
+  if (complete) note = `${cycle}日達成！ 明日からまた1日目です`;
   else if (next) note = `あと ${next - day} 日で +${nextCoins} SHIKA COIN（${next}日目）`;
   else note = '';
   p.append(el('p', { class: 'loginbonus__note', text: note }));
   p.append(el('p', { class: 'loginbonus__sub', text: `毎日 +${daily}。ログインした日を数えます（続けてでなくてもOK）` }));
   return p;
+}
+
+/* 15日目を受け取ったときの演出。
+   ロゴがぐっと縮んでから弾んで跳ね、後ろに金色の光が広がり、ロゴの上を光の筋が走り、キラキラが飛び散る。
+   最後に「15日コンプリート！」が弾んで出る。動きを減らす設定の端末では、文字だけ出す。 */
+function celebrateLogin(panel, logo, still) {
+  const { cycle } = loginInfo();
+  panel.classList.add('is-celebrate');
+  const badge = el('div', { class: 'loginbonus__complete', text: `${cycle}日コンプリート！` });
+  panel.insertBefore(badge, logo.nextSibling);
+  if (still) return;
+
+  const glow = el('div', { class: 'loginbonus__glow' });
+  const shine = el('div', { class: 'loginbonus__shine' });
+  logo.prepend(glow);
+  logo.append(shine);
+  const sparks = el('div', { class: 'loginbonus__sparks' });
+  const colors = ['#ffd54a', '#ffb300', '#fff3b0', '#4fc3f7', '#ff8a65'];
+  for (let i = 0; i < 22; i += 1) {
+    const a = (Math.PI * 2 * i) / 22 + (i % 2 ? 0.12 : -0.08);
+    const r = 90 + (i % 3) * 34;
+    sparks.append(el('i', {
+      style: {
+        '--dx': `${Math.cos(a) * r}px`, '--dy': `${Math.sin(a) * r * 0.72}px`,
+        '--c': colors[i % colors.length], '--d': `${(i % 5) * 40}ms`, '--s': `${6 + (i % 3) * 3}px`,
+      },
+    }));
+  }
+  logo.append(sparks);
+  sfx.coin();
+  setTimeout(() => sfx.coin(), 380);
+  vibrate([20, 40, 20, 40, 60]);
+  // 終わったら飾りを片付ける（ロゴとバッジは残す）
+  setTimeout(() => {
+    glow.classList.add('is-rest');
+    sparks.remove();
+    shine.remove();
+  }, 2600);
 }
 
 /** 称号をシェアするボタン（獲得した称号だけ）。称号の絵とアプリのURLを共有する。 */
