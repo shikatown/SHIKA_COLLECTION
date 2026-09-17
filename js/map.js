@@ -4,7 +4,7 @@
    経路・所要時間・ナビは Google Maps へ外部リンクで渡す。 */
 
 import { app, isVisited, mapCards, commit } from './state.js';
-import { el, clear, toast, dialog, cardFace, vibrate } from './ui.js';
+import { el, clear, toast, dialog, cardFace, vibrate, mapsRouteUrl, mapsCourseUrl } from './ui.js';
 import * as geo from './geo.js';
 import { coinCfg } from './rewards.js';
 import { sfx, unlock } from './sound.js';
@@ -334,6 +334,55 @@ export function renderMap(view, params) {
     else mapApi.fitBounds(list.map((c) => ({ lat: c.gps.lat, lng: c.gps.lng })));
   };
 
+  /* 「近くのスポットを探す」の下に出す、選んだ絞り込みのスポット一覧。
+     モデルコースは、決めた順（MAP_FILTERS の ids の順）に番号を振って並べ、
+     1つずつの経路のほかに、全部の場所を回る経路（Googleマップに全部のピンが出る）も出す。
+     現在地が分かっているときは、直線のおよその距離も添える。 */
+  function drawList() {
+    clear(listBox);
+    const f = MAP_FILTERS.find((x) => x.key === mapFilter) || MAP_FILTERS[0];
+    const list = filteredSpots(mapFilter);
+    listBox.append(el('div', { class: 'homehead' }, [
+      el('span', { text: f.ids ? 'コースの順番' : f.label }),
+      el('b', { text: `${list.length} か所` }),
+    ]));
+    if (!list.length) {
+      listBox.append(el('p', { class: 'muted center', style: { margin: '6px 0 0' }, text: mapFilter === 'visited' ? 'まだ訪問したスポットはありません' : '当てはまるスポットはありません' }));
+      return;
+    }
+    if (f.ids && list.length > 1) {
+      // 全部の場所にピンを落として、1番目から順に回る経路を Googleマップで開く
+      listBox.append(el('a', {
+        class: 'btn btn--block spotlist__all',
+        attrs: { href: mapsCourseUrl(list.map((c) => ({ lat: c.gps.lat, lng: c.gps.lng }))), target: '_blank', rel: 'noopener noreferrer' },
+        html: '<span>コース全体の経路をGoogleマップで見る</span>',
+      }));
+      listBox.append(el('p', { class: 'spotlist__note', text: '1番目から順に回る経路です。全部の場所にピンが立ちます。' }));
+    }
+    list.forEach((c, i) => {
+      const row = el('div', { class: 'spotlist__row', attrs: { role: 'button', tabindex: '0' } });
+      row.append(el('span', {
+        class: `spotlist__no${isVisited(c.id) ? ' is-visited' : ''}`,
+        text: f.ids ? String(i + 1) : (isVisited(c.id) ? '★' : '●'),
+      }));
+      const mid = el('span', { class: 'spotlist__b' });
+      mid.append(el('span', { class: 'spotlist__n', text: c.name }));
+      const state = isVisited(c.id) ? '訪問済み' : (c.gps.enabled ? '未訪問' : '');
+      const dist = geo.hasFix() ? geo.distanceText(c.gps.lat, c.gps.lng) : '';
+      mid.append(el('span', { class: 'spotlist__s', text: [state, dist].filter(Boolean).join(' ・ ') }));
+      row.append(mid);
+      row.append(el('a', {
+        class: 'spotlist__go',
+        attrs: { href: mapsRouteUrl(c.gps.lat, c.gps.lng), target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${c.name}への経路をGoogleマップで見る` },
+        text: '経路',
+      }));
+      const open = () => go(`#/card/${c.id}`);
+      row.addEventListener('click', (e) => { if (!e.target.closest('a')) open(); });
+      row.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === row) { e.preventDefault(); open(); } });
+      listBox.append(row);
+    });
+  }
+
   const chipBtns = MAP_FILTERS.map((f) => {
     const b = el('button', {
       class: `mapchip${f.ids ? ' mapchip--wide' : ''}${mapFilter === f.key ? ' is-active' : ''}`,
@@ -348,6 +397,7 @@ export function renderMap(view, params) {
         x.setAttribute('aria-pressed', String(on));
       });
       drawPins(true);
+      drawList();
     });
     (f.ids ? chips : chipRow).append(b);
     return b;
@@ -369,6 +419,11 @@ export function renderMap(view, params) {
     on: { click: () => runCheckIn(view, status, btn) },
   });
   view.append(btn);
+
+  // 選んだ絞り込みのスポットを、ボタンの下に一覧で出す（モデルコースは巡る順）
+  const listBox = el('div', { class: 'spotlist' });
+  view.append(listBox);
+  drawList();
 
 
   if (params && params.checkin) setTimeout(() => runCheckIn(view, status, btn), 60);

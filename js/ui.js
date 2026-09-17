@@ -245,6 +245,20 @@ export function mapsRouteUrl(lat, lng) {
   const q = `${lat},${lng}`;
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}&travelmode=driving`;
 }
+/** Googleマップの経路検索（複数のスポットを、渡した順に回る）。
+    1つ目が出発地、最後が目的地、あいだは経由地になる（地図には全部のピンが出る）。
+    ここでも現在地は渡さない（アプリは端末の位置を保存も送信もしない）。 */
+export function mapsCourseUrl(points) {
+  const pt = (p) => `${p.lat},${p.lng}`;
+  if (!points || !points.length) return '';
+  if (points.length === 1) return mapsRouteUrl(points[0].lat, points[0].lng);
+  const mid = points.slice(1, -1).map(pt).join('|');
+  return 'https://www.google.com/maps/dir/?api=1'
+    + `&origin=${encodeURIComponent(pt(points[0]))}`
+    + `&destination=${encodeURIComponent(pt(points[points.length - 1]))}`
+    + (mid ? `&waypoints=${encodeURIComponent(mid)}` : '')
+    + '&travelmode=driving';
+}
 export function externalLink(label, url, cls = 'btn btn--block') {
   const safe = safeUrl(url);
   if (!safe) return null;

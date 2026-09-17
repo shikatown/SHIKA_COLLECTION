@@ -1523,3 +1523,28 @@ a{color:var(--accent)}
 .home__main{flex:0 0 auto;gap:6px}
 .home__main > .firstpop{margin:2px 0 12px}
 .home__main > .trio{margin-bottom:6px}
+
+/* まち巡り：選んだ絞り込みのスポット一覧（js/map.js の drawList）。
+   「近くのスポットを探す」の下に出す。モデルコースは巡る順の番号付き。 */
+.spotlist{margin-top:14px}
+.spotlist .homehead{margin-bottom:6px}
+.spotlist__all{gap:6px;margin-bottom:4px;color:var(--accent);border-color:var(--accent);font-weight:800;text-decoration:none}
+.spotlist__note{margin:0 2px 8px;font-size:11.5px;color:var(--ink-3)}
+.spotlist__row{
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:8px 10px;
+  border:1px solid var(--line-2);border-radius:12px;background:var(--surface);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.spotlist__row:active{transform:scale(.99)}
+.spotlist__no{
+  flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent);color:#fff;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;
+}
+.spotlist__no.is-visited{background:var(--coin);color:#fff}
+.spotlist__b{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;gap:1px}
+.spotlist__n{font-size:13.5px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spotlist__s{font-size:11.5px;color:var(--ink-3)}
+.spotlist__go{
+  flex:none;padding:6px 12px;border-radius:999px;border:1px solid var(--accent);
+  background:#fff;color:var(--accent);font-size:12px;font-weight:800;text-decoration:none;
+}
