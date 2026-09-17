@@ -11,7 +11,9 @@ import { el, clear, toast, dialog, confirm2 } from './ui.js';
 import { go } from './router.js';
 import { celebrateComplete } from './title-complete.js';
 import { TITLE_MAX_CHARS } from './card-render.js';
-import { gpsCards } from './state.js';
+import { gpsCards, todayKey } from './state.js';
+import { loginInfo } from './rewards.js';
+import { offerDaily } from './gacha.js';
 
 export function isAdmin() {
   return !!(app.state && app.state.flags && app.state.flags.admin);
@@ -49,6 +51,64 @@ export function attachSecret(node) {
   });
 }
 
+/* ===== ログインボーナスの確認 =====
+   本番は1日に1回しか受け取れないので、日付を1日戻して「翌日に開いた」ことにして試す。
+   日数を合わせるボタンで、5日目・10日目・15日目のボーナスと、15日目の翌日に1日目へ戻る動きを確かめられる。 */
+function loginTools() {
+  const p = el('div', { class: 'panel', style: { marginTop: '12px' } });
+  const { day, cycle, today, next, nextCoins } = loginInfo();
+  p.append(el('h3', { class: 'panel__title', style: { margin: '0 0 6px' }, text: 'ログインボーナスの確認' }));
+  p.append(el('p', {
+    style: { margin: '0 0 10px', fontSize: '13px' },
+    text: `いま ${day} / ${cycle} 日目 ・ 今日の分は${today ? '受け取り済み' : 'まだ'}${next ? ` ・ 次のボーナスは ${next}日目 +${nextCoins}` : ''}`,
+  }));
+  const g = el('div', { class: 'adminacts' });
+
+  // 翌日に開いたことにして受け取る。ミッション画面で色が伸びる演出も見られるよう、見せた記録も消す
+  g.append(el('button', {
+    class: 'btn btn--primary', attrs: { type: 'button' }, text: '翌日にする（受け取る）',
+    on: {
+      click: async () => {
+        commit((s) => { s.dailyBonusDate = ''; s.loginShownDate = ''; });
+        await offerDaily();
+        go('#/missions');
+      },
+    },
+  }));
+
+  // 日数を合わせる。今日の分は受け取り済みにしておき、「翌日にする」で次の日を試す
+  const setDays = (n, label) => g.append(el('button', {
+    class: 'btn', attrs: { type: 'button' }, text: label,
+    on: {
+      click: () => {
+        const t = todayKey();
+        commit((s) => { s.loginDays = n; s.dailyBonusDate = t; s.loginShownDate = t; });
+        toast(`ログイン ${n} 日目にしました。「翌日にする」で次の日を試せます`);
+        go('#/admin');
+        renderAdmin(document.getElementById('view'));
+      },
+    },
+  }));
+  setDays(4, '4日目まで（次は5日目）');
+  setDays(9, '9日目まで（次は10日目）');
+  setDays(14, `${cycle - 1}日目まで（次は${cycle}日目）`);
+  setDays(cycle, `${cycle}日目（次は1日目に戻る）`);
+  setDays(0, '0日に戻す');
+
+  g.append(el('button', {
+    class: 'btn', attrs: { type: 'button' }, text: '色が付く演出をもう一度',
+    on: {
+      click: () => {
+        if (!app.state.loginDays) { toast('先に「翌日にする」で受け取ってください'); return; }
+        commit((s) => { s.loginShownDate = ''; if (!s.dailyBonusDate) s.dailyBonusDate = todayKey(); });
+        go('#/missions');
+      },
+    },
+  }));
+  p.append(g);
+  return p;
+}
+
 /* ===== カード点検 ===== */
 
 export function renderAdmin(view) {
@@ -69,6 +129,7 @@ export function renderAdmin(view) {
 
   view.append(summary(all, pub));
   view.append(operations(pub));
+  view.append(loginTools());
 
   view.append(el('h3', { text: `カード一覧（${all.length}）` }));
   const table = el('div', { class: 'panel adminlist' });

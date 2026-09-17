@@ -251,13 +251,9 @@ export function renderMap(view, params) {
   clear(view);
   if (mapApi) { mapApi.destroy(); mapApi = null; }
 
-  const stats = geo.visitStats();
-  // 見出しはアプリバーに出ているので、ここでは繰り返さない
+  // 見出しはアプリバーに出ているので、ここでは繰り返さない（訪問数のバーは v1.40.1 で外した）
   const head = el('div', { style: { marginBottom: '12px' } });
   head.append(el('p', { class: 'muted', style: { margin: 0 }, text: '石川県志賀町' }));
-  head.append(el('div', { class: 'bar', style: { marginTop: '8px' } }, [
-    el('span', { style: { width: `${stats.total ? (stats.visited / stats.total) * 100 : 0}%` } }),
-  ]));
   view.append(head);
 
   const box = el('div', { class: 'mapwrap' });
