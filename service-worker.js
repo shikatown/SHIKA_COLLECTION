@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.41.0';
+const APP_VERSION = '1.42.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -56,8 +56,7 @@ const SHELL = [
   './assets/icons/coin-sm.png',
   './assets/icons/coin.png',
   './assets/icons/title-complete.png',
-  './assets/icons/tagline-sm.png',
-  './assets/icons/web/tagline.webp',
+  './assets/video/home-poster.jpg',
   './assets/frames/web/logo-letters.png',
 ];
 
@@ -123,6 +122,10 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   if (url.origin !== location.origin) return;   // その他の外部は素通し
+
+  /* 動画は控えずにブラウザに任せる。動画は途中から読む要求（Range）が多く、
+     控えから丸ごと返すと iPhone で流れないことがあるため。通信が無いときは最初の場面の絵が出る。 */
+  if (/\.(mp4|webm|mov)$/i.test(url.pathname)) return;
 
   // 公開データ
   if (url.pathname.includes('/data/') && url.pathname.endsWith('.json')) {

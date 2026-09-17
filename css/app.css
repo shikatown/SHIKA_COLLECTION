@@ -184,7 +184,24 @@ a{color:var(--accent)}
 .hero__title{font-size:21px;margin:0 0 12px;letter-spacing:.06em;font-weight:800}
 .hero--first{padding-top:2px}
 
-/* 「志賀町を、あつめよう。」のロゴ（支給画像 assets/icons/tagline*.png、縦横比 1469:864）。
+/* ホームの動画（js/app.js の homeVideo）。
+   いつもの人は 16:9、初めての人は下が空いているので 4:3 で大きく。動画は枠いっぱいに広げ、はみ出た左右を切る
+   （SHIKA COLLECTION のロゴは真ん中にあるので切れない）。読むまでは下地に最初の場面の絵を出す。 */
+.homevideo{
+  position:relative;display:block;overflow:hidden;
+  aspect-ratio:16 / 9;margin:0 auto 4px;border-radius:14px;
+  background:#cfe3e6 center / cover no-repeat;box-shadow:var(--shadow-1);
+}
+.view .homevideo{width:calc(100% + 24px);max-width:none;margin:0 -12px 6px}
+.hero--first .homevideo{aspect-ratio:4 / 3}
+.homevideo__v{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
+  opacity:1;transition:opacity .6s ease;
+}
+.homevideo__v.is-fading{opacity:0}
+.homevideo__v.is-reset{transition:none}
+
+/* 「志賀町を、あつめよう。」のロゴ（支給画像 assets/icons/tagline*.png、縦横比 1469:864）。v1.42 からホームでは使っていない。
    読む前から場所を取っておき、あとで下の要素が動かないようにする。 */
 .tagline{
   position:relative;display:block;margin:0 auto 4px;

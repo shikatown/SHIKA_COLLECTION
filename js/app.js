@@ -174,8 +174,7 @@ function warmHomeImages() {
     './assets/cards/web/_back.webp',       // 起動画面のカードの裏
     './assets/frames/thumb/logo.png',      // ホームのロゴ（小）
     './assets/frames/web/logo.webp',       // ホームのロゴ（大）
-    './assets/icons/tagline-sm.png',       // 「志賀町を、あつめよう。」のロゴ（小）
-    './assets/icons/web/tagline.webp',     // 「志賀町を、あつめよう。」のロゴ（大）
+    './assets/video/home-poster.jpg',      // ホームの動画の最初の場面（動画を読むまで出す）
   ]) {
     const i = new Image();
     i.decoding = 'async';
@@ -259,6 +258,7 @@ function onRouteChange(route) {
      左上の「＜ 画面名」は出さない。タブが今いる場所を示しているので重複する。
      カード詳細や歯車の奥の画面など、戻る先がある画面だけに出す。 */
   const tabRoot = TAB_ROOTS.has(route.path);
+  if (route.path !== '/home') stopHomeVideo();   // ホームを離れたら動画を止める
   document.getElementById('appTitle').textContent = tabRoot ? '' : (TITLES[route.path] != null ? TITLES[route.path] : '');
   document.getElementById('btnBack').hidden = tabRoot;
   // 左右に払って前後のカードへ移れるのは、カード詳細のときだけ
@@ -321,7 +321,7 @@ function renderHome(view) {
      引いたあとは、ロゴの代わりに持っているカードを大きく見せる。 */
   const first = !s.flags.firstFreeTenDone;
   const hero = el('div', { class: `hero${first ? ' hero--first' : ''}` });
-  hero.append(taglineLogo());
+  hero.append(homeVideo());
   view.append(hero);
 
   /* 持っているカードを1枚ずつ大きく見せる。5秒ごとに入れ替え、
@@ -351,28 +351,88 @@ function renderHome(view) {
 
 /* ===== ホームの見出し・ロゴ・初回ポップ ===== */
 
-/** 「志賀町を、あつめよう。」のロゴ（支給画像）。
-    小さい方を先に出し、原寸は読み終わってから重ねて現す（差し替えるとちらつく）。 */
-function taglineLogo() {
-  const box = el('h2', { class: 'tagline' });
-  box.append(el('img', {
-    class: 'tagline__img',
-    attrs: { src: './assets/icons/tagline-sm.png', alt: '志賀町を、あつめよう。 SHIKA COLLECTION', decoding: 'async' },
-  }));
-  // 大きい方は軽い WebP を読み、無ければ元の PNG
-  const LIGHT = './assets/icons/web/tagline.webp';
-  const hi = el('img', {
-    class: 'tagline__img tagline__img--hi',
-    attrs: { src: LIGHT, alt: '', decoding: 'async' },
+/* ===== ホームの動画 =====
+   「志賀町を、あつめよう。」のロゴの代わりに、志賀町の風景と SHIKA COLLECTION のロゴの動画を流す。
+   音なし・画面の中で・ずっと繰り返す。最後の0.6秒で最初の場面の絵に溶けてから最初に戻るので、つなぎ目が見えない。
+
+   重くしないために：
+   ・動画は 960×408・約3.2MB（assets/video/README.txt）。読み終わるまでは最初の場面の絵（約80KB）を出す
+   ・起動画面のあいだは読まない。起動の絵（カードの裏やロゴ）の読み込みと取り合わないよう、起動画面が消えてから読む
+   ・ホームを離れたら止めて、読み込みも手放す。アプリを閉じたら止め、戻ったら続きから
+   ・動きを減らす設定の端末と、データセーバーの端末では、絵だけにする
+   ・Service Worker では控えない（service-worker.js）。動画は途中から読む要求が多く、控えから返すと iPhone で流れないことがあるため */
+const HOME_VIDEO = './assets/video/home.mp4';
+const HOME_POSTER = './assets/video/home-poster.jpg';
+const HOME_VIDEO_FADE = 0.6;   // 最後の何秒で、最初の場面の絵に溶かすか
+let homeVideoEl = null;
+
+/** いま流しているホームの動画を止めて、読み込みも手放す */
+function stopHomeVideo() {
+  if (!homeVideoEl) return;
+  const v = homeVideoEl;
+  homeVideoEl = null;
+  v.pause();
+  v.removeAttribute('src');
+  v.load();
+}
+document.addEventListener('visibilitychange', () => {
+  if (!homeVideoEl) return;
+  if (document.hidden) homeVideoEl.pause();
+  else homeVideoEl.play().catch(() => {});
+});
+
+function homeVideo() {
+  stopHomeVideo();
+  const box = el('div', {
+    class: 'homevideo',
+    attrs: { role: 'img', 'aria-label': '志賀町の風景と SHIKA COLLECTION のロゴ' },
+    style: { backgroundImage: `url("${HOME_POSTER}")` },
   });
-  const show = () => hi.classList.add('is-on');
-  if (hi.complete && hi.naturalWidth) show();
-  else hi.addEventListener('load', show, { once: true });
-  hi.addEventListener('error', () => {
-    if (hi.getAttribute('src') === LIGHT) { hi.src = './assets/icons/tagline.png'; return; }
-    hi.remove();
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = !!(navigator.connection && navigator.connection.saveData);
+  if (reduce || saveData) return box;   // 絵だけ
+
+  const v = el('video', {
+    class: 'homevideo__v',
+    attrs: { muted: '', playsinline: '', 'webkit-playsinline': '', preload: 'none', poster: HOME_POSTER, 'aria-hidden': 'true', disableremoteplayback: '' },
   });
-  box.append(hi);
+  v.muted = true;
+  v.defaultMuted = true;
+  v.playsInline = true;
+  box.append(v);
+  homeVideoEl = v;
+
+  // 終わりが近づいたら、最初の場面の絵（下地）に溶かす
+  v.addEventListener('timeupdate', () => {
+    if (v.duration && v.currentTime >= v.duration - HOME_VIDEO_FADE) v.classList.add('is-fading');
+  });
+  // 終わったら、見えていないうちに最初へ戻し、下地と同じ絵のまま一瞬で現す
+  v.addEventListener('ended', () => {
+    v.addEventListener('seeked', () => {
+      v.classList.add('is-reset');
+      v.classList.remove('is-fading');
+      v.play().catch(() => {});
+      requestAnimationFrame(() => requestAnimationFrame(() => v.classList.remove('is-reset')));
+    }, { once: true });
+    v.currentTime = 0;
+  });
+
+  const begin = () => {
+    if (homeVideoEl !== v || !box.isConnected) return;
+    v.src = HOME_VIDEO;
+    v.play().catch(() => {});   // 自動で流せない端末（省電力モードなど）は、絵のまま
+  };
+  const bootEl = document.getElementById('boot');
+  if (!bootEl || bootEl.hidden) {
+    requestAnimationFrame(begin);
+  } else {
+    const mo = new MutationObserver(() => {
+      if (!bootEl.hidden) return;
+      mo.disconnect();
+      requestAnimationFrame(begin);
+    });
+    mo.observe(bootEl, { attributes: true, attributeFilter: ['hidden'] });
+  }
   return box;
 }
 
