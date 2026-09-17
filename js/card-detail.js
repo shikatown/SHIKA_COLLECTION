@@ -3,11 +3,14 @@
 
 import { app, isOwned, isVisited, commit, CATEGORY_LABEL, CATEGORIES, publishedCards } from './state.js';
 import {
-  el, clear, cardFace, lockedCard, toast, externalLink, mapsSearchUrl, safeUrl, resolvePhoto, vibrate, mapsRouteUrl } from './ui.js';
+  el, clear, cardFace, lockedCard, toast, externalLink, resolvePhoto, vibrate } from './ui.js';
 import { openViewer } from './card-3d.js';
+import { cardActionUrl, linkCardButton } from './card-link.js';
 import { coinCfg } from './rewards.js';
 import { distanceText, hasFix } from './geo.js';
 import { go } from './router.js';
+
+export { cardActionUrl };   // 以前からの呼び出し口（js/card-link.js へ移した）
 
 export function renderCardDetail(view, params) {
   clear(view);
@@ -255,38 +258,6 @@ function maybeHintSwipe() {
   if (app.state.flags.swipeHintShown) return;
   commit((s) => { s.flags.swipeHintShown = true; });
   setTimeout(() => toast('左右に払うと、前後のカードに移ります'), 800);
-}
-
-/** カードに印刷されたボタンが指す先。地図や販売店の検索はここ1か所で決める。 */
-export function cardActionUrl(c) {
-  // スポットのボタンは「Googleマップで経路を見る」なので、場所の検索ではなく経路の検索を開く
-  if (c.category === 'spot' && c.gps.lat != null) return mapsRouteUrl(c.gps.lat, c.gps.lng);
-  if (c.purchase.enabled) {
-    const shop = c.purchase.shops.find((s) => safeUrl(s.url));
-    if (shop) return safeUrl(shop.url);
-    const word = c.purchase.searchWord || `${(app.config && app.config.townName) || '志賀町'} ${c.name}`;
-    return mapsSearchUrl(word);
-  }
-  if (c.gps.lat != null) return mapsSearchUrl(`${c.gps.lat},${c.gps.lng}`);
-  const first = c.externalLinks.find((l) => safeUrl(l.url));
-  return first ? safeUrl(first.url) : '';
-}
-
-/** カードの絵に描かれたボタンの上に、透明なリンクを重ねる。
-    絵は作り直さずに、押せる場所だけを足す。 */
-function linkCardButton(face, c) {
-  const btn = face.querySelector('.cardart__btn');
-  if (!btn) return;                       // 文化カードのようにボタンが無い意匠
-  const url = cardActionUrl(c);
-  if (!url) return;
-  btn.classList.add('is-live');
-  btn.append(el('a', {
-    class: 'cardart__hit',
-    attrs: {
-      href: url, target: '_blank', rel: 'noopener noreferrer',
-      'aria-label': (btn.textContent || '').replace('→', '').trim(),
-    },
-  }));
 }
 
 /** 現地訪問（SHIKA COIN がもらえる行動）だけを残した欄。地図へ飛ぶのはカードのボタンが担う。

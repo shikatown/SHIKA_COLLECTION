@@ -6,6 +6,7 @@
 import { app, isOwned } from './state.js';
 import { el, clear, cardFace, cardBack, vibrate } from './ui.js';
 import { commit } from './state.js';
+import { linkCardButton } from './card-link.js';
 
 const MAX_X = 26;          // 上下の傾き上限（度）
 const SPIN_LIMIT = 900;    // 回転速度の上限（度/秒相当）
@@ -83,7 +84,10 @@ function render(view) {
   clear(view.card);
 
   const front = el('div', { class: 'card3d__side card3d__side--front' });
-  front.append(cardFace(c));
+  // カードに印刷されたボタン（取扱店を検索する・経路を見る など）は、ここでも押せるようにする
+  const face = cardFace(c);
+  linkCardButton(face, c);
+  front.append(face);
   front.append(el('div', { class: 'card3d__sheen' }));
   front.append(el('div', { class: 'card3d__glint' }));   // 左から右へ走る光（CSSで繰り返す）
 
@@ -110,8 +114,19 @@ function attachInteraction(card, shadow) {
   let lastTap = 0;
 
   const set = (r) => { rot = r; apply(card, shadow, rot); };
+  // 裏面がこちらを向いているか（左右に90度より大きく回っている）
+  const showingBack = () => Math.cos((rot.y * Math.PI) / 180) < 0;
+  const onButton = (e) => !!(e.target && e.target.closest && e.target.closest('.cardart__hit'));
+
+  /* カードのボタンを押したときは、回す操作を始めずにリンクを開く。
+     回す操作は指を捕まえる（setPointerCapture）ので、そのままだとリンクが押せなかった。
+     裏面を向いているときは、表のボタンは見えていないので開かない。 */
+  card.addEventListener('click', (e) => {
+    if (onButton(e) && showingBack()) e.preventDefault();
+  });
 
   card.addEventListener('pointerdown', (e) => {
+    if (onButton(e) && !showingBack()) return;
     const now = Date.now();
     if (now - lastTap < 300) {                 // ダブルタップで正面へ
       lastTap = 0;
