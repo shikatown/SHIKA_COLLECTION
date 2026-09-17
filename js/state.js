@@ -133,6 +133,16 @@ function withConfigDefaults(cfg) {
     spotFirst: 3, spotRevisit: 1, townFirst: 5,
     ...(c.coin || {}),
   };
+  /* ログインした日数のごほうび（{ 日目: コイン }）。いちばん大きい日目で1周し、翌日からまた1日目。
+     書いていない・おかしいときは 5日目 +5 ／ 10日目 +10 ／ 15日目 +15。 */
+  const lb = {};
+  if (coin.loginBonus && typeof coin.loginBonus === 'object' && !Array.isArray(coin.loginBonus)) {
+    for (const [k, v] of Object.entries(coin.loginBonus)) {
+      const n = Number(k);
+      if (Number.isInteger(n) && n > 0 && n <= 365 && typeof v === 'number' && Number.isFinite(v) && v >= 0) lb[n] = Math.floor(v);
+    }
+  }
+  coin.loginBonus = Object.keys(lb).length ? lb : { 5: 5, 10: 10, 15: 15 };
   /* ミッションの報酬。以前はここで取り込んでいなかったので、config.json に書いても無視されていた。
      0以上の数だけを受け付け、書いていない・おかしい値は既定値にする。 */
   const ms = c.mission && typeof c.mission === 'object' ? c.mission : {};

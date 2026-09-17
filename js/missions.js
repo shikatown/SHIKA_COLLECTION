@@ -9,7 +9,9 @@
 
 import { app, commit, saveOk, CATEGORIES, categoryStats } from './state.js';
 import { el, clear, toast, vibrate, coinIcon } from './ui.js';
-import { coinCfg, titles, COMPLETE_TITLE } from './rewards.js';
+import { coinCfg, titles, COMPLETE_TITLE, loginInfo } from './rewards.js';
+import { shareImage, prepareShareImage, SHARE_ICON } from './share.js';
+import { titleImage } from './share-image.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
 import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
@@ -158,7 +160,9 @@ export function renderMissions(view) {
   all.disabled = ready.length === 0;
   head.append(all);
 
-  // 並びは まとめて受け取る → カード → まち巡り → 称号
+  // 並びは ログインボーナス → まとめて受け取る → カード → まち巡り → 称号
+  view.append(el('h3', { class: 'missions__first', text: 'ログインボーナス' }));
+  view.append(loginPanel());
   view.append(head);
 
   for (const group of ['カード', 'まち巡り']) {
@@ -189,16 +193,93 @@ export function renderMissions(view) {
   });
 }
 
+/* ログインボーナス。SHIKA COLLECTION のロゴは色の無い状態から始まり、
+   ログインした日数のぶんだけ左から色が付いていく。15日で全部に色が付き、翌日からまた1日目。
+   今日はじめて開いたときだけ、前の日の位置から今日の位置まで色が伸びる。 */
+function loginPanel() {
+  const { day, cycle, bonus, next, nextCoins, today } = loginInfo();
+  const daily = coinCfg().daily;
+  const p = el('div', { class: 'panel loginbonus' });
+
+  const pct = (d) => `${Math.max(0, Math.min(100, (d / cycle) * 100))}%`;
+  const logo = el('div', { class: 'loginbonus__logo', attrs: { role: 'img', 'aria-label': `ログイン ${day} / ${cycle} 日` } });
+  logo.append(el('img', { class: 'loginbonus__gray', attrs: { src: './assets/frames/web/logo.webp', alt: '', decoding: 'async' } }));
+  const color = el('img', { class: 'loginbonus__color', attrs: { src: './assets/frames/web/logo.webp', alt: '', decoding: 'async' } });
+  for (const img of logo.querySelectorAll('img')) img.addEventListener('error', () => { img.src = './assets/frames/logo.png'; }, { once: true });
+  color.addEventListener('error', () => { color.src = './assets/frames/logo.png'; }, { once: true });
+  logo.append(color);
+  p.append(logo);
+
+  const shownToday = app.state.loginShownDate === app.state.dailyBonusDate;
+  const animate = today && day > 0 && !shownToday;
+  const clip = (d) => `inset(0 calc(100% - ${pct(d)}) 0 0)`;
+  color.style.clipPath = clip(animate ? day - 1 : day);
+  if (animate) {
+    // 画面に出てから、前の日の位置から今日の位置まで色を伸ばす
+    requestAnimationFrame(() => setTimeout(() => {
+      color.classList.add('is-grow');
+      color.style.clipPath = clip(day);
+    }, 350));
+    commit((s) => { s.loginShownDate = s.dailyBonusDate; });
+  }
+
+  p.append(el('div', { class: 'loginbonus__count' }, [
+    el('b', { text: String(day) }),
+    el('span', { text: ` / ${cycle} 日` }),
+  ]));
+
+  // 1〜15日の目盛り。ごほうびの日には +コイン を添える
+  const track = el('div', { class: 'loginbonus__track', style: { gridTemplateColumns: `repeat(${cycle}, 1fr)` } });
+  for (let d = 1; d <= cycle; d += 1) {
+    const reward = bonus[d];
+    const dot = el('div', { class: `loginbonus__dot${d <= day ? ' is-on' : ''}${reward ? ' is-reward' : ''}` });
+    if (reward) dot.append(el('span', { class: 'loginbonus__plus', text: `+${reward}` }));
+    track.append(dot);
+  }
+  p.append(track);
+
+  let note;
+  if (day >= cycle) note = `${cycle}日達成！ 明日からまた1日目です`;
+  else if (next) note = `あと ${next - day} 日で +${nextCoins} SHIKA COIN（${next}日目）`;
+  else note = '';
+  p.append(el('p', { class: 'loginbonus__note', text: note }));
+  p.append(el('p', { class: 'loginbonus__sub', text: `毎日 +${daily}。ログインした日を数えます（続けてでなくてもOK）` }));
+  return p;
+}
+
+/** 称号をシェアするボタン（獲得した称号だけ）。称号の絵とアプリのURLを共有する。 */
+function shareTitleButton(name, icons) {
+  const opts = {
+    key: `title:${name}`,
+    make: () => titleImage({ name, icons }),
+    fileName: 'shika-collection-title.jpg',
+    title: `SHIKA COLLECTION 称号「${name}」`,
+    text: `志賀町で称号「${name}」を獲得しました！ #SHIKACOLLECTION #志賀町`,
+  };
+  const btn = el('button', {
+    class: 'titlebadge__share', attrs: { type: 'button', 'aria-label': `称号「${name}」をSNSでシェア` },
+    html: `${SHARE_ICON}<span>シェア</span>`,
+  });
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try { await shareImage(opts); } finally { btn.disabled = false; }
+  });
+  setTimeout(() => { if (btn.isConnected) prepareShareImage(opts.key, opts.make, opts.fileName).catch(() => {}); }, 1500);
+  return btn;
+}
+
 /* 称号。ミッションと同じ「達成したことが分かるもの」なので、ここにまとめる。
    （以前はカード画面のコレクション欄に置いていた） */
 function titlesPanel() {
   const got = titles();
   const box = el('div', { class: 'panel titlegrid' });
+  // big はシェアの絵に使う大きい絵（先に読めたもの）
   const all = [
-    ...CATEGORIES.map((x) => ({ name: x.master, icon: `./assets/frames/thumb/icon-${x.key}.png` })),
-    { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png' },
+    ...CATEGORIES.map((x) => ({ name: x.master, icon: `./assets/frames/thumb/icon-${x.key}.png`, big: [`./assets/frames/icon-${x.key}.png`] })),
+    { name: '志賀町マスター', icon: './assets/frames/thumb/logo.png', big: ['./assets/frames/web/logo.webp', './assets/frames/logo.png'] },
   ];
-  for (const { name, icon } of all) {
+  for (const { name, icon, big } of all) {
     const on = got.includes(name);
     const b = el('div', { class: `titlebadge${on ? ' is-on' : ''}` });
     b.append(el('div', { class: 'titlebadge__ring' }, [
@@ -206,6 +287,7 @@ function titlesPanel() {
     ]));
     b.append(el('div', { class: 'titlebadge__n', text: name }));
     b.append(el('div', { class: 'titlebadge__s', text: on ? '達成' : '未達成' }));
+    if (on) b.append(shareTitleButton(name, big));
     box.append(b);
   }
 
@@ -221,6 +303,7 @@ function titlesPanel() {
   ]));
   c.append(el('div', { class: 'titlebadge__n', text: COMPLETE_TITLE }));
   c.append(el('div', { class: 'titlebadge__s', text: done ? '達成' : 'すべてのカードとチェックインで獲得' }));
+  if (done) c.append(shareTitleButton(COMPLETE_TITLE, ['./assets/icons/title-complete.png']));
   box.append(c);
   return box;
 }

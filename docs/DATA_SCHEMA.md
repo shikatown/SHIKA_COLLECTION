@@ -93,7 +93,8 @@
 既定は グルメ「取扱店を検索する」/ スポット「Googleマップで経路を見る」/ 文化「」。
 
 `coin` の既定値：`daily:1` / `sakeSnack:1` / `duplicatePer5:1` / `categoryPer5:2` /
-`spotFirst:3` / `spotRevisit:1` / `townFirst:5`
+`spotFirst:3` / `spotRevisit:1` / `townFirst:5` /
+`loginBonus:{"5":5,"10":10,"15":15}`（ログインした日数のごほうび。いちばん大きい日目で1周し、翌日からまた1日目）
 
 `event`：`enabled`（イベントモード）、`name`、`startAt`/`endAt`（ISO日時。期間外は通常モード）、
 `sakeSnackBonus`（酒のアテON/OFF）、`venueBonus`（会場GPSボーナスON/OFF）、`lat`/`lng`/`radius`、`message`

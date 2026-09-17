@@ -548,6 +548,13 @@ a{color:var(--accent)}
 .panel--tight{padding:10px 12px;margin-top:10px}
 .spotline{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;margin-bottom:8px}
 .detail__acts > *{flex:1;min-width:8em}
+/* カードのシェアは絵と短い文字だけ。ほかの2つのボタンの幅を削らない */
+.detail__acts > .detail__share{flex:0 0 auto;min-width:0;gap:5px;padding-left:14px;padding-right:14px;color:var(--accent)}
+.detail__share svg{width:16px;height:16px;flex:none}
+.detail__share:disabled{opacity:.55}
+/* シェアの画面：作った絵を見せる */
+.shareimg__pic{display:block;max-width:100%;max-height:36vh;margin:0 auto 10px;border-radius:10px;box-shadow:var(--shadow-1)}
+.shareimg__note{margin:10px 0 0;font-size:11.5px;color:var(--ink-3)}
 .detail p{font-size:13.5px;margin:0 0 10px}
 .deflist{display:grid;gap:8px;font-size:13px}
 .deflist__row{display:flex;gap:10px}
@@ -704,6 +711,18 @@ a{color:var(--accent)}
   border-radius:12px;box-shadow:var(--shadow-2);
 }
 .gachahome__acts{flex:none;width:100%;display:grid;gap:10px}
+/* コインが足りないとき：下の「10連まであと少し」の見出しが画面の下に少し見えるよう、画面を少し短くする
+   （カードの裏がそのぶん小さくなる。コインとボタンの大きさは変えない） */
+.gachahome--hint{height:auto}
+/* 高さを中身に合わせるので、カードの裏の高さはここで決める。
+   背の高い画面は画面の高さの39%まで。背の低い画面は、上のおび・タブ・コイン（60px）・ボタン2つ（約160px）・
+   すき間を引いて、下の欄の見出しぶん（64px）を残した高さ。カードとボタンのあいだに空きができない。 */
+/* 下の欄は、ボタンのすぐ下に少しあけて続ける */
+.gachahome--hint + .panel{margin-top:18px}
+.gachahome--hint .gachahome__card{
+  flex:none;max-height:none;
+  height:min(39svh, calc(100svh - var(--appbar-h) - var(--tabbar-h) - 34px - 64px - 60px - 20px - 160px - env(safe-area-inset-bottom)));
+}
 
 /* たまごが孵る前のように、ゆらゆら揺れる。下を軸にして左右に傾ける。
    揺らすのは中の絵。外側は場所を決めるだけなので動かさない。 */
@@ -787,6 +806,29 @@ a{color:var(--accent)}
   background:#fff4c7;color:#7a5200;font-size:11.5px;font-weight:800;
 }
 
+/* ===== ログインボーナス（ミッション画面のいちばん上） =====
+   SHIKA COLLECTION のロゴを、色の無い版の上に色つきの版を重ね、日数のぶんだけ左から見せる。 */
+.loginbonus{margin-bottom:14px;text-align:center}
+.loginbonus__logo{position:relative;width:min(62%,240px);aspect-ratio:3/2;margin:2px auto 6px}
+.loginbonus__logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.loginbonus__gray{filter:grayscale(1) opacity(.28)}
+.loginbonus__color{clip-path:inset(0 100% 0 0)}
+.loginbonus__color.is-grow{transition:clip-path 1.3s cubic-bezier(.3,.7,.2,1)}
+.loginbonus__count{font-size:13px;color:var(--ink-3);margin-bottom:8px}
+.loginbonus__count b{font-size:26px;font-weight:900;color:var(--coin);font-variant-numeric:tabular-nums;margin-right:2px}
+.loginbonus__track{display:grid;gap:3px;align-items:end;margin:18px 2px 8px}
+.loginbonus__dot{position:relative;height:8px;border-radius:99px;background:#ebe6dc}
+.loginbonus__dot.is-on{background:linear-gradient(90deg,#e7b43c,#f2cf62)}
+.loginbonus__dot.is-reward{height:12px;box-shadow:inset 0 0 0 2px #e3c789}
+.loginbonus__dot.is-reward.is-on{box-shadow:none;background:linear-gradient(90deg,#d99a16,#f0bf2e)}
+.loginbonus__plus{
+  position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%);
+  font-size:10.5px;font-weight:900;color:var(--coin);white-space:nowrap;
+}
+.loginbonus__note{margin:4px 0 2px;font-size:13px;font-weight:800;color:var(--ink)}
+.loginbonus__sub{margin:0;font-size:11px;color:var(--ink-3)}
+@media (prefers-reduced-motion: reduce){ .loginbonus__color.is-grow{transition:none} }
+
 /* ミッション画面は見出し「称号」から始まるので、上の余白を詰める */
 .view > h3.missions__first{margin-top:4px}
 
@@ -860,6 +902,14 @@ a{color:var(--accent)}
 
 /* ===== 称号「志賀町コンプリート」 ===== */
 /* 4つの称号の下、まんなかに置く */
+/* 獲得した称号のシェアボタン */
+.titlebadge__share{
+  display:inline-flex;align-items:center;gap:4px;margin-top:2px;
+  border:1px solid #e3c789;background:#fff;color:#8a5a00;border-radius:999px;
+  padding:4px 11px;font-size:11.5px;font-weight:800;cursor:pointer;
+}
+.titlebadge__share svg{width:13px;height:13px;flex:none}
+.titlebadge__share:disabled{opacity:.55}
 .titlebadge--complete{grid-column:1 / -1;justify-self:center;width:min(100%,220px)}
 .titlebadge--complete .titlebadge__ring{width:112px;height:112px;position:relative;overflow:hidden}
 .titlebadge--complete .titlebadge__i{width:104px;height:104px;filter:none;display:none}

@@ -19,7 +19,12 @@
     "categoryPer5": 2,
     "spotFirst": 3,
     "spotRevisit": 1,
-    "townFirst": 5
+    "townFirst": 5,
+    "loginBonus": {
+      "5": 5,
+      "10": 10,
+      "15": 15
+    }
   },
   "event": {
     "enabled": false,

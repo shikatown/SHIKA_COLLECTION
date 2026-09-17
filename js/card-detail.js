@@ -6,6 +6,8 @@ import {
   el, clear, cardFace, lockedCard, toast, externalLink, resolvePhoto, vibrate } from './ui.js';
 import { openViewer } from './card-3d.js';
 import { cardActionUrl, linkCardButton } from './card-link.js';
+import { shareImage, prepareShareImage, SHARE_ICON } from './share.js';
+import { cardImage } from './share-image.js';
 import { coinCfg } from './rewards.js';
 import { distanceText, hasFix } from './geo.js';
 import { go } from './router.js';
@@ -67,6 +69,7 @@ export function renderCardDetail(view, params) {
     acts.append(el('a', { class: 'btn btn--primary', text: 'ガチャを引く', attrs: { href: '#/gacha' } }));
   }
   acts.append(favButton(c));
+  if (owned) acts.append(shareCardButton(c));
   meta.append(acts);
   hero.append(meta);
   view.append(hero);
@@ -134,6 +137,29 @@ function favButton(c) {
     btn.textContent = nowOn ? '♥ 気になる' : '♡ 気になる';
     toast(nowOn ? '「気になる」に入れました' : '「気になる」から外しました');
   });
+  return btn;
+}
+
+/** カードをシェアするボタン。カードの絵とアプリのURLを共有する（持っているカードだけ）。 */
+function shareCardButton(c) {
+  const opts = {
+    key: `card:${c.id}`,
+    make: () => cardImage(c),
+    fileName: `shika-collection-${c.id}.jpg`,
+    title: `SHIKA COLLECTION「${c.name}」`,
+    text: `志賀町のカード「${c.name}」をゲットしました！ #SHIKACOLLECTION #志賀町`,
+  };
+  const btn = el('button', {
+    class: 'btn detail__share', attrs: { type: 'button', 'aria-label': 'このカードをSNSでシェア' },
+    html: `${SHARE_ICON}<span>シェア</span>`,
+  });
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try { await shareImage(opts); } finally { btn.disabled = false; }
+  });
+  /* 絵は少し待ってから裏で作っておく。押してから作ると、iPhone では共有の許可が切れて1回で開けないことがある。 */
+  setTimeout(() => { if (btn.isConnected) prepareShareImage(opts.key, opts.make, opts.fileName).catch(() => {}); }, 1200);
   return btn;
 }
 

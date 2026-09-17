@@ -33,6 +33,8 @@ export function defaultState() {
     obtainedAt: {},          // cardId -> ISO日時（初取得）
     duplicateGauge: 0,
     dailyBonusDate: '',
+    loginDays: 0,            // ログインボーナスの日数（1周のなかで何日目まで受け取ったか）
+    loginShownDate: '',      // ミッション画面でロゴに色が付く演出を見せた日（1日1回だけ動かす）
     favorites: [],
     visits: {},              // cardId -> { firstVisitedAt, lastVisitDate, firstBonusAt }
     townVisited: false,
@@ -102,6 +104,8 @@ export function normalize(raw) {
   out.obtainedAt = obj(raw.obtainedAt);
   out.duplicateGauge = num(raw.duplicateGauge, 0);
   out.dailyBonusDate = typeof raw.dailyBonusDate === 'string' ? raw.dailyBonusDate : '';
+  out.loginDays = Math.min(365, num(raw.loginDays, 0));
+  out.loginShownDate = typeof raw.loginShownDate === 'string' ? raw.loginShownDate : '';
   out.favorites = arr(raw.favorites);
   out.townVisited = raw.townVisited === true;
   out.lastEventBonusDate = typeof raw.lastEventBonusDate === 'string' ? raw.lastEventBonusDate : '';

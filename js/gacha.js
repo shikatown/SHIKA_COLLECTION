@@ -3,7 +3,7 @@
    コイン消費・抽選・保存・ボーナス確定まで終わらせる。 */
 
 import { app, commit, saveOk, publishedCards, CATEGORIES, CATEGORY_LABEL } from './state.js';
-import { applyDrawTo, duplicateGaugeInfo, categoryProgress, dailyAvailable, claimDaily, coinCfg } from './rewards.js';
+import { applyDrawTo, duplicateGaugeInfo, categoryProgress, dailyAvailable, claimDaily, coinCfg, loginInfo } from './rewards.js';
 import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dialog, coinAmount, coinIcon } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
@@ -198,8 +198,12 @@ export function renderGacha(view) {
   home.append(el('div', { class: 'gachahome__acts' }, [b1, tenWrap]));
   view.append(home);
 
+  /* コインが足りないときは、下に「10連まであと少し」などの欄を出す。
+     カードの裏を少し小さくして、この欄の見出しが画面の下に少し見えるようにする（下にあると気づけるように）。 */
+  const short = !freeNow && s.coins < TEN_COST;
+  home.classList.toggle('gachahome--hint', short);
   if (!freeNow && s.coins < SINGLE_COST) view.append(shortOfCoins());
-  else if (!freeNow && s.coins < TEN_COST) view.append(shortOfCoins(true));
+  else if (short) view.append(shortOfCoins(true));
 }
 
 /** ガチャのボタン。名前の右に、値段を「コインの絵＋数字」で添える。 */
@@ -489,6 +493,13 @@ export function showResults(view, payload) {
 export async function offerDaily() {
   if (!dailyAvailable()) return 0;
   const n = claimDaily();
-  if (n > 0) { sfx.coin(); toast(`今日のログインボーナス +${n} SHIKA COIN`); }
+  if (n > 0) {
+    sfx.coin();
+    const { day, cycle } = loginInfo();
+    const extra = n - coinCfg().daily;
+    toast(extra > 0
+      ? `ログイン${day}日目！ ボーナス +${n} SHIKA COIN`
+      : `今日のログインボーナス +${n} SHIKA COIN（${day}/${cycle}日目）`, extra > 0 ? 4200 : 2600);
+  }
   return n;
 }

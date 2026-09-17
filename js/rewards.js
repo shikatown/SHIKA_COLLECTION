@@ -1,5 +1,5 @@
 /* rewards.js — SHIKA COIN の付与ルールを1か所にまとめる。
-   ・デイリー           1日1回 +1
+   ・デイリー           1日1回 +1。ログインした日数が 5日目 +5 ／ 10日目 +10 ／ 15日目 +15、15日目の翌日にまた1日目
    ・酒のアテ           初取得時のみ +1（Excelの明示フラグのみ。自動推論しない）
    ・かぶり             全カード共通ゲージ 5枚ごと +1（繰り越しあり）
    ・カテゴリ収集       ミッション画面で受け取る（js/missions.js）
@@ -11,15 +11,41 @@ export function coinCfg() {
   return (app.config && app.config.coin) || {
     daily: 1, sakeSnack: 1, duplicatePer5: 1, categoryPer5: 2,
     spotFirst: 3, spotRevisit: 1, townFirst: 5,
+    loginBonus: { 5: 5, 10: 10, 15: 15 },
   };
 }
 
-/** デイリーボーナス。付与したコイン数を返す（0なら本日分は付与済み）。 */
+/** ログインボーナス1周の日数（ごほうびのいちばん大きい日目。既定 15日） */
+export function loginCycle() {
+  const days = Object.keys(coinCfg().loginBonus || {}).map(Number).filter((n) => n > 0);
+  return days.length ? Math.max(...days) : 15;
+}
+
+/**
+ * ログインボーナスのいまの状況。
+ * @returns {{day:number, cycle:number, bonus:Object, next:number|null, nextCoins:number, today:boolean}}
+ *   day = この周で何日目まで受け取ったか、today = 今日の分を受け取ったか
+ */
+export function loginInfo() {
+  const cycle = loginCycle();
+  const bonus = coinCfg().loginBonus || {};
+  const day = Math.min(app.state.loginDays || 0, cycle);
+  const next = Object.keys(bonus).map(Number).sort((a, b) => a - b).find((d) => d > day) || null;
+  return { day, cycle, bonus, next, nextCoins: next ? bonus[next] : 0, today: !dailyAvailable() };
+}
+
+/** デイリーボーナス。付与したコイン数を返す（0なら本日分は付与済み）。
+    毎日の分に、ログインした日数のごほうび（5日目・10日目・15日目）を足す。
+    日数は「受け取った日」を数える（続けてでなくてよい）。1周（15日）を終えた翌日は、また1日目。 */
 export function claimDaily() {
   const today = todayKey();
   if (app.state.dailyBonusDate === today) return 0;
-  const amount = coinCfg().daily;
-  commit((s) => { s.dailyBonusDate = today; s.coins += amount; });
+  const cfg = coinCfg();
+  const cycle = loginCycle();
+  const prev = app.state.loginDays || 0;
+  const day = prev >= cycle ? 1 : prev + 1;
+  const amount = cfg.daily + ((cfg.loginBonus || {})[day] || 0);
+  commit((s) => { s.dailyBonusDate = today; s.loginDays = day; s.coins += amount; });
   return saveOk() ? amount : 0;   // 保存できなければ、受け取ったことにしない
 }
 
