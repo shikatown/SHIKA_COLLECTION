@@ -12,7 +12,7 @@ import { visitStats } from './geo.js';
 import { shareImage, shareApp, prepareShareImage, SHARE_ICON } from './share.js';
 import { titleImage } from './share-image.js';
 import { go } from './router.js';
-import { FANCLUB_TITLE, FANCLUB_ICON, FANCLUB_IMAGE, isFanclubMember, fanclubButton } from './fanclub.js';
+import { FANCLUB_TITLE, FANCLUB_ICON, FANCLUB_IMAGE, FANCLUB_IMAGE_WEB, isFanclubMember, fanclubButton } from './fanclub.js';
 import { toast } from './ui.js';
 
 /**
@@ -41,13 +41,15 @@ export function titleInfos() {
   const v = visitStats();
   const list = prog.map((p) => ({
     key: p.key, kind: 'category', name: p.master, label: p.label,
-    icon: `./assets/frames/thumb/icon-${p.key}.png`, big: [`./assets/frames/icon-${p.key}.png`],
+    icon: `./assets/frames/thumb/icon-${p.key}.png`,
+    // 大きい絵は表示用の軽い WebP。読めなければ元の PNG（js/title-complete.js・js/share-image.js が順に試す）
+    big: [`./assets/frames/web/icon-${p.key}.webp`, `./assets/frames/icon-${p.key}.png`],
     earned: got.includes(p.master), owned: p.owned, total: p.total,
   }));
   // 志賀町ファンクラブは、志賀町マスターの左（ホームでは2段目のいちばん左）
   list.push({
     key: 'fanclub', kind: 'fanclub', name: FANCLUB_TITLE,
-    icon: FANCLUB_ICON, big: [FANCLUB_IMAGE],
+    icon: FANCLUB_ICON, big: [FANCLUB_IMAGE_WEB, FANCLUB_IMAGE],
     earned: isFanclubMember(), owned: 0, total: 0,
   });
   list.push({
@@ -58,7 +60,7 @@ export function titleInfos() {
   const done = got.includes(COMPLETE_TITLE);
   list.push({
     key: 'complete', kind: 'complete', name: COMPLETE_TITLE,
-    icon: './assets/icons/title-complete.png', big: ['./assets/icons/title-complete.png'],
+    icon: './assets/icons/title-complete.png', big: ['./assets/icons/web/title-complete.webp', './assets/icons/title-complete.png'],
     earned: done, owned: allOwned, total: allTotal, visited: v.visited, spots: v.total,
   });
   for (const t of list) {

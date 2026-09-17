@@ -20,7 +20,7 @@ import { dailyAvailable } from './rewards.js';
 import { createOpening } from './opening.js';
 import { thumbUrl } from './card-render.js';
 import { maybeCelebrateTitles } from './title-complete.js';
-import { titleRow } from './titles.js';
+import { titleRow, titleInfos } from './titles.js';
 
 /* ===== 動作環境の確認 ===== */
 function unsupportedReason() {
@@ -100,15 +100,19 @@ async function boot() {
   /* 起動画面がまだ出ているうちに、ホーム画面を組み立てておく。
      先に起動画面を消すと、そのあとで画像を読むことになり一瞬ちらつく。 */
   document.getElementById('app').hidden = false;
+  /* 起動画面のうしろで前のタブを組み立てると、「スタート」を押した瞬間にそれが一瞬見えてしまう。
+     はじめからホームだけを組み立てる（v1.47。「スタート」でホームへ移る仕様と合わせる） */
+  if (location.hash && location.hash !== '#/home') history.replaceState(null, '', '#/home');
   router.start();
   updateChrome();
 
   // 「スタート」か「スキップ」を押すまで待つ
   await opening.done;
-  // 「スタート」を押したら、どの画面のアドレスで開いても必ずホームから始める
+  // 「スタート」を押したら、どの画面のアドレスで開いても必ずホームから始める（念のため）
   if (location.hash !== '#/home') router.go('#/home', true);
   document.getElementById('boot').hidden = true;
   setTimeout(maybeCelebrateTitles, 450);
+  prefetchTitleArt();
 
   // 起動後のお知らせ類（順番に1つずつ）
   await offerDaily();
@@ -360,6 +364,23 @@ function renderHome(view) {
 }
 
 
+/* 称号の大きい絵（獲得の演出と、押したときの案内で使う）を、手が空いたときに先に読んでおく。
+   押した瞬間に読み込みと展開が重なると、絵が出るまでカクつくため。
+   軽い WebP（1枚およそ100KB）で、起動の邪魔をしないよう、起動画面が消えてから1枚ずつ読む。 */
+function prefetchTitleArt() {
+  const srcs = titleInfos().map((t) => t.big[0]).filter(Boolean);
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 400));
+  let i = 0;
+  const next = () => {
+    if (i >= srcs.length) return;
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = img.onerror = () => { i += 1; idle(next); };
+    img.src = srcs[i];
+  };
+  idle(next);
+}
+
 /* ===== ホームの見出し・ロゴ・初回ポップ ===== */
 
 /* ===== ホームの動画 =====
@@ -367,21 +388,24 @@ function renderHome(view) {
    音なし・画面の中で・ずっと繰り返す。最後の0.6秒で最初の場面の絵に溶けてから最初に戻るので、つなぎ目が見えない。
 
    重くしないために：
-   ・動画は 960×408・約3.2MB（assets/video/README.txt）。読み終わるまでは最初の場面の絵（約80KB）を出す
+   ・動画は 1152×486・約5.9MB（assets/video/README.txt）。読み終わるまでは最初の場面の絵（約85KB）を出す
    ・起動画面のあいだは読まない。起動の絵（カードの裏やロゴ）の読み込みと取り合わないよう、起動画面が消えてから読む
-   ・ホームを離れたら止めて、読み込みも手放す。アプリを閉じたら止め、戻ったら続きから
+   ・ホームを離れたら止めて、読み込みも手放す。戻ってきたら、離れたところの続きから流す（v1.47）
+   ・アプリを閉じたら止め、戻ったら続きから
    ・動きを減らす設定の端末と、データセーバーの端末では、絵だけにする
    ・Service Worker では控えない（service-worker.js）。動画は途中から読む要求が多く、控えから返すと iPhone で流れないことがあるため */
 const HOME_VIDEO = './assets/video/home.mp4';
 const HOME_POSTER = './assets/video/home-poster.jpg';
 const HOME_VIDEO_FADE = 0.6;   // 最後の何秒で、最初の場面の絵に溶かすか
 let homeVideoEl = null;
+let homeVideoTime = 0;   // ほかのタブへ移る前に流していたところ（戻ってきたら、その続きから）
 
-/** いま流しているホームの動画を止めて、読み込みも手放す */
+/** いま流しているホームの動画を止めて、読み込みも手放す。どこまで流したかは覚えておく */
 function stopHomeVideo() {
   if (!homeVideoEl) return;
   const v = homeVideoEl;
   homeVideoEl = null;
+  if (Number.isFinite(v.currentTime) && v.currentTime > 0) homeVideoTime = v.currentTime;
   v.pause();
   v.removeAttribute('src');
   v.load();
@@ -419,6 +443,7 @@ function homeVideo() {
   });
   // 終わったら、見えていないうちに最初へ戻し、下地と同じ絵のまま一瞬で現す
   v.addEventListener('ended', () => {
+    homeVideoTime = 0;
     v.addEventListener('seeked', () => {
       v.classList.add('is-reset');
       v.classList.remove('is-fading');
@@ -431,6 +456,16 @@ function homeVideo() {
   const begin = () => {
     if (homeVideoEl !== v || !box.isConnected) return;
     v.src = HOME_VIDEO;
+    // ほかのタブから戻ってきたら、離れたところの続きから（終わりぎわなら最初から）
+    const resume = homeVideoTime;
+    if (resume > 0.2) {
+      v.addEventListener('loadedmetadata', () => {
+        if (homeVideoEl !== v) return;
+        if (v.duration && resume < v.duration - HOME_VIDEO_FADE - 0.2) {
+          try { v.currentTime = resume; } catch (_) { /* 途中から流せない端末は最初から */ }
+        }
+      }, { once: true });
+    }
     v.play().catch(() => {});   // 自動で流せない端末（省電力モードなど）は、絵のまま
   };
   const bootEl = document.getElementById('boot');

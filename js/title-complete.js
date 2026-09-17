@@ -80,11 +80,20 @@ function loadImage(src, ms) {
   return Promise.race([
     new Promise((resolve) => {
       const img = new Image();
-      img.onload = img.onerror = () => resolve();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
       img.src = src;
     }),
-    sleep(ms),
+    sleep(ms).then(() => false),
   ]);
+}
+
+/** 大きい絵の候補（軽い WebP → 元の PNG）から、読めたものを選ぶ */
+async function pickArt(list) {
+  for (const src of list) {
+    if (await loadImage(src, 3000)) return src;
+  }
+  return list[list.length - 1];
 }
 
 /** ホームの称号の枠 */
@@ -120,8 +129,7 @@ export async function celebrateTitle(t, { preview = false } = {}) {
   if (running) return;
   running = true;
   const quick = reduceMotion();
-  const art = t.big[0];
-  await loadImage(art, 3000);
+  const art = await pickArt(t.big);
 
   // ① ホームへ（すでに開いていても描き直す）
   go('#/home', true);

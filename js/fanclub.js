@@ -12,6 +12,7 @@ export const FANCLUB_TITLE = '志賀町ファンクラブ';
 export const FANCLUB_URL = 'https://liff.line.me/2006352925-134gxgYw/landing?follow=%40299bzzpg&lp=VODReE&liff_id=2006352925-134gxgYw';
 export const FANCLUB_ICON = './assets/icons/title-fanclub-sm.png';
 export const FANCLUB_IMAGE = './assets/icons/title-fanclub.png';
+export const FANCLUB_IMAGE_WEB = './assets/icons/web/title-fanclub.webp';   // 表示用の軽い WebP
 
 /** ファンクラブに登録したか（登録ボタンを押したか） */
 export function isFanclubMember() {
