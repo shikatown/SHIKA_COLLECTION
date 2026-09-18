@@ -96,7 +96,7 @@ export function missions() {
     owned: isFanclubMember() ? 1 : 0, need: 1, coins: k.fanclub,
   });
 
-  // ⑤ 志賀町と日本酒の歴史（「読む」を押して説明を読んだら達成）
+  // ⑤ 志賀町と日本酒の歴史（「読む」を押して説明を読んだら達成。画面ではファンクラブの上に出す）
   list.push({
     id: 'sake', group: '志賀町と日本酒の歴史',
     label: '志賀町と日本酒の歴史を読む',
@@ -176,12 +176,12 @@ export function renderMissions(view) {
   all.disabled = ready.length === 0;
   head.append(all);
 
-  // 並びは ログインボーナス → まとめて受け取る → カード → まち巡り（称号は v1.44 でホームへ移した）
+  // 並びは ログインボーナス → まとめて受け取る → 志賀町と日本酒の歴史 → ファンクラブ → カード → まち巡り
   view.append(el('h3', { class: 'missions__first', text: 'ログインボーナス' }));
   view.append(loginPanel());
   view.append(head);
 
-  for (const group of ['ファンクラブ', '志賀町と日本酒の歴史', 'カード', 'まち巡り']) {
+  for (const group of ['志賀町と日本酒の歴史', 'ファンクラブ', 'カード', 'まち巡り']) {
     const rows = list.filter((m) => m.group === group);
     if (!rows.length) continue;
     view.append(el('h3', { text: group }));
