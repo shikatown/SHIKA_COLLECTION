@@ -56,7 +56,7 @@ export function defaultState() {
       missionsGuideShown: false, // ミッション画面の初回の案内を見せたか
       gachaGuideShown: false,  // ガチャ画面の初回の案内（ミッションでコインをもらおう）を見せたか
       fanclubJoined: false,    // 「ファンクラブに登録」を押したか（志賀町ファンクラブの登録とみなす。js/fanclub.js）
-      sakeHistoryRead: false,  // ミッション「志賀町日本酒の歴史を読む」で説明を開いたか（js/missions.js）
+      sakeHistoryRead: false,  // ミッション「志賀町と日本酒の歴史を読む」で説明を開いたか（js/missions.js）
       openingPlayed: false,    // 起動演出の長い版を一度見たか（2回目からは短い版）
       completeCelebrated: false, // 「志賀町コンプリート」の獲得演出を見せたか（1回だけ出す）
       admin: false,          // 管理者の確認用モード（公開前の点検だけに使う）

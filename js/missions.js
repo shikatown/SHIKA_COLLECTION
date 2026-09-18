@@ -99,7 +99,7 @@ export function missions() {
   // ⑤ 志賀町と日本酒の歴史（「読む」を押して説明を読んだら達成）
   list.push({
     id: 'sake', group: '志賀町と日本酒の歴史',
-    label: '志賀町日本酒の歴史を読む',
+    label: '志賀町と日本酒の歴史を読む',
     owned: app.state.flags.sakeHistoryRead ? 1 : 0, need: 1, coins: k.sake,
   });
 
@@ -493,7 +493,7 @@ function afterJoin(view) {
   setTimeout(maybeCelebrateTitles, 600);
 }
 
-/* 志賀町と日本酒の歴史（ミッション「志賀町日本酒の歴史を読む」）。
+/* 志賀町と日本酒の歴史（ミッション「志賀町と日本酒の歴史を読む」）。
    「読む」を押すと説明が出て、その時点で達成にする（flags.sakeHistoryRead）。
    文章は町からの提供文をそのまま載せる。 */
 const SAKE_HISTORY = [
