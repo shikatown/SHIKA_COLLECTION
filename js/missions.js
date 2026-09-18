@@ -27,6 +27,7 @@ function cfg() {
     visit: c.visit || { 1: 3, 5: 5, 10: 8 },
     visitAll: c.visitAll != null ? c.visitAll : 15,
     fanclub: c.fanclub != null ? c.fanclub : 10,
+    sake: c.sake != null ? c.sake : 5,
   };
 }
 
@@ -93,6 +94,13 @@ export function missions() {
     id: 'fanclub', group: 'ファンクラブ',
     label: '志賀町ファンクラブ会員になる',
     owned: isFanclubMember() ? 1 : 0, need: 1, coins: k.fanclub,
+  });
+
+  // ⑤ 志賀町と日本酒の歴史（「読む」を押して説明を読んだら達成）
+  list.push({
+    id: 'sake', group: '志賀町と日本酒の歴史',
+    label: '志賀町日本酒の歴史を読む',
+    owned: app.state.flags.sakeHistoryRead ? 1 : 0, need: 1, coins: k.sake,
   });
 
   const claimed = app.state.rewardClaims.missions || [];
@@ -173,7 +181,7 @@ export function renderMissions(view) {
   view.append(loginPanel());
   view.append(head);
 
-  for (const group of ['ファンクラブ', 'カード', 'まち巡り']) {
+  for (const group of ['ファンクラブ', '志賀町と日本酒の歴史', 'カード', 'まち巡り']) {
     const rows = list.filter((m) => m.group === group);
     if (!rows.length) continue;
     view.append(el('h3', { text: group }));
@@ -182,6 +190,12 @@ export function renderMissions(view) {
       // ミッションの行（押すと説明）と、「ファンクラブに登録」ボタンをひとまとめに
       for (const m of rows) box.append(row(m, view));
       box.append(fanclubPanel(view));
+      view.append(box);
+      continue;
+    }
+    if (group === '志賀町と日本酒の歴史') {
+      for (const m of rows) box.append(row(m, view));
+      box.append(sakePanel(view));
       view.append(box);
       continue;
     }
@@ -479,6 +493,46 @@ function afterJoin(view) {
   setTimeout(maybeCelebrateTitles, 600);
 }
 
+/* 志賀町と日本酒の歴史（ミッション「志賀町日本酒の歴史を読む」）。
+   「読む」を押すと説明が出て、その時点で達成にする（flags.sakeHistoryRead）。
+   文章は町からの提供文をそのまま載せる。 */
+const SAKE_HISTORY = [
+  '酒の醸造戸数は四戸で、高浜の「新酒屋」岡部弥平（鶴の友・金山・巴正宗・奉天）が四百四十六石、堀松の加茂野八郎（浅）が百九十四石、上棚の辻口政頼（萬歳）が百二十五石、岩田の泉庄助（岩泉）が百四石を造っていた。現存する酒蔵は残念ながらない。',
+  '大正から昭和初期ごろの志賀町・外浦地域で酒粕や甘酒、こんかいわしなどを使った発酵・保存食を土鍋で煮て食べる冬の食文化が根付いていたことが、『日本の食生活全集17 聞き書 石川の食事』で記録されている。',
+];
+
+/** 「読む」を押したとき。説明を出して、ミッションを達成にする */
+function openSakeHistory(view) {
+  const first = !app.state.flags.sakeHistoryRead;
+  if (first) commit((s) => { s.flags.sakeHistoryRead = true; });
+  const body = el('div', { class: 'sakehist' });
+  body.append(el('h4', { class: 'sakehist__h', text: '志賀町の歴史' }));
+  for (const t of SAKE_HISTORY) body.append(el('p', { class: 'sakehist__p', text: t }));
+  if (first && saveOk()) {
+    body.append(el('p', { class: 'sakehist__done', text: `読んでいただきありがとうございます。ミッション達成です（+${cfg().sake} SHIKA COIN）。閉じたあと「受け取る」を押してください。` }));
+  }
+  dialog({ title: '志賀町と日本酒の歴史', body: [body], actions: [{ label: '閉じる', value: null, primary: true }] })
+    .then(() => { if (first && view.isConnected) renderMissions(view); });
+}
+
+/** ミッションの下に置く、「読む」ボタンのまとまり */
+function sakePanel(view) {
+  const read = !!app.state.flags.sakeHistoryRead;
+  const p = el('div', { class: 'fanclub' });
+  p.append(el('p', {
+    class: 'fanclub__text',
+    text: read
+      ? '志賀町に四戸あった酒蔵と、冬の食文化の話です。何度でも読めます。'
+      : '志賀町にあった酒蔵と、冬の食文化の話です。読むとミッション達成になります。',
+  }));
+  p.append(el('button', {
+    class: 'btn btn--primary btn--block', attrs: { type: 'button' },
+    text: read ? 'もう一度読む' : '読む',
+    on: { click: () => openSakeHistory(view) },
+  }));
+  return p;
+}
+
 /** ミッションの下に置く、登録ボタンのまとまり */
 function fanclubPanel(view) {
   const joined = isFanclubMember();
@@ -498,13 +552,14 @@ function fanclubPanel(view) {
 
 function row(m, view) {
   const r = el('div', { class: `missionrow${m.claimed ? ' is-claimed' : ''}${m.done && !m.claimed ? ' is-ready' : ''}` });
-  if (m.id === 'fanclub') {
-    // 押すと、受信設定フォームから登録する方法を説明する（受け取るボタンはそのまま）
+  if (m.id === 'fanclub' || m.id === 'sake') {
+    // 押すと説明が出る（ファンクラブは登録の手順、日本酒の歴史は本文。受け取るボタンはそのまま）
+    const open = () => (m.id === 'fanclub' ? openFanclubHelp(view) : openSakeHistory(view));
     r.classList.add('is-tap');
     r.setAttribute('role', 'button');
     r.setAttribute('tabindex', '0');
-    r.addEventListener('click', (e) => { if (!e.target.closest('button, a')) openFanclubHelp(view); });
-    r.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === r) { e.preventDefault(); openFanclubHelp(view); } });
+    r.addEventListener('click', (e) => { if (!e.target.closest('button, a')) open(); });
+    r.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === r) { e.preventDefault(); open(); } });
   }
 
   const body = el('div', { class: 'missionrow__b' });
@@ -518,6 +573,8 @@ function row(m, view) {
     d.append(el('span', { text: `+${m.coins} SHIKA COIN` }));
   } else if (m.id === 'fanclub') {
     d.append(el('span', { text: '受信設定フォームから登録 ／ タップで説明' }));
+  } else if (m.id === 'sake') {
+    d.append(el('span', { text: '「読む」を押すと達成 ／ タップでも読めます' }));
   } else {
     d.append(el('span', { text: `${m.owned} / ${m.need} ／ あと ${m.need - m.owned}` }));
   }
@@ -526,6 +583,12 @@ function row(m, view) {
 
   if (m.claimed) {
     r.append(el('span', { class: 'missionrow__ok', text: '✓' }));
+  } else if (m.id === 'sake' && !m.done) {
+    // まだ読んでいないときは、行から直接読める
+    r.append(el('button', {
+      class: 'btn btn--primary missionrow__go', attrs: { type: 'button' }, text: '読む',
+      on: { click: () => openSakeHistory(view) },
+    }));
   } else if (m.done) {
     r.append(el('button', {
       class: 'btn btn--primary missionrow__go', attrs: { type: 'button' }, text: '受け取る',

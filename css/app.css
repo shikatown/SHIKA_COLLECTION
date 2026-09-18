@@ -1549,3 +1549,9 @@ a{color:var(--accent)}
   flex:none;padding:6px 12px;border-radius:999px;border:1px solid var(--accent);
   background:#fff;color:var(--accent);font-size:12px;font-weight:800;text-decoration:none;
 }
+
+/* ミッション「志賀町日本酒の歴史を読む」の本文（js/missions.js の openSakeHistory） */
+.sakehist{text-align:left}
+.sakehist__h{margin:0 0 8px;font-size:13px;color:var(--ink-3);letter-spacing:.04em}
+.dialog .sakehist__p{margin:0 0 12px;font-size:14px;line-height:1.85;color:var(--ink)}
+.dialog .sakehist__done{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--coin-soft);color:var(--coin);font-size:13px;font-weight:800;line-height:1.6}
