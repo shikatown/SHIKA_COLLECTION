@@ -33,6 +33,53 @@ function filteredSpots(key) {
   return all;
 }
 
+/**
+ * 現在地から全部のスポットを回るとき、道のりが短くなる順番を作る。
+ * 距離は直線のめやす（アプリの中だけで計算する。現在地はどこにも送らない）。
+ * 8か所までは、ありうる順番をすべて試して最短を選ぶ。それより多いときは、近い所から順に選ぶ。
+ * @param {Array} spots スポット（カード）
+ * @param {{lat:number,lng:number}|null} from 現在地。無ければ元の順のまま
+ */
+function bestOrder(spots, from) {
+  if (!from || spots.length < 2) return spots.slice();
+  const n = spots.length;
+  // 距離の表を先に作る（同じ計算を何度もしない）。d0[i] = 現在地から i、d[i][j] = i から j
+  const d0 = spots.map((c) => geo.distanceMeters(from.lat, from.lng, c.gps.lat, c.gps.lng));
+  const d = spots.map((a) => spots.map((b) => geo.distanceMeters(a.gps.lat, a.gps.lng, b.gps.lat, b.gps.lng)));
+  if (n <= 8) {
+    let bestIdx = null;
+    let bestLen = Infinity;
+    const used = new Array(n).fill(false);
+    const acc = [];
+    const walk = (len, last) => {
+      if (len >= bestLen) return;               // すでに長いので、この先は見ない
+      if (acc.length === n) { bestLen = len; bestIdx = acc.slice(); return; }
+      for (let i = 0; i < n; i += 1) {
+        if (used[i]) continue;
+        used[i] = true;
+        acc.push(i);
+        walk(len + (last < 0 ? d0[i] : d[last][i]), i);
+        acc.pop();
+        used[i] = false;
+      }
+    };
+    walk(0, -1);
+    return bestIdx ? bestIdx.map((i) => spots[i]) : spots.slice();
+  }
+  // 近い所から順に選ぶ
+  const rest = spots.map((c, i) => i);
+  const out = [];
+  let last = -1;
+  while (rest.length) {
+    let bi = 0;
+    let bd = Infinity;
+    rest.forEach((i, k) => { const x = last < 0 ? d0[i] : d[last][i]; if (x < bd) { bd = x; bi = k; } });
+    last = rest.splice(bi, 1)[0];
+    out.push(spots[last]);
+  }
+  return out;
+}
+
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTR = 'OpenStreetMap contributors';
 const TILE_ATTR_URL = 'https://www.openstreetmap.org/copyright';
@@ -350,14 +397,36 @@ export function renderMap(view, params) {
       listBox.append(el('p', { class: 'muted center', style: { margin: '6px 0 0' }, text: mapFilter === 'visited' ? 'まだ訪問したスポットはありません' : '当てはまるスポットはありません' }));
       return;
     }
+    /* モデルコースは、全部の場所を回る経路も出す。
+       現在地が分かっていれば、道のりが短くなる順に並べ替えてから渡す（bestOrder）。
+       押した時点の現在地で計算し直すので、移動していても近い順になる。 */
+    let orderIdx = null;   // 経路で回る順番（list の何番目を、何番目に回るか）
     if (f.ids && list.length > 1) {
-      // 全部の場所にピンを落として、1番目から順に回る経路を Googleマップで開く
-      listBox.append(el('a', {
+      const routeOf = () => {
+        const me = geo.myPosition();
+        const order = bestOrder(list, me);
+        orderIdx = me ? order.map((c) => list.indexOf(c)) : null;
+        return mapsCourseUrl(order.map((c) => ({ lat: c.gps.lat, lng: c.gps.lng })));
+      };
+      const link = el('a', {
         class: 'btn btn--block spotlist__all',
-        attrs: { href: mapsCourseUrl(list.map((c) => ({ lat: c.gps.lat, lng: c.gps.lng }))), target: '_blank', rel: 'noopener noreferrer' },
+        attrs: { href: routeOf(), target: '_blank', rel: 'noopener noreferrer' },
         html: '<span>コース全体の経路をGoogleマップで見る</span>',
-      }));
-      listBox.append(el('p', { class: 'spotlist__note', text: '1番目から順に回る経路です。全部の場所にピンが立ちます。' }));
+      });
+      // 押した瞬間に、そのときの現在地で並べ替え直す（リンクをたどる前に書き換える）
+      link.addEventListener('click', () => { link.href = routeOf(); });
+      listBox.append(link);
+      if (orderIdx) {
+        listBox.append(el('p', { class: 'spotlist__note', text: `現在地から、道のりが短くなる順に回ります（直線距離のめやす）。経路の順：${orderIdx.map((i) => i + 1).join(' → ')}` }));
+      } else {
+        const note = el('p', { class: 'spotlist__note', text: '現在地から出発して、下の順に回ります。現在地が分かると、近い順に並べ替えます。' });
+        listBox.append(note);
+        // 現在地を取ってから並べ替える（チェックインはしない）
+        listBox.append(el('button', {
+          class: 'btn btn--block spotlist__locate', attrs: { type: 'button' }, text: '現在地を取得して、近い順にする',
+          on: { click: (e) => locateForCourse(e.currentTarget) },
+        }));
+      }
     }
     list.forEach((c, i) => {
       const row = el('div', { class: 'spotlist__row', attrs: { role: 'button', tabindex: '0' } });
@@ -369,7 +438,8 @@ export function renderMap(view, params) {
       mid.append(el('span', { class: 'spotlist__n', text: c.name }));
       const state = isVisited(c.id) ? '訪問済み' : (c.gps.enabled ? '未訪問' : '');
       const dist = geo.hasFix() ? geo.distanceText(c.gps.lat, c.gps.lng) : '';
-      mid.append(el('span', { class: 'spotlist__s', text: [state, dist].filter(Boolean).join(' ・ ') }));
+      const step = orderIdx ? `経路の順 ${orderIdx.indexOf(i) + 1}番目` : '';
+      mid.append(el('span', { class: 'spotlist__s', text: [state, dist, step].filter(Boolean).join(' ・ ') }));
       row.append(mid);
       row.append(el('a', {
         class: 'spotlist__go',
@@ -381,6 +451,24 @@ export function renderMap(view, params) {
       row.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === row) { e.preventDefault(); open(); } });
       listBox.append(row);
     });
+  }
+
+  /** 一覧を現在地から近い順にするために、現在地だけを取る（チェックインはしない） */
+  async function locateForCourse(btnEl) {
+    unlock();
+    if (!geo.supported()) { await geoFailDialog('unsupported'); return; }
+    const before = btnEl.textContent;
+    btnEl.disabled = true;
+    try {
+      const me = await geo.acquire((msg) => { btnEl.textContent = msg; });
+      mapApi.setMe(me.lat, me.lng);
+      status.textContent = `現在地: ${geo.fixAgeMinutes()}分前に確認`;
+      drawList();
+    } catch (e) {
+      btnEl.disabled = false;
+      btnEl.textContent = before;
+      if (String(e.message) !== 'busy') await geoFailDialog(geo.errorKind(e));
+    }
   }
 
   const chipBtns = MAP_FILTERS.map((f) => {

@@ -246,17 +246,18 @@ export function mapsRouteUrl(lat, lng) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}&travelmode=driving`;
 }
 /** Googleマップの経路検索（複数のスポットを、渡した順に回る）。
-    1つ目が出発地、最後が目的地、あいだは経由地になる（地図には全部のピンが出る）。
-    ここでも現在地は渡さない（アプリは端末の位置を保存も送信もしない）。 */
+    出発地は渡さないので、端末の現在地から出発して、渡した順に回る経路になる
+    （最後が目的地、あいだは経由地。地図には全部のピンが立つ）。
+    現在地は Googleマップ側が決めるもので、アプリからは渡さない（位置を保存も送信もしない）。
+    回る順番は、呼ぶ側で決める（js/map.js の bestOrder が、現在地から短くなる順に並べ替える）。 */
 export function mapsCourseUrl(points) {
   const pt = (p) => `${p.lat},${p.lng}`;
   if (!points || !points.length) return '';
   if (points.length === 1) return mapsRouteUrl(points[0].lat, points[0].lng);
-  const mid = points.slice(1, -1).map(pt).join('|');
+  const mid = points.slice(0, -1).map(pt).join('|');   // 経由地（最後の1つ以外）
   return 'https://www.google.com/maps/dir/?api=1'
-    + `&origin=${encodeURIComponent(pt(points[0]))}`
     + `&destination=${encodeURIComponent(pt(points[points.length - 1]))}`
-    + (mid ? `&waypoints=${encodeURIComponent(mid)}` : '')
+    + `&waypoints=${encodeURIComponent(mid)}`
     + '&travelmode=driving';
 }
 export function externalLink(label, url, cls = 'btn btn--block') {
