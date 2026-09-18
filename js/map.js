@@ -341,6 +341,7 @@ export function createMap(container, { center, zoom }) {
 /* ===== まち巡り画面 ===== */
 
 let mapApi = null;
+let redrawList = null;   // いま出ている一覧を作り直す（現在地が分かったら、近い順に並べ直すため）
 
 export function renderMap(view, params) {
   clear(view);
@@ -388,9 +389,15 @@ export function renderMap(view, params) {
   function drawList() {
     clear(listBox);
     const f = MAP_FILTERS.find((x) => x.key === mapFilter) || MAP_FILTERS[0];
-    const list = filteredSpots(mapFilter);
+    const base = filteredSpots(mapFilter);
+    /* 現在地が分かっていれば、どの絞り込みでも近い順に並べる（「近くのスポットを探す」を押したあとなど）。
+       モデルコースの番号は、コースで決めた順（base の並び）のまま添える。 */
+    const near = geo.hasFix();
+    const list = near
+      ? base.slice().sort((a, b) => geo.distanceFromMe(a.gps.lat, a.gps.lng) - geo.distanceFromMe(b.gps.lat, b.gps.lng))
+      : base;
     listBox.append(el('div', { class: 'homehead' }, [
-      el('span', { text: f.ids ? 'コースの順番' : f.label }),
+      el('span', { text: near ? '近い順' : (f.ids ? 'コースの順番' : f.label) }),
       el('b', { text: `${list.length} か所` }),
     ]));
     if (!list.length) {
@@ -401,11 +408,11 @@ export function renderMap(view, params) {
        現在地が分かっていれば、道のりが短くなる順に並べ替えてから渡す（bestOrder）。
        押した時点の現在地で計算し直すので、移動していても近い順になる。 */
     let orderIdx = null;   // 経路で回る順番（list の何番目を、何番目に回るか）
-    if (f.ids && list.length > 1) {
+    if (f.ids && base.length > 1) {
       const routeOf = () => {
         const me = geo.myPosition();
-        const order = bestOrder(list, me);
-        orderIdx = me ? order.map((c) => list.indexOf(c)) : null;
+        const order = bestOrder(base, me);
+        orderIdx = me ? order.map((c) => base.indexOf(c)) : null;
         return mapsCourseUrl(order.map((c) => ({ lat: c.gps.lat, lng: c.gps.lng })));
       };
       const link = el('a', {
@@ -428,17 +435,17 @@ export function renderMap(view, params) {
         }));
       }
     }
-    list.forEach((c, i) => {
+    list.forEach((c) => {
       const row = el('div', { class: 'spotlist__row', attrs: { role: 'button', tabindex: '0' } });
       row.append(el('span', {
         class: `spotlist__no${isVisited(c.id) ? ' is-visited' : ''}`,
-        text: f.ids ? String(i + 1) : (isVisited(c.id) ? '★' : '●'),
+        text: f.ids ? String(base.indexOf(c) + 1) : (isVisited(c.id) ? '★' : '●'),
       }));
       const mid = el('span', { class: 'spotlist__b' });
       mid.append(el('span', { class: 'spotlist__n', text: c.name }));
       const state = isVisited(c.id) ? '訪問済み' : (c.gps.enabled ? '未訪問' : '');
       const dist = geo.hasFix() ? geo.distanceText(c.gps.lat, c.gps.lng) : '';
-      const step = orderIdx ? `経路の順 ${orderIdx.indexOf(i) + 1}番目` : '';
+      const step = orderIdx ? `経路の順 ${orderIdx.indexOf(base.indexOf(c)) + 1}番目` : '';
       mid.append(el('span', { class: 'spotlist__s', text: [state, dist, step].filter(Boolean).join(' ・ ') }));
       row.append(mid);
       row.append(el('a', {
@@ -452,6 +459,9 @@ export function renderMap(view, params) {
       listBox.append(row);
     });
   }
+
+    // 「近くのスポットを探す」から一覧を作り直すための入口（現在地が分かると、近い順に並び替わる）
+  redrawList = drawList;
 
   /** 一覧を現在地から近い順にするために、現在地だけを取る（チェックインはしない） */
   async function locateForCourse(btnEl) {
@@ -665,12 +675,10 @@ async function runCheckIn(view, status, btn) {
   const res = geo.checkIn();
   if (res.saveFailed) return;   // 保存できなかった。チェックインの成功は知らせない
   if (res.out) {
-    sfx.error();
-    await dialog({
-      title: 'チェックイン範囲外です',
-      body: ['まだスポットのチェックイン範囲外です。', 'もう少しスポットに近づいてから、再度お試しください。'],
-      actions: [{ label: '閉じる', value: null, primary: true }],
-    });
+    /* まだどのスポットの範囲にも入っていないとき。
+       以前は「チェックイン範囲外です」の案内を出していたが、
+       下の一覧が現在地から近い順に並び替わり、それぞれの距離も出るので、案内は出さない（v1.48.2）。 */
+    if (redrawList) redrawList();   // 近い順に並べ直す
     showNearest(view, res.nearest);
     return;
   }

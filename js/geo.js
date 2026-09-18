@@ -27,10 +27,7 @@ export function acquire(onProgress = () => {}) {
   if (asking) return Promise.reject(new Error('busy'));
   asking = true;
 
-  const messages = ['ピン！ 波紋', '志賀町を探索中…', '現在地を確認しています'];
-  let mi = 0;
-  onProgress(messages[0]);
-  const ticker = setInterval(() => { mi = (mi + 1) % messages.length; onProgress(messages[mi]); }, 1200);
+  onProgress('現在地を確認しています…');
 
   return new Promise((resolve, reject) => {
     let best = null;
@@ -40,7 +37,6 @@ export function acquire(onProgress = () => {}) {
     const finish = (err) => {
       if (done) return;
       done = true;
-      clearInterval(ticker);
       asking = false;
       navigator.geolocation.clearWatch(watchId);
       clearTimeout(timer);
