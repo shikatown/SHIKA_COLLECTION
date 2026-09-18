@@ -519,12 +519,8 @@ function openSakeHistory(view) {
 function sakePanel(view) {
   const read = !!app.state.flags.sakeHistoryRead;
   const p = el('div', { class: 'fanclub' });
-  p.append(el('p', {
-    class: 'fanclub__text',
-    text: read
-      ? '志賀町に四戸あった酒蔵と、冬の食文化の話です。何度でも読めます。'
-      : '志賀町にあった酒蔵と、冬の食文化の話です。読むとミッション達成になります。',
-  }));
+  // 説明文は置かない（ミッションの行と同じ内容になるため。v1.49.3）
+  p.append(el('p', { class: 'fanclub__text', text: read ? '何度でも読めます。' : '読むとミッション達成になります。' }));
   p.append(el('button', {
     class: 'btn btn--primary btn--block', attrs: { type: 'button' },
     text: read ? 'もう一度読む' : '読む',
