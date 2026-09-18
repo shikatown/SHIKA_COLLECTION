@@ -569,8 +569,6 @@ function row(m, view) {
     d.append(el('span', { text: `+${m.coins} SHIKA COIN` }));
   } else if (m.id === 'fanclub') {
     d.append(el('span', { text: '受信設定フォームから登録 ／ タップで説明' }));
-  } else if (m.id === 'sake') {
-    d.append(el('span', { text: '下の「読む」で達成 ／ タップでも読めます' }));
   } else {
     d.append(el('span', { text: `${m.owned} / ${m.need} ／ あと ${m.need - m.owned}` }));
   }
