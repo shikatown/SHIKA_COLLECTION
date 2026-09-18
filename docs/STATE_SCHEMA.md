@@ -53,7 +53,7 @@
 | `rewardClaims.sakeSnack` | 酒のアテ初取得ボーナスを渡したカードID |
 | `rewardClaims.category` | カテゴリごとの「5種類段階」を何段階まで払ったか |
 | `settings` | 効果音（既定OFF）・振動（既定ON） |
-| `flags` | 一度きりの案内を出したかどうか |
+| `flags` | 一度きりの案内を出したかどうか（`sakeHistoryRead` は、ミッション「志賀町日本酒の歴史を読む」で本文を開いたか。v1.49） |
 | `knownCardIds` | 前回起動時に見えていた公開カードID。差分が新カード通知になる |
 | `dataVersion` | 最後に読んだ公開データのバージョン |
 | `pendingResult` | 未確認のガチャ結果（**すでに確定・保存済み**）。結果画面を閉じると null |

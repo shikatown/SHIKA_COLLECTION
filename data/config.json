@@ -12,6 +12,10 @@
     "spot": "Googleマップで経路を見る",
     "culture": ""
   },
+  "mission": {
+    "fanclub": 10,
+    "sake": 5
+  },
   "coin": {
     "daily": 1,
     "sakeSnack": 1,
