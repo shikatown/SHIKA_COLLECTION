@@ -506,7 +506,6 @@ function openSakeHistory(view) {
   const first = !app.state.flags.sakeHistoryRead;
   if (first) commit((s) => { s.flags.sakeHistoryRead = true; });
   const body = el('div', { class: 'sakehist' });
-  body.append(el('h4', { class: 'sakehist__h', text: '志賀町の歴史' }));
   for (const t of SAKE_HISTORY) body.append(el('p', { class: 'sakehist__p', text: t }));
   if (first && saveOk()) {
     body.append(el('p', { class: 'sakehist__done', text: `読んでいただきありがとうございます。ミッション達成です（+${cfg().sake} SHIKA COIN）。閉じたあと「受け取る」を押してください。` }));
