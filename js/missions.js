@@ -574,7 +574,7 @@ function row(m, view) {
   } else if (m.id === 'fanclub') {
     d.append(el('span', { text: '受信設定フォームから登録 ／ タップで説明' }));
   } else if (m.id === 'sake') {
-    d.append(el('span', { text: '「読む」を押すと達成 ／ タップでも読めます' }));
+    d.append(el('span', { text: '下の「読む」で達成 ／ タップでも読めます' }));
   } else {
     d.append(el('span', { text: `${m.owned} / ${m.need} ／ あと ${m.need - m.owned}` }));
   }
@@ -583,12 +583,6 @@ function row(m, view) {
 
   if (m.claimed) {
     r.append(el('span', { class: 'missionrow__ok', text: '✓' }));
-  } else if (m.id === 'sake' && !m.done) {
-    // まだ読んでいないときは、行から直接読める
-    r.append(el('button', {
-      class: 'btn btn--primary missionrow__go', attrs: { type: 'button' }, text: '読む',
-      on: { click: () => openSakeHistory(view) },
-    }));
   } else if (m.done) {
     r.append(el('button', {
       class: 'btn btn--primary missionrow__go', attrs: { type: 'button' }, text: '受け取る',
