@@ -13,6 +13,7 @@ import { createGachaStage } from './gacha-anim.js';
 import { isAdmin } from './admin.js';
 import { isValidPendingResult } from './storage.js';
 import { showGuide } from './guide.js';
+import { trackEvent } from './analytics.js';
 
 export const SINGLE_COST = 1;
 export const TEN_COST = 10;
@@ -91,6 +92,7 @@ export function commitDraw(kind) {
     s.pendingResult = payload;
   });
   if (!saveOk()) return null;   // 案内は app.js（onSaveFailed）が出す
+  trackEvent('gacha_draw', { kind, cards: results.length });   // 引いた回数の傾向だけ（何が出たかは送らない）
   return payload;
 }
 

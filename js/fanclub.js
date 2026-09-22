@@ -7,6 +7,7 @@
 
 import { app, commit } from './state.js';
 import { el } from './dom.js';
+import { trackEvent } from './analytics.js';
 
 export const FANCLUB_TITLE = '志賀町ファンクラブ';
 export const FANCLUB_URL = 'https://liff.line.me/2006352925-134gxgYw/landing?follow=%40299bzzpg&lp=VODReE&liff_id=2006352925-134gxgYw';
@@ -33,6 +34,7 @@ export function fanclubButton({ label = 'ファンクラブに登録', cls = 'bt
   a.append(el('span', { text: label }));
   a.addEventListener('click', () => {
     const first = !isFanclubMember();
+    trackEvent('outbound', { link: 'fanclub_line', first });
     if (first) commit((s) => { s.flags.fanclubJoined = true; });
     if (onJoined) setTimeout(() => onJoined(first), 0);
   });

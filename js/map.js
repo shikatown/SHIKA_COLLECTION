@@ -11,6 +11,7 @@ import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
 import { maybeCelebrateTitles } from './title-complete.js';
+import { trackEvent } from './analytics.js';
 import { showGuide } from './guide.js';
 
 /* 地図の絞り込み。モデルコースは、巡る順に並べたカード番号 */
@@ -421,7 +422,7 @@ export function renderMap(view, params) {
         html: '<span>コース全体の経路をGoogleマップで見る</span>',
       });
       // 押した瞬間に、そのときの現在地で並べ替え直す（リンクをたどる前に書き換える）
-      link.addEventListener('click', () => { link.href = routeOf(); });
+      link.addEventListener('click', () => { link.href = routeOf(); trackEvent('outbound', { link: 'route_course' }); });
       listBox.append(link);
       if (orderIdx) {
         listBox.append(el('p', { class: 'spotlist__note', text: `現在地から、道のりが短くなる順に回ります（直線距離のめやす）。経路の順：${orderIdx.map((i) => i + 1).join(' → ')}` }));
@@ -448,11 +449,13 @@ export function renderMap(view, params) {
       const step = orderIdx ? `経路の順 ${orderIdx.indexOf(base.indexOf(c)) + 1}番目` : '';
       mid.append(el('span', { class: 'spotlist__s', text: [state, dist, step].filter(Boolean).join(' ・ ') }));
       row.append(mid);
-      row.append(el('a', {
+      const goLink = el('a', {
         class: 'spotlist__go',
         attrs: { href: mapsRouteUrl(c.gps.lat, c.gps.lng), target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${c.name}への経路をGoogleマップで見る` },
         text: '経路',
-      }));
+      });
+      goLink.addEventListener('click', () => trackEvent('outbound', { link: 'route_spot' }));
+      row.append(goLink);
       const open = () => go(`#/card/${c.id}`);
       row.addEventListener('click', (e) => { if (!e.target.closest('a')) open(); });
       row.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === row) { e.preventDefault(); open(); } });
@@ -685,6 +688,7 @@ async function runCheckIn(view, status, btn) {
 
   sfx.checkin();
   vibrate([20, 50, 30]);
+  trackEvent('checkin', { spots: res.checkins.length });   // 何か所チェックインできたかだけ（現在地は送らない）
   await showCheckinResult(res);
   renderMap(view, null);
   // チェックインで称号がそろったら、獲得演出へ

@@ -44,7 +44,7 @@ export function defaultState() {
       category: {},          // category -> 付与済み回数（v1.18より前の自動付与の記録）
       missions: [],          // 受け取ったミッションの id
     },
-    settings: { sound: false, vibration: true },
+    settings: { sound: false, vibration: true, analytics: true },   // analytics = 利用状況の記録を送るか（js/analytics.js）
     flags: {
       firstFreeTenDone: false,
       tutorial3dShown: false,
@@ -140,7 +140,7 @@ export function normalize(raw) {
   out.rewardClaims.missions = Array.from(new Set(out.rewardClaims.missions));
 
   const st = obj(raw.settings);
-  out.settings = { sound: st.sound === true, vibration: st.vibration !== false };
+  out.settings = { sound: st.sound === true, vibration: st.vibration !== false, analytics: st.analytics !== false };
 
   const fl = obj(raw.flags);
   for (const k of Object.keys(d.flags)) out.flags[k] = fl[k] === true;
