@@ -7,6 +7,7 @@
 
 import { publishedCards, isOwned } from './state.js';
 import { el, dialog, toast, externalLink } from './ui.js';
+import { trackEvent } from './analytics.js';
 
 /** シェアするアプリのURL。画面の位置（#以降）や付け足しの ? は外す。 */
 function appUrl() {
@@ -24,6 +25,7 @@ function shareText() {
 
 /** アプリをシェアする。text を渡すと、その文でシェアする（称号の「あと○種類！」など） */
 export async function shareApp(opts = {}) {
+  trackEvent('share', { kind: 'app' });
   const url = appUrl();
   const text = opts.text || shareText();
 
@@ -84,6 +86,7 @@ export function prepareShareImage(key, make, fileName) {
  * @param {{key:string, make:()=>Promise<Blob>, fileName:string, text:string, title:string}} o
  */
 export async function shareImage({ key, make, fileName, text, title }) {
+  trackEvent('share', { kind: String(key || '').split(':')[0] || 'image' });
   const url = appUrl();
   const withUrl = `${text}\n${url}`;
   let file = null;

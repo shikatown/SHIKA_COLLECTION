@@ -1,5 +1,6 @@
 /* settings.js — 設定・遊び方・プライバシー・リセット。 */
 
+
 import { app, commit, setState, storage, CATEGORIES } from './state.js';
 import { el, clear, toast, dialog, confirm2, coinIcon } from './ui.js';
 import { sfx, unlock } from './sound.js';
@@ -9,6 +10,7 @@ import { SINGLE_COST, TEN_COST } from './gacha.js';
 import { go } from './router.js';
 import { isAdmin, attachSecret } from './admin.js';
 import { clearImageCache } from './update.js';
+import { resumeAnalytics, stopAnalytics } from './analytics.js';
 
 export function renderMore(view) {
   clear(view);
@@ -47,6 +49,17 @@ export function renderSettings(view) {
   list.append(toggleRow('振動', 'vibration'));
   view.append(list);
   view.append(el('p', { class: 'muted', style: { fontSize: '11.5px', marginTop: '8px' }, text: '効果音はアプリ内で生成しています。BGMはありません。振動に対応していない端末では無視されます。' }));
+
+  // 利用状況の記録（Google アナリティクス。js/analytics.js）
+  view.append(el('h3', { text: '利用状況の記録' }));
+  const an = el('div', { class: 'list' });
+  an.append(toggleRow('利用状況の記録を送る', 'analytics'));
+  view.append(an);
+  view.append(el('p', {
+    class: 'muted', style: { fontSize: '11.5px', marginTop: '8px' },
+    text: 'どの画面が見られているか、ガチャやチェックインが何回あったか、という全体の傾向だけを送ります（Google アナリティクス）。'
+      + '氏名・連絡先・現在地の緯度経度・持っているカード・コインの残高は送りません。切ると、以後いっさい送りません。',
+  }));
 
   view.append(el('h3', { text: 'データ' }));
   const data = el('div', { class: 'list' });
@@ -111,6 +124,7 @@ function toggleRow(label, key) {
     sw.setAttribute('aria-checked', String(on));
     if (key === 'sound' && on) { unlock(); sfx.tap(); }
     if (key === 'vibration' && on && 'vibrate' in navigator) navigator.vibrate(15);
+    if (key === 'analytics') { if (on) resumeAnalytics(); else stopAnalytics(); }
   });
   row.append(sw);
   return row;
@@ -201,7 +215,14 @@ export function renderPrivacy(view) {
   view.append(section('集めない情報', [
     '氏名・住所・電話番号・メールアドレスは入力欄そのものがありません。',
     'ユーザー登録やアカウントはありません。',
-    'アクセス解析・行動分析・利用者の追跡は行っていません。解析タグも入れていません。',
+    '誰が使っているかを特定する情報は集めていません。',
+  ]));
+  view.append(section('利用状況の記録', [
+    'どの画面が見られているか、ガチャやチェックインが何回あったか、という全体の傾向を知るために Google アナリティクス（GA4）を使っています。',
+    '送るのは画面の名前と操作の種類だけです。氏名・連絡先・現在地の緯度経度・持っているカード・コインの残高は送りません。',
+    '同じ端末からの再訪をまとめて数えるために、Cookie（_ga）を1つ使います。誰かを特定するものではありません。',
+    '広告のための計測（Google シグナル・広告のカスタマイズ）は切っています。',
+    '設定の「利用状況の記録を送る」を切ると、以後いっさい送りません。',
   ]));
   view.append(section('位置情報', [
     '現在地は「現在地を確認」を押したときだけ取得します。',
@@ -214,6 +235,7 @@ export function renderPrivacy(view) {
   ]));
   view.append(section('外部への通信', [
     'カードデータ・画像・地図タイルの読み込みのために通信します。',
+    '利用状況の記録のために、Google（googletagmanager.com・google-analytics.com）へ送ります。設定で止められます。',
     '「Google Maps で行く」などのリンクを押したときだけ、外部サイトへ移動します。',
   ]));
 }

@@ -12,6 +12,10 @@
     "spot": "Googleマップで経路を見る",
     "culture": ""
   },
+  "analytics": {
+    "measurementId": "G-C995G4LMNR",
+    "enabled": true
+  },
   "mission": {
     "fanclub": 10,
     "sake": 5

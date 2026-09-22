@@ -21,7 +21,7 @@
     "sakeSnack": ["001"],
     "category": { "gourmet": 2, "spot": 1, "culture": 0 }
   },
-  "settings": { "sound": false, "vibration": true },
+  "settings": { "sound": false, "vibration": true, "analytics": true },
   "flags": {
     "firstFreeTenDone": true,
     "tutorial3dShown": true,
@@ -52,7 +52,7 @@
 | `lastEventBonusDate` | イベント会場ボーナスを受けた日 |
 | `rewardClaims.sakeSnack` | 酒のアテ初取得ボーナスを渡したカードID |
 | `rewardClaims.category` | カテゴリごとの「5種類段階」を何段階まで払ったか |
-| `settings` | 効果音（既定OFF）・振動（既定ON） |
+| `settings` | 効果音（既定OFF）・振動（既定ON）。`analytics` は利用状況の記録を送るか（v1.50。js/analytics.js） |
 | `flags` | 一度きりの案内を出したかどうか（`sakeHistoryRead` は、ミッション「志賀町と日本酒の歴史を読む」で本文を開いたか。v1.49） |
 | `knownCardIds` | 前回起動時に見えていた公開カードID。差分が新カード通知になる |
 | `dataVersion` | 最後に読んだ公開データのバージョン |

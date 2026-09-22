@@ -21,6 +21,7 @@ import { createOpening } from './opening.js';
 import { thumbUrl } from './card-render.js';
 import { maybeCelebrateTitles } from './title-complete.js';
 import { titleRow, titleInfos } from './titles.js';
+import { initAnalytics, trackScreen } from './analytics.js';
 
 /* ===== 動作環境の確認 ===== */
 function unsupportedReason() {
@@ -113,6 +114,7 @@ async function boot() {
   document.getElementById('boot').hidden = true;
   setTimeout(maybeCelebrateTitles, 450);
   prefetchTitleArt();
+  initAnalytics();   // 利用状況の記録（js/analytics.js）。設定で切っていれば何も読み込まない
 
   // 起動後のお知らせ類（順番に1つずつ）
   await offerDaily();
@@ -277,6 +279,7 @@ function onRouteChange(route) {
   // 画面が出そろってから戻すと、持ち上がりが最後まで見える
   requestAnimationFrame(() => requestAnimationFrame(unpopTabs));
   updateChrome();
+  trackScreen(location.hash);
   // 称号を獲得していたら、画面が落ち着いてから獲得演出を出す（称号ごとに1回だけ）
   setTimeout(maybeCelebrateTitles, 450);
   // 日付が変わっていたら、ログインボーナスを受け取る（開いたまま日をまたいだとき用）

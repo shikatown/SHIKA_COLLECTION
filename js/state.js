@@ -146,6 +146,7 @@ function withConfigDefaults(cfg) {
   /* ミッションの報酬。以前はここで取り込んでいなかったので、config.json に書いても無視されていた。
      0以上の数だけを受け付け、書いていない・おかしい値は既定値にする。 */
   const ms = c.mission && typeof c.mission === 'object' ? c.mission : {};
+  const an = c.analytics && typeof c.analytics === 'object' ? c.analytics : {};
   const count = (v, d) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : d);
   const visit = {};
   if (ms.visit && typeof ms.visit === 'object' && !Array.isArray(ms.visit)) {
@@ -175,6 +176,13 @@ function withConfigDefaults(cfg) {
       visit: Object.keys(visit).length ? visit : { 1: 3, 5: 5, 10: 8 },   // チェックインの箇所数ごと
       visitAll: count(ms.visitAll, 15),          // すべての場所
       fanclub: count(ms.fanclub, 10),            // 志賀町ファンクラブ会員になる
+      sake: count(ms.sake, 5),                   // 志賀町と日本酒の歴史を読む
+    },
+    /* 利用状況の記録（js/analytics.js）。測定IDを空にすると、読み込み自体を行わない。
+       ここで受け取らないと config.json に書いても無視されるので、項目を増やしたら必ず足すこと。 */
+    analytics: {
+      measurementId: typeof an.measurementId === 'string' ? an.measurementId.trim() : '',
+      enabled: an.enabled !== false,
     },
     event: {
       enabled: ev.enabled === true,
