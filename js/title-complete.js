@@ -20,7 +20,7 @@
 
 import { app, commit } from './state.js';
 import { go } from './router.js';
-import { el, vibrate, reduceMotion, sleep } from './ui.js';
+import { el, reduceMotion, sleep } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { titles, COMPLETE_TITLE } from './rewards.js';
 import { titleInfos, titleCelebrated } from './titles.js';
@@ -205,7 +205,6 @@ export async function celebrateTitle(t, { preview = false } = {}) {
     }
     unlock();
     sfx.snap();
-    vibrate([24, 50, 36]);
     // はまったあとも少しのあいだ照らしたままにして、枠に収まった姿を見せてから幕を上げる
     fly.classList.add('is-landed');
     badge.style.opacity = '0';   // 枠の中の本物の絵に入れ替わる
@@ -247,7 +246,6 @@ export async function celebrateTitle(t, { preview = false } = {}) {
     fly.classList.add('is-reveal');
     sfx.neu();
     sfx.openingLogo();
-    vibrate([18, 40, 26]);
     await wait(quick ? 1400 : 1900);
   }
   await land();

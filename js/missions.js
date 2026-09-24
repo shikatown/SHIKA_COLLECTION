@@ -8,7 +8,7 @@
    ・受け取った記録は state.rewardClaims.missions（ミッションの id の並び）。 */
 
 import { app, commit, saveOk, CATEGORIES, categoryStats } from './state.js';
-import { el, clear, toast, vibrate, coinIcon, dialog } from './ui.js';
+import { el, clear, toast, coinIcon, dialog } from './ui.js';
 import { coinCfg, loginInfo } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
@@ -166,7 +166,7 @@ export function renderMissions(view) {
         const r = claimAll();
         if (r.failed) { releaseCoins(); return; }   // 保存できなかった（案内は app.js が出す）
         if (!r.count) { releaseCoins(); toast('いま受け取れるものはありません'); return; }
-        sfx.coin(); vibrate([12, 30, 18]);
+        sfx.coin();
         toast(`${r.count} 件で +${r.coins} SHIKA COIN`);
         flyCoins(from, r.coins);
         renderMissions(view);
@@ -364,7 +364,6 @@ function loginPanel() {
       pop.classList.add('is-on');
       burst.classList.add('is-on');
       sfx.coin();
-      vibrate(12);
     }, 450);
     setTimeout(() => {
       if (!p.isConnected) return;
@@ -451,7 +450,6 @@ function celebrateLogin(panel, logo, still) {
   logo.append(sparks);
   sfx.coin();
   setTimeout(() => sfx.coin(), 380);
-  vibrate([20, 40, 20, 40, 60]);
   // 終わったら飾りを片付ける（ロゴとバッジは残す）
   setTimeout(() => {
     glow.classList.add('is-rest');
@@ -584,7 +582,7 @@ function row(m, view) {
           holdCoins();
           const got = claim(m.id);
           if (!got) { releaseCoins(); return; }
-          sfx.coin(); vibrate(12);
+          sfx.coin();
           toast(`+${got} SHIKA COIN`);
           flyCoins(from, got);
           renderMissions(view);

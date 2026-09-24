@@ -3,7 +3,7 @@
 
 import { app, isOwned, isVisited, commit, CATEGORY_LABEL, CATEGORIES, publishedCards } from './state.js';
 import {
-  el, clear, cardFace, lockedCard, toast, externalLink, resolvePhoto, vibrate } from './ui.js';
+  el, clear, cardFace, lockedCard, toast, externalLink, resolvePhoto } from './ui.js';
 import { openViewer } from './card-3d.js';
 import { cardActionUrl, linkCardButton } from './card-link.js';
 import { shareImage, prepareShareImage, SHARE_ICON } from './share.js';
@@ -265,7 +265,6 @@ function attachSwipe(view) {
     if (at < 0 || list.length < 2) { settle(t, 0, 260); return; }
     swipedAt = Date.now();
     const n = (at + (dx < 0 ? 1 : -1) + list.length) % list.length;   // 端まで来たら反対側へ
-    vibrate(8);
     // 隣が中央に来るところまで送ってから、その画面に切り替える
     const span = (t ? t.getBoundingClientRect().width : window.innerWidth) + 14;
     settle(t, dx < 0 ? -span : span, 220);

@@ -6,7 +6,7 @@
    毎フレーム transform を書き換える方式（rAF）。軌道計算が要るのでキーフレームでは組めない。 */
 
 import { el, clear } from './dom.js';
-import { cardBack, vibrate, reduceMotion } from './ui.js';
+import { cardBack, reduceMotion } from './ui.js';
 import { sfx } from './sound.js';
 
 /* 拍の境界。ここ以外に時間を書かない */
@@ -363,14 +363,12 @@ export function createGachaStage(host) {
         if (!fired['p' + i] && t >= POP[i]) {
           fired['p' + i] = 1;
           spawnPop(30, FX[GENRES[i]].color);
-          vibrate(9);
           sfx.tap();
         }
       }
       if (!fired.hit && t >= T.merge) {
         fired.hit = 1;
         spawnBurst(96, mode);
-        vibrate(30);
         if (onBeat) onBeat('impact');
       }
       if (!fired.face && t >= T.face) { fired.face = 1; sfx.flip(); }
@@ -419,7 +417,6 @@ export function createGachaStage(host) {
       if (quick) { fired.p0 = fired.p1 = fired.p2 = 1; }
       running = true;
       last = performance.now();
-      vibrate(12);
       return new Promise((resolve) => { resolveDone = resolve; });
     },
     /** 残りを飛ばして最終状態へ */

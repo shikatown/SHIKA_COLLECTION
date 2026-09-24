@@ -3,7 +3,7 @@
    カード画像だけ伏せる（現地へ行くきっかけを残すため）。 */
 
 import { app, isOwned, CATEGORIES, CATEGORY_LABEL, publishedCards, categoryStats, commit } from './state.js';
-import { el, clear, cardFace, cardBack, lockedCard, vibrate, reduceMotion, sleep } from './ui.js';
+import { el, clear, cardFace, cardBack, lockedCard, reduceMotion, sleep } from './ui.js';
 import { categoryProgress, coinCfg } from './rewards.js';
 import { shareApp } from './share.js';
 import { go } from './router.js';
@@ -320,7 +320,6 @@ async function snapIn(grid, cells) {
     // 着地。「パチーン」と鳴らす
     finish(cellEl);
     sfx.snap();
-    vibrate(last ? [16, 34, 24] : 12);
     fly.remove();
     dim.remove();
   };
@@ -352,7 +351,7 @@ async function snapIn(grid, cells) {
   if (!gone()) {
     const rest = cells.filter((c) => !c.classList.contains('is-snapped'));
     for (const c of rest) finish(c);
-    if (skip && rest.length) { sfx.snap(); vibrate(12); }   // 残りをまとめて収めた合図
+    if (skip && rest.length) { sfx.snap(); }   // 残りをまとめて収めた合図
   }
   done();
 }

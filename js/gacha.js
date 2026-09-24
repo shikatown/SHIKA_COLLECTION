@@ -4,7 +4,7 @@
 
 import { app, commit, saveOk, publishedCards, CATEGORIES, CATEGORY_LABEL } from './state.js';
 import { applyDrawTo, duplicateGaugeInfo, categoryProgress, dailyAvailable, claimDaily, coinCfg, loginInfo } from './rewards.js';
-import { el, clear, cardFace, cardBack, toast, vibrate, sleep, reduceMotion, dialog, coinAmount, coinIcon } from './ui.js';
+import { el, clear, cardFace, cardBack, toast, sleep, reduceMotion, dialog, coinAmount, coinIcon } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { go } from './router.js';
 import { openViewer } from './card-3d.js';
@@ -318,7 +318,6 @@ async function start(kind, view) {
   unlock();
   const payload = commitDraw(kind);
   if (!payload) return;
-  vibrate(12);
   await playSequence(view, payload);
 }
 
@@ -390,7 +389,6 @@ export async function playSequence(view, payload) {
         if (beat === 'impact') {
           // 音は新しいカードでもそうでなくても同じにする（引いた手ごたえをそろえる）
           sfx.neu();
-          vibrate(r.isNew ? [18, 40, 26] : 12);
           if (r.isNew) caption.append(el('div', { class: 'gacha__newtag', text: 'NEW' }));
         }
         if (beat === 'name') {

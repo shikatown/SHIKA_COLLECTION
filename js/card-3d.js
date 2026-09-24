@@ -1,10 +1,10 @@
 /* card-3d.js — カード鑑賞専用の3Dビューア。
    ・説明文は出さない（情報は詳細画面の役割）
    ・画像そのものは加工せず、光沢・影は独立レイヤーで重ねる
-   ・振動なし／ジャイロ不使用 */
+   ・ジャイロ不使用 */
 
 import { app, isOwned } from './state.js';
-import { el, clear, cardFace, cardBack, vibrate } from './ui.js';
+import { el, clear, cardFace, cardBack } from './ui.js';
 import { commit } from './state.js';
 import { linkCardButton } from './card-link.js';
 

@@ -46,9 +46,8 @@ export function renderSettings(view) {
 
   const list = el('div', { class: 'list' });
   list.append(toggleRow('効果音', 'sound'));
-  list.append(toggleRow('振動', 'vibration'));
   view.append(list);
-  view.append(el('p', { class: 'muted', style: { fontSize: '11.5px', marginTop: '8px' }, text: '効果音はアプリ内で生成しています。BGMはありません。振動に対応していない端末では無視されます。' }));
+  view.append(el('p', { class: 'muted', style: { fontSize: '11.5px', marginTop: '8px' }, text: '効果音はアプリ内で生成しています。BGMはありません。' }));
 
   // 利用状況の記録（Google アナリティクス。js/analytics.js）
   view.append(el('h3', { text: '利用状況の記録' }));
@@ -123,7 +122,6 @@ function toggleRow(label, key) {
     sw.classList.toggle('is-on', on);
     sw.setAttribute('aria-checked', String(on));
     if (key === 'sound' && on) { unlock(); sfx.tap(); }
-    if (key === 'vibration' && on && 'vibrate' in navigator) navigator.vibrate(15);
     if (key === 'analytics') { if (on) resumeAnalytics(); else stopAnalytics(); }
   });
   row.append(sw);
