@@ -4,7 +4,7 @@
    経路・所要時間・ナビは Google Maps へ外部リンクで渡す。 */
 
 import { app, isVisited, mapCards, commit } from './state.js';
-import { el, clear, toast, dialog, cardFace, vibrate, mapsRouteUrl, mapsCourseUrl } from './ui.js';
+import { el, clear, toast, dialog, cardFace, mapsRouteUrl, mapsCourseUrl } from './ui.js';
 import * as geo from './geo.js';
 import { coinCfg } from './rewards.js';
 import { sfx, unlock } from './sound.js';
@@ -687,7 +687,6 @@ async function runCheckIn(view, status, btn) {
   }
 
   sfx.checkin();
-  vibrate([20, 50, 30]);
   trackEvent('checkin', { spots: res.checkins.length });   // 何か所チェックインできたかだけ（現在地は送らない）
   await showCheckinResult(res);
   renderMap(view, null);

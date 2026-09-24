@@ -14,7 +14,7 @@
    続けて押しても、前の演出が終わってから次が始まる（数字が行ったり来たりしない）。 */
 
 import { app } from './state.js';
-import { vibrate, reduceMotion } from './ui.js';
+import { reduceMotion } from './ui.js';
 import { sfx } from './sound.js';
 
 const COIN_SRC = './assets/icons/coin-sm.png';
@@ -139,7 +139,6 @@ async function fly(from, amount) {
       show(k === n - 1 ? base + amount : base + step * (k + 1));
       bump();
       if (k % 2 === 0 || k === n - 1) sfx.coinTick();
-      if (k === n - 1) vibrate(14);
     }).catch(() => { img.remove(); }));
   }
   await Promise.all(jobs);

@@ -221,13 +221,6 @@ export function resolvePhoto(p) {
   return `./assets/details/${p}`;
 }
 
-/* ===== 触覚 ===== */
-export function vibrate(pattern) {
-  if (!app.state.settings.vibration) return;
-  if (!('vibrate' in navigator)) return;
-  try { navigator.vibrate(pattern); } catch (_) { /* 非対応端末は無視 */ }
-}
-
 /* ===== 外部リンク ===== */
 const SAFE_SCHEME = /^https?:$/i;
 export function safeUrl(raw) {
