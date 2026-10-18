@@ -123,6 +123,35 @@ function pageFace(t, idx, total) {
   return face;
 }
 
+/* 本の大きさは話の長さで変えない（開くたびに上下に伸び縮みすると落ち着かないため）。
+   ページの高さは決め打ちにして、短い話は行間を広げて埋め、長い話は行間を詰める。
+   それでも入りきらないときだけ、文字を少しずつ小さくする。
+   画面に出してから測るので、必ず DOM に入れてから呼ぶこと（v1.54.2）。 */
+const LINE_MAX = 2.6;
+const LINE_MIN = 1.5;
+const SIZE_MAX = 14;
+const SIZE_MIN = 11;
+
+function fitBody(face) {
+  const box = face.querySelector('.book__b');
+  const p = box && box.firstElementChild;
+  if (!box || !p) return;
+  let size = SIZE_MAX;
+  p.style.fontSize = `${size}px`;
+  // 広い行間から順に狭めて、はじめて収まったところで止める
+  let lh = LINE_MAX;
+  for (; lh > LINE_MIN; lh -= 0.05) {
+    p.style.lineHeight = lh.toFixed(2);
+    if (box.scrollHeight <= box.clientHeight) break;
+  }
+  p.style.lineHeight = lh.toFixed(2);
+  // まだ入らなければ、文字を小さくする（細い画面でも切れないように）
+  while (box.scrollHeight > box.clientHeight && size > SIZE_MIN) {
+    size -= 0.5;
+    p.style.fontSize = `${size}px`;
+  }
+}
+
 /**
  * 本を開く。閉じるまでこの中でページを進める。
  * @param {HTMLElement} view ミッション画面（閉じたら進み具合を描き直す）
@@ -213,6 +242,7 @@ export async function openTriviaBook(view, opts = {}) {
 
     if (reduceMotion()) {
       page.replaceChildren(toFace);
+      fitBody(toFace);
       idx = to;
       flipping = false;
       updateNav();
@@ -223,9 +253,10 @@ export async function openTriviaBook(view, opts = {}) {
     // めくる紙。表＝いまのページ、裏＝次のページ。裏返った字は見えない（backface-visibility）
     const flip = el('div', { class: `book__flip book__flip--${dir > 0 ? 'next' : 'prev'}` });
     const front = el('div', { class: 'book__side book__side--front' }, [fromFace.cloneNode(true)]);
+    page.replaceChildren(toFace);     // 下には新しいページを置いておく（めくり終わるとぴったり重なる）
+    fitBody(toFace);                  // 行間を決めてから、裏の面に写す（表と裏で行の数が変わらないように）
     const back = el('div', { class: 'book__side book__side--back' }, [toFace.cloneNode(true)]);
     flip.append(front, back);
-    page.replaceChildren(toFace);     // 下には新しいページを置いておく（めくり終わるとぴったり重なる）
     stage.append(flip);
     // 影の濃さも動かして、紙が立ち上がって見えるようにする
     requestAnimationFrame(() => requestAnimationFrame(() => flip.classList.add('is-turning')));
@@ -251,11 +282,13 @@ export async function openTriviaBook(view, opts = {}) {
   // 開いたときの1ページ目も「読んだ」に数える（開く動きが終わってから）
   const openDone = sleep(reduceMotion() ? 0 : 320).then(() => { if (!closed) finishPage(idx); });
 
-  await dialog({
+  const shown = dialog({
     title: TRIVIA_TITLE,
     body: [book],
     actions: [{ label: '閉じる', value: null, primary: true }],
   });
+  fitBody(page.firstElementChild);   // 画面に出てから、1ページ目の行間を決める
+  await shown;
   closed = true;
   open = false;
   await openDone;
