@@ -17,7 +17,7 @@
    ・動きを減らす設定の端末では、めくらずに切り替える */
 
 import { app, commit, saveOk } from './state.js';
-import { el, clear, toast, dialog, reduceMotion, sleep } from './ui.js';
+import { el, clear, toast, dialog, reduceMotion, sleep, coinIcon } from './ui.js';
 import { sfx, unlock } from './sound.js';
 import { holdCoins, releaseCoins, flyCoins } from './coin-fly.js';
 import { trackEvent } from './analytics.js';
@@ -89,9 +89,12 @@ export function triviaPanel(view, onClose) {
     el('span', { text: '読んだ数' }),
     el('b', { text: `${st.read} / ${st.total}` }),
   ]));
+  // コインの出し方は、ほかのミッションとそろえる（絵 ＋ SHIKA COIN）
   lines.append(el('span', { class: 'trivia__line' }, [
     el('span', { text: '獲得済み' }),
-    el('b', { text: `${st.coins} / ${st.maxCoins} コイン` }),
+    coinIcon(),
+    el('b', { text: `${st.coins} / ${st.maxCoins}` }),
+    el('span', { text: 'SHIKA COIN' }),
   ]));
   p.append(lines);
   return p;
