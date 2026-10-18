@@ -1608,7 +1608,9 @@ a{color:var(--accent)}
   opacity:0;transition:opacity .2s ease;
 }
 .is-turning .book__side--front::after{opacity:1}
-.book__nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 0}
+/* 前へ・次へは、下の「閉じる」とはっきり離す（間違って閉じないように） */
+.book__nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 0}
+.dialog .book{margin-bottom:24px}
 .book__arrow{
   width:46px;height:38px;flex:none;border-radius:10px;border:1px solid var(--line);
   background:var(--surface);color:var(--ink);font-size:16px;font-weight:900;cursor:pointer;
