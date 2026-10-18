@@ -272,14 +272,22 @@ function loadLogoPixels() {
 }
 
 /** ロゴを描く。mode(文字の番号) が 'color' なら元の色、'gray' なら色の無い薄い姿、'none' なら描かない */
+/* 塗り分けた絵の控え（色の付け方 → 描き終えた絵）。
+   ロゴは 960×640＝約61万画素あり、1文字ずつ色を決めて塗ると時間がかかる。
+   ミッション画面はよく開き直すので、同じ色の付け方なら控えから写すだけにする（v1.54.1）。 */
+const logoCache = new Map();
+
 function paintLogo(canvas, d, mode) {
   canvas.width = d.W; canvas.height = d.H;
   const ctx = canvas.getContext('2d');
+  const modes = [];
+  for (let L = 0; L <= LOGO_LETTERS.length; L += 1) modes[L] = mode(L);
+  const key = modes.join(',');
+  const hit = logoCache.get(key);
+  if (hit) { ctx.drawImage(hit, 0, 0); return; }   // 同じ塗り分けは、写すだけ
   const out = ctx.createImageData(d.W, d.H);
   const o = out.data;
   const src = d.rgba;
-  const modes = [];
-  for (let L = 0; L <= LOGO_LETTERS.length; L += 1) modes[L] = mode(L);
   for (let i = 0; i < d.W * d.H; i += 1) {
     const a = src[i * 4 + 3];
     if (!a) continue;
@@ -294,6 +302,12 @@ function paintLogo(canvas, d, mode) {
     }
   }
   ctx.putImageData(out, 0, 0);
+  // 控えに残す（日が変わるまで同じ絵を使い回す。種類が増えすぎたら捨てる）
+  const keep = document.createElement('canvas');
+  keep.width = d.W; keep.height = d.H;
+  keep.getContext('2d').drawImage(canvas, 0, 0);
+  if (logoCache.size > 6) logoCache.clear();
+  logoCache.set(key, keep);
 }
 
 function loginPanel() {

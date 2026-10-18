@@ -40,7 +40,7 @@ function coinsPer() {
 export async function loadTrivia() {
   if (items) return items;
   if (!loading) {
-    loading = fetch('./data/trivia.json', { cache: 'no-cache' })
+    loading = fetch('./data/trivia.json')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => {
         items = (d.items || []).filter((t) => t && t.id && t.title && t.body);
@@ -64,6 +64,25 @@ export function triviaStats() {
   return { read: Math.min(read, total), total, coins: Math.min(read, total) * coinsPer(), maxCoins: total * coinsPer() };
 }
 
+/* 入口の絵は1つだけ作って使い回す。
+   画面を開き直すたびに作り直すと、そのたびに絵を展開することになり、切り替えが重くなる（v1.54.1）。
+   大きさ（1440×480）を先に伝えておくので、読み終える前でも場所が確保され、画面が跳ねない。 */
+let bookImg = null;
+function bookImage() {
+  if (bookImg) return bookImg;
+  bookImg = el('img', {
+    class: 'trivia__img',
+    attrs: {
+      src: BOOK_IMAGE, alt: '知ってる？ 志賀町のこと 全30話',
+      width: '1050', height: '350', decoding: 'async', fetchpriority: 'high',
+    },
+  });
+  bookImg.addEventListener('error', () => {
+    if (bookImg.getAttribute('src') !== BOOK_IMAGE_FALLBACK) bookImg.src = BOOK_IMAGE_FALLBACK;
+  }, { once: true });
+  return bookImg;
+}
+
 /**
  * ミッション画面に置く入口（本の絵のボタンと、進み具合の文字）。
  * @param {HTMLElement} view ミッション画面
@@ -74,12 +93,7 @@ export function triviaPanel(view, onClose) {
   const btn = el('button', {
     class: 'trivia__btn', attrs: { type: 'button', 'aria-label': `${TRIVIA_TITLE}（全30話）を開く` },
   });
-  const img = el('img', {
-    class: 'trivia__img',
-    attrs: { src: BOOK_IMAGE, alt: '知ってる？ 志賀町のこと 全30話', decoding: 'async' },
-  });
-  img.addEventListener('error', () => { if (img.getAttribute('src') !== BOOK_IMAGE_FALLBACK) img.src = BOOK_IMAGE_FALLBACK; }, { once: true });
-  btn.append(img);
+  btn.append(bookImage());
   btn.addEventListener('click', () => openTriviaBook(view, { onClose }));
   p.append(btn);
 

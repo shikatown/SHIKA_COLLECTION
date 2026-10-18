@@ -1564,7 +1564,7 @@ a{color:var(--accent)}
   cursor:pointer;-webkit-tap-highlight-color:transparent;overflow:hidden;line-height:0;
 }
 .trivia__btn:active{transform:scale(.985)}
-.trivia__img{width:100%;height:auto;display:block;border-radius:12px}
+.trivia__img{width:100%;height:auto;aspect-ratio:3/1;display:block;border-radius:12px}
 .trivia__state{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 2px 0}
 .trivia__line{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-3)}
 .trivia__line b{font-size:13.5px;font-weight:900;color:var(--coin);font-variant-numeric:tabular-nums}

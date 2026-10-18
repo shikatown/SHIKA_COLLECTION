@@ -67,14 +67,18 @@ let lastHash = '';
 function rememberScroll() {
   if (lastHash) scrollMemo.set(lastHash, window.scrollY);
 }
-/** 戻したい位置へ。中身の高さが決まるまで数回やり直す（画像の読み込みで伸びるため） */
+/** 戻したい位置へ。中身の高さが決まるまで数回やり直す（画像の読み込みで伸びるため）
+    覚えが無いとき（いちばん上から見るとき）は、高さを測らずに上へ戻すだけにする。
+    高さを測ると、作ったばかりの画面の配置をその場で計算し直すことになり、
+    切り替えが一瞬止まって見えるため（v1.54.1）。 */
 function restoreScroll(y) {
+  if (!y) { window.scrollTo(0, 0); return; }
   const put = () => {
     const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
     window.scrollTo(0, Math.min(y, max));
   };
-  put();
-  if (y > 0) { setTimeout(put, 60); setTimeout(put, 220); setTimeout(put, 500); }
+  requestAnimationFrame(put);
+  setTimeout(put, 60); setTimeout(put, 220); setTimeout(put, 500);
 }
 
 export function handle() {
