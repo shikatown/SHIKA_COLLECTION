@@ -11,7 +11,8 @@
 
    画面
    ・入口はもらった本の絵をそのままボタンにする（絵の上に文字は重ねない）。進み具合は絵の下に文字で出す
-   ・ポップアップは ui.js の dialog（閉じるボタンの見た目・位置・操作はほかと同じ）
+   ・ポップアップは ui.js の dialog（閉じるボタンの見た目・位置・操作はほかと同じ）。
+     中は表紙・背・小口を描いた本の形にする（css/app.css の .book__cover）
    ・めくる動きは、紙が回って裏返る形。裏返った字が見えないよう、表と裏を別の面にする
    ・動きを減らす設定の端末では、めくらずに切り替える */
 
@@ -132,11 +133,16 @@ export async function openTriviaBook(view, opts = {}) {
   let closed = false;
   let flipping = false;
 
+  /* 本の見た目：表紙（濃い緑）の中に紙を1枚置き、左に背（綴じ）、右に小口（紙の重なり）を描く。
+     めくる紙は表紙の中で回るので、綴じのところへ吸い込まれるように見える。 */
   const book = el('div', { class: 'book' });
+  const cover = el('div', { class: 'book__cover' });
+  cover.append(el('span', { class: 'book__ribbon', attrs: { 'aria-hidden': 'true' } }));
   const stage = el('div', { class: 'book__stage' });
   const page = el('div', { class: 'book__page' }, [pageFace(list[idx], idx, total)]);
   stage.append(page);
-  book.append(stage);
+  cover.append(stage);
+  book.append(cover);
 
   const nav = el('div', { class: 'book__nav' });
   const prev = el('button', { class: 'book__arrow', attrs: { type: 'button', 'aria-label': '前の豆知識' }, text: '＜' });
