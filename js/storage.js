@@ -67,6 +67,7 @@ export function defaultState() {
     triviaPage: 0,           // 最後に見た豆知識のページ（次に開いたときの続き）
     pendingResult: null,     // 未確認のガチャ結果（確定済み）
     titlesCelebrated: null,  // 獲得の演出を見せた称号の名前（null = 記録を始める前。js/title-complete.js）
+    titlesGotAt: {},         // 称号を取った日（称号名 -> ISO日時。v1.54。js/titles.js）
   };
 }
 
@@ -150,6 +151,10 @@ export function normalize(raw) {
   // 形の壊れた結果は捨てる（結果画面が落ちないように）
   out.pendingResult = isValidPendingResult(raw.pendingResult) ? raw.pendingResult : null;
   out.titlesCelebrated = Array.isArray(raw.titlesCelebrated) ? Array.from(new Set(arr(raw.titlesCelebrated))) : null;
+  out.titlesGotAt = {};
+  for (const [k, v] of Object.entries(obj(raw.titlesGotAt))) {
+    if (typeof k === 'string' && typeof v === 'string' && v) out.titlesGotAt[k] = v;
+  }
   out.triviaRead = Array.from(new Set(arr(raw.triviaRead)));
   out.triviaPage = Math.min(999, num(raw.triviaPage, 0));
   return out;

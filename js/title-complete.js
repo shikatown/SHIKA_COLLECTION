@@ -214,6 +214,9 @@ export async function celebrateTitle(t, { preview = false } = {}) {
       commit((st) => {
         if (!Array.isArray(st.titlesCelebrated)) st.titlesCelebrated = [];
         if (!st.titlesCelebrated.includes(t.name)) st.titlesCelebrated.push(t.name);
+        // いつ取ったかを残す（称号を押したときに「2026年10月19日 GET！」と出す。js/titles.js）
+        if (!st.titlesGotAt || typeof st.titlesGotAt !== 'object') st.titlesGotAt = {};
+        if (!st.titlesGotAt[t.name]) st.titlesGotAt[t.name] = new Date().toISOString();
         if (t.kind === 'complete') st.flags.completeCelebrated = true;
       });
     }

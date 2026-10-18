@@ -5,7 +5,7 @@
              志賀町ファンクラブ（LINE の志賀町ファンクラブに登録。js/fanclub.js）、
              志賀町マスター（すべてのカード）、志賀町コンプリート（すべてのカード＋すべてのスポットでチェックイン） */
 
-import { app, CATEGORIES } from './state.js';
+import { app, CATEGORIES, publishedCards } from './state.js';
 import { el, dialog } from './ui.js';
 import { titles, categoryProgress, COMPLETE_TITLE } from './rewards.js';
 import { visitStats } from './geo.js';
@@ -70,6 +70,47 @@ export function titleInfos() {
   return list;
 }
 
+/* ここから下は「いつ取ったか」。
+   v1.54 から state.titlesGotAt に書き留めている。
+   それより前に取っていた人の分は記録が無いので、手持ちのデータから割り出す。
+   ・ジャンルのマスター … そのジャンルで最後に手に入れたカードの日
+   ・志賀町マスター   … いちばん最後に手に入れたカードの日
+   ・志賀町コンプリート … 最後のカードか、最後のチェックインの、遅いほうの日
+   ・志賀町ファンクラブ … 押した日を残していないので分からない（日付なしで「GET！」だけ出す） */
+function latestOf(dates) {
+  const ok = dates.filter((d) => typeof d === 'string' && d);
+  if (!ok.length) return '';
+  return ok.reduce((a, b) => (a > b ? a : b));
+}
+
+function guessGotAt(t) {
+  const s = app.state;
+  if (!t.earned) return '';
+  const at = s.obtainedAt || {};
+  const pub = publishedCards();
+  if (t.kind === 'category') return latestOf(pub.filter((c) => c.category === t.key).map((c) => at[c.id]));
+  if (t.kind === 'all') return latestOf(pub.map((c) => at[c.id]));
+  if (t.kind === 'complete') {
+    const visits = Object.values(s.visits || {}).map((v) => v && v.firstVisitedAt);
+    return latestOf([...pub.map((c) => at[c.id]), ...visits]);
+  }
+  return '';
+}
+
+/** 称号を取った日（分からなければ空） */
+export function titleGotAt(t) {
+  const s = app.state;
+  const saved = (s.titlesGotAt && s.titlesGotAt[t.name]) || '';
+  return saved || guessGotAt(t);
+}
+
+/** 2026年10月19日 の形にする（端末の時刻で見た日付） */
+function dateText(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
 /** 獲得条件の文 */
 function conditionText(t) {
   if (t.kind === 'category') return `${t.label}のカードを、すべて（${t.total}種類）集める`;
@@ -78,17 +119,22 @@ function conditionText(t) {
   return `すべてのカード（${t.total}種類）を集めて、すべてのスポット（${t.spots}か所）でチェックインする`;
 }
 
-/** あといくつで獲得か（獲得済みなら null） */
+/**
+ * あといくつで獲得か（獲得済みなら null）。
+ * 画面の幅で行の切れ方が変わらないよう、2行に分けて返す（1行目＝あと何、2行目＝どうすると獲得か）。
+ * @returns {string[]|null}
+ */
 function goalText(t) {
   if (t.earned) return null;
-  if (t.kind === 'fanclub') return 'ファンクラブに登録すると称号獲得！';
+  if (t.kind === 'fanclub') return ['ファンクラブに登録すると', '称号獲得！'];
   const cards = Math.max(0, t.total - t.owned);
-  if (t.kind !== 'complete') return `あと ${cards} 種類で称号獲得！`;
+  if (t.kind !== 'complete') return [`あと ${cards} 種類`, '集めて称号獲得！'];
   const spots = Math.max(0, t.spots - t.visited);
   const parts = [];
   if (cards) parts.push(`カード ${cards} 種類`);
   if (spots) parts.push(`チェックイン ${spots} か所`);
-  return `あと ${parts.join('・')}で称号獲得！`;
+  // カードが残っていれば「集めて」、チェックインだけ残っていれば「まわって」
+  return [`あと ${parts.join('・')}`, cards ? '集めて称号獲得！' : 'まわって称号獲得！'];
 }
 
 /** 開いている案内を閉じる（画面を移る前に） */
@@ -125,7 +171,12 @@ export function openTitleDialog(t) {
   const img = medal.querySelector('img');
   if (img && t.big[1]) img.addEventListener('error', () => { img.src = t.big[1]; }, { once: true });
   body.append(medal);
-  body.append(el('div', { class: `titledlg__state${t.earned ? ' is-on' : ''}`, text: t.earned ? '獲得済み' : '未獲得' }));
+  // 取った日が分かれば「2026年10月19日 GET！」、分からなければ「GET！」だけ
+  const got = t.earned ? dateText(titleGotAt(t)) : '';
+  body.append(el('div', {
+    class: `titledlg__state${t.earned ? ' is-on' : ''}`,
+    text: t.earned ? `${got ? `${got} ` : ''}GET！` : '未獲得',
+  }));
 
   body.append(el('h4', { class: 'titledlg__h', text: '獲得条件' }));
   body.append(el('p', { class: 'titledlg__cond', text: conditionText(t) }));
@@ -133,8 +184,21 @@ export function openTitleDialog(t) {
   if (t.kind === 'complete') body.append(bar('チェックインしたスポット', t.visited, t.spots));
 
   const goal = goalText(t);
-  if (goal) body.append(el('p', { class: 'titledlg__goal', text: goal }));
-  else body.append(el('p', { class: 'titledlg__goal is-on', text: 'おめでとうございます！ 称号を獲得しました' }));
+  if (goal) {
+    body.append(el('p', { class: 'titledlg__goal' }, [
+      el('span', { text: goal[0] }),
+      el('br'),
+      el('span', { text: goal[1] }),
+    ]));
+  }
+  else {
+    // 「！」のあとで必ず改行する（画面の幅によって行の切れ方が変わらないように）
+    body.append(el('p', { class: 'titledlg__goal is-on' }, [
+      el('span', { text: 'おめでとうございます！' }),
+      el('br'),
+      el('span', { text: '称号を獲得しました' }),
+    ]));
+  }
 
   const acts = el('div', { class: 'titledlg__acts' });
   if (!t.earned && t.kind === 'fanclub') {
@@ -171,7 +235,7 @@ export function openTitleDialog(t) {
       click: () => {
         closeDialog();
         if (t.earned && t.shown) shareImage(opts);
-        else shareApp({ text: `志賀町の称号「${t.name}」を目指しています！ ${goal || ''} #SHIKACOLLECTION #志賀町`.replace(/\s+#/, ' #') });
+        else shareApp({ text: `志賀町の称号「${t.name}」を目指しています！ ${goal ? goal.join('') : ''} #SHIKACOLLECTION #志賀町`.replace(/\s+#/, ' #') });
       },
     },
   }));
