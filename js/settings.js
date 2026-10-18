@@ -95,7 +95,7 @@ export function renderSettings(view) {
     text: 'カードの写真が別のカードのものに見えるときに使ってください。通信が少し発生します。',
   }));
 
-  view.append(el('h3', { text: 'このアプリについて' }));
+  view.append(el('h3', { text: '使い方' }));
   const about = el('div', { class: 'list' });
   about.append(link('遊び方', '#/help'));
   // 「プライバシーについて」は「その他」の一覧に1つだけ置く（ここにも置くと重なって見える）
@@ -107,6 +107,11 @@ export function renderSettings(view) {
     on: { click: () => doReset() },
   }));
   view.append(reset);
+
+  // いちばん下に「このアプリについて」（出典・ライセンス・問い合わせ先）
+  const aboutRow = el('div', { class: 'list', style: { marginTop: '18px' } });
+  aboutRow.append(link('このアプリについて', '#/about'));
+  view.append(aboutRow);
 }
 
 function toggleRow(label, key) {
@@ -236,6 +241,83 @@ export function renderPrivacy(view) {
     '利用状況の記録のために、Google（googletagmanager.com・google-analytics.com）へ送ります。設定で止められます。',
     '「Google Maps で行く」などのリンクを押したときだけ、外部サイトへ移動します。',
   ]));
+}
+
+/* ===== このアプリについて =====
+   出典・ライセンス・問い合わせ先をまとめる画面。設定画面のいちばん下から開く。
+   ・OpenStreetMap の出典は ODbL ライセンスで必須（地図画面のすみにも出している）
+   ・外部のライブラリは1つも組み込んでいないので、ライブラリのライセンス一覧は無い
+   ・文面を直すときは docs/PRIVACY.md と食い違わないようにすること */
+const CONTACT_MAIL = 'shokan@town.shika.lg.jp';
+
+export function renderAbout(view) {
+  clear(view);
+  const v = app.version || {};
+
+  // 見出しとバージョン
+  const head = el('div', { class: 'panel', style: { marginBottom: '12px' } });
+  head.append(el('h3', { class: 'panel__title', text: 'SHIKA COLLECTION（しかコレ）', style: { margin: '0 0 6px' } }));
+  head.append(el('p', {
+    style: { margin: '0 0 8px', fontSize: '11.5px', color: 'var(--ink-3)' },
+    text: `アプリ ${v.appVersion || '-'} ／ データ ${v.dataVersion || '-'}`,
+  }));
+  head.append(el('p', {
+    style: { margin: 0, fontSize: '13px', lineHeight: '1.7' },
+    text: '志賀町の特産品・観光スポット・文化を、カードで集めて楽しむアプリです。志賀町が発行しています。',
+  }));
+  view.append(head);
+
+  // 発行と問い合わせ先（メールはタップするとメールソフトが開く）
+  const pub = el('div', { class: 'panel', style: { marginBottom: '12px' } });
+  pub.append(el('h3', { class: 'panel__title', text: '発行', style: { margin: '0 0 8px' } }));
+  pub.append(el('p', { style: { margin: '0 0 6px', fontSize: '13px' }, text: '© 2026 志賀町' }));
+  pub.append(el('p', { style: { margin: '0 0 4px', fontSize: '13px' }, text: 'お問い合わせ：志賀町 商工観光課' }));
+  pub.append(el('a', {
+    class: 'about__mail', text: CONTACT_MAIL,
+    attrs: { href: `mailto:${CONTACT_MAIL}`, 'aria-label': `メールで問い合わせる（${CONTACT_MAIL}）` },
+  }));
+  view.append(pub);
+
+  // 地図（ODbL の出典表示。必須）
+  const map = el('div', { class: 'panel', style: { marginBottom: '12px' } });
+  map.append(el('h3', { class: 'panel__title', text: '地図について', style: { margin: '0 0 8px' } }));
+  map.append(el('p', { style: { margin: '0 0 6px', fontSize: '13px', lineHeight: '1.7' }, text: '地図には OpenStreetMap のデータを使っています。' }));
+  map.append(el('a', {
+    class: 'about__link', text: '© OpenStreetMap contributors（ODbL ライセンス）',
+    attrs: { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener noreferrer' },
+  }));
+  view.append(map);
+
+  view.append(section('外部のサービス', [
+    'Google マップ … 経路や取扱店を調べるときに開きます',
+    'Google アナリティクス … 利用状況の記録（設定で止められます）',
+    'LINE … 志賀町ファンクラブの登録ページ',
+    'X／Facebook／LINE … シェアを選んだときだけ',
+  ]));
+
+  view.append(section('写真・文章', [
+    '写真・動画：志賀町提供',
+    'イラスト・装飾：生成AIを使って制作',
+    'カードの説明文・豆知識：志賀町の資料をもとに作成',
+    '『日本の食生活全集17 聞き書 石川の食事』（農山漁村文化協会）… 豆知識30話目でふれています',
+  ]));
+
+  view.append(section('ご注意', [
+    '掲載内容は制作時点のものです。営業時間などは各施設へお問い合わせください。',
+    '現地でのチェックインは、周囲の安全を確かめてから行ってください。',
+    '位置情報は保存も送信もしません（くわしくは「プライバシーについて」）。',
+  ]));
+
+  const tech = el('div', { class: 'panel', style: { marginBottom: '12px' } });
+  tech.append(el('h3', { class: 'panel__title', text: '技術について', style: { margin: '0 0 8px' } }));
+  tech.append(el('p', {
+    style: { margin: 0, fontSize: '13px', lineHeight: '1.7' },
+    text: '外部のライブラリを使わずに作っています。文字のデザイン（フォント）も端末のものだけを使っています。',
+  }));
+  view.append(tech);
+
+  const toPrivacy = el('a', { class: 'btn btn--block', text: 'プライバシーについて', attrs: { href: '#/privacy' } });
+  view.append(toPrivacy);
 }
 
 /* ===== 集めた記録 ===== */

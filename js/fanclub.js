@@ -26,10 +26,11 @@ export function isFanclubMember() {
  * @param {{label?:string, cls?:string, onJoined?:(first:boolean)=>void}} o
  */
 export function fanclubButton({ label = 'ファンクラブに登録', cls = 'btn btn--block fanclub__btn', onJoined } = {}) {
+  /* LINE の決まりで、公式アイコンに似せた絵をこちらで描いて出すことはできない
+     （LINE Social Plugins 利用ガイドライン）。代わりに文字だけのボタンにしている。v1.53 */
   const a = el('a', {
     class: cls,
     attrs: { href: FANCLUB_URL, target: '_blank', rel: 'noopener noreferrer' },
-    html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2c-5.1 0-9.3 3.3-9.3 7.4 0 3.7 3.3 6.8 7.8 7.3.3.1.7.2.8.5.1.2.1.6 0 .9l-.1.8c0 .2-.2.9.8.5 1-.4 5.4-3.2 7.4-5.5 1.4-1.5 2-3 2-4.5 0-4.1-4.2-7.4-9.4-7.4z" fill="currentColor"/></svg>',
   });
   a.append(el('span', { text: label }));
   a.addEventListener('click', () => {

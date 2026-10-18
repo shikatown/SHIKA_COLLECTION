@@ -43,7 +43,7 @@ export async function shareApp(opts = {}) {
   const links = el('div', { class: 'sharelist' });
   for (const [label, href, cls] of [
     ['X（旧Twitter）', `https://twitter.com/intent/tweet?text=${q(text)}&url=${q(url)}`, 'share--x'],
-    ['LINE', `https://social-plugins.line.me/lineit/share?url=${q(url)}&text=${q(text)}`, 'share--line'],
+    ['LINEで送る', `https://social-plugins.line.me/lineit/share?url=${q(url)}&text=${q(text)}`, 'share--line'],
     ['Facebook', `https://www.facebook.com/sharer/sharer.php?u=${q(url)}`, 'share--fb'],
   ]) {
     const a = externalLink(label, href, `btn btn--block ${cls}`);
@@ -135,7 +135,7 @@ export async function shareImage({ key, make, fileName, text, title }) {
   const q = encodeURIComponent;
   for (const [label, href, cls] of [
     ['X（旧Twitter）', `https://twitter.com/intent/tweet?text=${q(text)}&url=${q(url)}`, 'share--x'],
-    ['LINE', `https://social-plugins.line.me/lineit/share?url=${q(url)}&text=${q(text)}`, 'share--line'],
+    ['LINEで送る', `https://social-plugins.line.me/lineit/share?url=${q(url)}&text=${q(text)}`, 'share--line'],
     ['Facebook', `https://www.facebook.com/sharer/sharer.php?u=${q(url)}`, 'share--fb'],
   ]) {
     const a = externalLink(label, href, `btn btn--block ${cls}`);

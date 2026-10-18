@@ -10,7 +10,7 @@ import { renderGacha, showResults, offerDaily } from './gacha.js';
 import { renderCollection } from './collection.js';
 import { renderCardDetail } from './card-detail.js';
 import { renderMap } from './map.js';
-import { renderSettings, renderHelp, renderPrivacy, renderMore, renderRecords } from './settings.js';
+import { renderSettings, renderHelp, renderPrivacy, renderMore, renderRecords, renderAbout } from './settings.js';
 import { renderAdmin, isAdmin } from './admin.js';
 import { renderMissions, claimableCount } from './missions.js';
 import { startOfflineWatch } from './offline.js';
@@ -207,6 +207,7 @@ function setupRoutes() {
   router.define('/settings', renderSettings);
   router.define('/help', renderHelp);
   router.define('/privacy', renderPrivacy);
+  router.define('/about', renderAbout);
   router.define('/records', renderRecords);
   router.define('/admin', renderAdmin);
   router.define('/missions', renderMissions);
@@ -227,6 +228,7 @@ const TITLES = {
   '/settings': '設定',
   '/help': '遊び方',
   '/privacy': 'プライバシー',
+  '/about': 'このアプリについて',
   '/records': '集めた記録',
   '/admin': 'カード点検',
   '/missions': 'ミッション',
@@ -236,7 +238,7 @@ const TAB_OF = {
   '/card/:id': 'collection', '/map': 'map',
   '/missions': 'missions',
   // 設定まわりはタブに出さない（アプリバーの歯車から行く）
-  '/more': '', '/settings': '', '/help': '', '/privacy': '', '/records': '', '/admin': '',
+  '/more': '', '/settings': '', '/help': '', '/privacy': '', '/records': '', '/admin': '', '/about': '',
 };
 
 /* タブを押した瞬間に、そのタブだけぴょんと持ち上げる。
