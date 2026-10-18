@@ -20,6 +20,7 @@ export function renderMore(view) {
   list.append(link('集めた記録', '#/records'));
   list.append(link('設定', '#/settings'));
   list.append(link('プライバシーについて', '#/privacy'));
+  list.append(link('このアプリについて', '#/about'));   // 出典・ライセンス・問い合わせ先
   view.append(list);
 
   if (isAdmin()) view.append(link('カード点検（管理モード）', '#/admin'));
@@ -107,11 +108,6 @@ export function renderSettings(view) {
     on: { click: () => doReset() },
   }));
   view.append(reset);
-
-  // いちばん下に「このアプリについて」（出典・ライセンス・問い合わせ先）
-  const aboutRow = el('div', { class: 'list', style: { marginTop: '18px' } });
-  aboutRow.append(link('このアプリについて', '#/about'));
-  view.append(aboutRow);
 }
 
 function toggleRow(label, key) {

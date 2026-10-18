@@ -1295,7 +1295,7 @@
      - 通信が切れていても読める（`service-worker.js` の DATA_FILES に `./data/trivia.json` を加えた）
 
 184. **「このアプリについて」の画面を足した（v1.53）。**
-     設定画面のいちばん下から開く（js/settings.js の renderAbout、ルートは `#/about`）。
+     「その他」の一覧のいちばん下から開く（js/settings.js の renderAbout、ルートは `#/about`。v1.53.1 で設定画面から移した）。
      出典・ライセンス・問い合わせ先を1か所にまとめ、公開後の問い合わせに答えられるようにした。
      - 発行：© 2026 志賀町。問い合わせは志賀町 商工観光課（shokan@town.shika.lg.jp。押すとメールソフトが開く `mailto:`）
      - 地図：OpenStreetMap の出典（ODbL）。これはライセンス上必須の表示で、地図画面のすみにも出している
