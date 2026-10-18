@@ -4,7 +4,7 @@
    ・画像・地図タイル         : キャッシュ優先（容量に上限あり）
    本体を更新したら APP_VERSION を上げること。 */
 
-const APP_VERSION = '1.51.0';
+const APP_VERSION = '1.52.0';
 const SHELL_CACHE = `shika-shell-${APP_VERSION}`;
 const DATA_CACHE = 'shika-data';
 const ASSET_CACHE = 'shika-assets';
@@ -47,6 +47,7 @@ const SHELL = [
   './js/share.js',
   './js/share-image.js',
   './js/titles.js',
+  './js/trivia.js',
   './js/analytics.js',
   './js/fanclub.js',
   './js/opening.js',
@@ -66,7 +67,7 @@ const SHELL = [
 /* 公開データ。入った時点で控えておく。
    アプリは起動時に通信優先でこれを読むが、初めて開いたときは Service Worker が
    まだ動いておらず、控えが作られなかった。そのため初回利用のあと通信が切れると起動できなかった。 */
-const DATA_FILES = ['./data/version.json', './data/cards.json', './data/config.json'];
+const DATA_FILES = ['./data/version.json', './data/cards.json', './data/config.json', './data/trivia.json'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {

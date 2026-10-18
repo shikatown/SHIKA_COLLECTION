@@ -1554,3 +1554,69 @@ a{color:var(--accent)}
 .sakehist{text-align:left}
 .dialog .sakehist__p{margin:0 0 12px;font-size:14px;line-height:1.85;color:var(--ink)}
 .dialog .sakehist__done{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--coin-soft);color:var(--coin);font-size:13px;font-weight:800;line-height:1.6}
+
+/* ===== 読んで知ろう！志賀町（js/trivia.js） ===== */
+/* 入口。もらった本の絵をそのまま押せるようにする（絵の上には何も重ねない）。
+   進み具合は絵の下に文字で出す */
+.trivia{padding:10px 12px 12px;border-top:1px solid var(--line-2)}
+.trivia__btn{
+  display:block;width:100%;padding:0;border:0;background:none;border-radius:12px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;overflow:hidden;line-height:0;
+}
+.trivia__btn:active{transform:scale(.985)}
+.trivia__img{width:100%;height:auto;display:block;border-radius:12px}
+.trivia__state{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 2px 0}
+.trivia__line{display:inline-flex;align-items:baseline;gap:6px;font-size:12px;color:var(--ink-3)}
+.trivia__line b{font-size:13.5px;font-weight:900;color:var(--coin);font-variant-numeric:tabular-nums}
+
+/* 本のポップアップ。紙の面を回して「めくる」。裏返った字は見せない */
+.book{text-align:left}
+.book__stage{position:relative;perspective:1200px}
+.book__page,.book__side{
+  background:linear-gradient(180deg,#fffdf6,#f7f2e4);
+  border:1px solid #e6dcc4;border-radius:10px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.6), 0 1px 4px rgba(90,70,30,.12);
+  padding:12px 13px;
+}
+.book__face{display:block}
+.book__no{font-size:11.5px;font-weight:800;color:var(--ink-3);letter-spacing:.06em;margin:0 0 4px}
+.book__t{margin:0 0 8px;font-size:15px;font-weight:900;line-height:1.45;color:var(--ink)}
+.dialog .book__b{max-height:min(44svh,320px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.dialog .book__b p{margin:0;font-size:13.5px;line-height:1.85;color:var(--ink)}
+/* めくる紙。表＝いままでのページ、裏＝次のページ */
+.book__flip{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
+.book__side{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.book__side--back{transform:rotateY(180deg)}
+.book__flip--next{transform-origin:left center}
+.book__flip--prev{transform-origin:right center}
+.book__flip--next.is-turning{animation:bookNext .46s cubic-bezier(.4,0,.25,1) forwards}
+.book__flip--prev.is-turning{animation:bookPrev .46s cubic-bezier(.4,0,.25,1) forwards}
+@keyframes bookNext{
+  0%{transform:rotateY(0deg);box-shadow:0 0 0 rgba(90,70,30,0)}
+  50%{box-shadow:-14px 0 26px rgba(90,70,30,.28)}
+  100%{transform:rotateY(-180deg);box-shadow:0 0 0 rgba(90,70,30,0)}
+}
+@keyframes bookPrev{
+  0%{transform:rotateY(0deg);box-shadow:0 0 0 rgba(90,70,30,0)}
+  50%{box-shadow:14px 0 26px rgba(90,70,30,.28)}
+  100%{transform:rotateY(180deg);box-shadow:0 0 0 rgba(90,70,30,0)}
+}
+/* 紙が立ち上がるときの陰。影だけを動かすので、文字の読みやすさは変わらない */
+.book__side--front::after,.book__side--back::after{
+  content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(90,70,30,.16),rgba(90,70,30,0) 45%);
+  opacity:0;transition:opacity .2s ease;
+}
+.is-turning .book__side--front::after{opacity:1}
+.book__nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 0}
+.book__arrow{
+  width:46px;height:38px;flex:none;border-radius:10px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);font-size:16px;font-weight:900;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.book__arrow:active{transform:scale(.96)}
+.book__arrow:disabled{opacity:.35;cursor:default}
+.book__count{font-size:13px;font-weight:800;color:var(--ink-3);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){
+  .book__flip{display:none}
+}

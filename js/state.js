@@ -176,7 +176,7 @@ function withConfigDefaults(cfg) {
       visit: Object.keys(visit).length ? visit : { 1: 3, 5: 5, 10: 8 },   // チェックインの箇所数ごと
       visitAll: count(ms.visitAll, 15),          // すべての場所
       fanclub: count(ms.fanclub, 10),            // 志賀町ファンクラブ会員になる
-      sake: count(ms.sake, 5),                   // 志賀町と日本酒の歴史を読む
+      trivia: count(ms.trivia, 1),               // 豆知識1話につき（読んで知ろう！志賀町）
     },
     /* 利用状況の記録（js/analytics.js）。測定IDを空にすると、読み込み自体を行わない。
        ここで受け取らないと config.json に書いても無視されるので、項目を増やしたら必ず足すこと。 */

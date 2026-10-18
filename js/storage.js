@@ -56,7 +56,6 @@ export function defaultState() {
       missionsGuideShown: false, // ミッション画面の初回の案内を見せたか
       gachaGuideShown: false,  // ガチャ画面の初回の案内（ミッションでコインをもらおう）を見せたか
       fanclubJoined: false,    // 「ファンクラブに登録」を押したか（志賀町ファンクラブの登録とみなす。js/fanclub.js）
-      sakeHistoryRead: false,  // ミッション「志賀町と日本酒の歴史を読む」で説明を開いたか（js/missions.js）
       openingPlayed: false,    // 起動演出の長い版を一度見たか（2回目からは短い版）
       completeCelebrated: false, // 「志賀町コンプリート」の獲得演出を見せたか（1回だけ出す）
       admin: false,          // 管理者の確認用モード（公開前の点検だけに使う）
@@ -64,6 +63,8 @@ export function defaultState() {
     knownCardIds: [],        // 「新カード追加」通知の判定用
     unseenCardIds: [],       // 取得したが、まだ一覧で枠にはめる演出を見せていないカード
     dataVersion: '',
+    triviaRead: [],          // 読み終えた豆知識のID（1話につき1コイン。js/trivia.js）
+    triviaPage: 0,           // 最後に見た豆知識のページ（次に開いたときの続き）
     pendingResult: null,     // 未確認のガチャ結果（確定済み）
     titlesCelebrated: null,  // 獲得の演出を見せた称号の名前（null = 記録を始める前。js/title-complete.js）
   };
@@ -149,6 +150,8 @@ export function normalize(raw) {
   // 形の壊れた結果は捨てる（結果画面が落ちないように）
   out.pendingResult = isValidPendingResult(raw.pendingResult) ? raw.pendingResult : null;
   out.titlesCelebrated = Array.isArray(raw.titlesCelebrated) ? Array.from(new Set(arr(raw.titlesCelebrated))) : null;
+  out.triviaRead = Array.from(new Set(arr(raw.triviaRead)));
+  out.triviaPage = Math.min(999, num(raw.triviaPage, 0));
   return out;
 }
 

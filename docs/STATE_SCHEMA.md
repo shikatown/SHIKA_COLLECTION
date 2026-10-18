@@ -32,6 +32,8 @@
   "knownCardIds": ["001", "002"],
   "dataVersion": "20260910",
   "pendingResult": null,
+  "triviaRead": ["01", "02"],
+  "triviaPage": 1,
   "titlesCelebrated": null
 }
 ```
@@ -57,6 +59,8 @@
 | `knownCardIds` | 前回起動時に見えていた公開カードID。差分が新カード通知になる |
 | `dataVersion` | 最後に読んだ公開データのバージョン |
 | `pendingResult` | 未確認のガチャ結果（**すでに確定・保存済み**）。結果画面を閉じると null |
+| `triviaRead` | 読み終えた豆知識のID（v1.52。1話につき1コイン。js/trivia.js） |
+| `triviaPage` | 最後に見た豆知識のページ（0から数える。次に開いたときの続き） |
 | `titlesCelebrated` | 獲得の演出を見せた称号の名前（v1.46）。null は記録を始める前で、はじめて確かめたときに、その時点で持っている称号（見せていないコンプリートを除く）を入れる |
 
 ## 壊れたデータへの備え

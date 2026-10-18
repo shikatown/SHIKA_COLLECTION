@@ -96,6 +96,13 @@ python -m http.server 8000
 
 > Excel を開くと「使い方」シートに同じ内容が入っています。
 
+### 豆知識（読んで知ろう！志賀町）
+
+30話の文章は **`data/trivia.json`** です（提供された Excel から起こしたもの）。
+直すときはこのファイルの `title` と `body` を書き換え、`data/version.json` の `dataVersion` を新しくします。
+話を増やす・減らすときは `id` を重ねないこと（`id` が、どの話を読んだかの記録の鍵です）。
+入口の絵は `assets/icons/trivia-book.png`（控え）と `assets/icons/web/trivia-book.webp`（表示用）です。
+
 ## 運用（更新のしかた）
 
 | やりたいこと | 触るファイル | 手順 |
