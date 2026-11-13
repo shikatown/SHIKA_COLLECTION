@@ -581,6 +581,7 @@ async function geoFailDialog(kind) {
           '同じ画面の「Safari の Web サイト」を「使用中」または「確認」にする',
         ]),
         '変更したら、この画面に戻って「近くのスポットを探す」をもう一度押してください。',
+        el('p', { class: 'geofail__note', text: '※iPhoneでホーム画面に追加したアプリでは、iOSの仕様により位置情報を利用できない場合があります。その場合は、Safariで開いてご利用ください（ホーム画面のアプリとSafariでは遊びのデータが別になります。設定のバックアップで移せます）。' }),
       ];
     } else if (isAndroid) {
       body = [

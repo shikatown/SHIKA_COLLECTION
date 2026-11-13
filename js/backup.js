@@ -86,6 +86,8 @@ export async function restoreFromFile(file) {
     return false;
   }
   const s = storage.normalize(obj.state);
+  // 管理モードだったバックアップでも、パスワードを入れずに管理モードへ戻れないようにする。
+  s.flags.admin = false;
   const when = obj.exportedAt ? obj.exportedAt.slice(0, 10) : '不明';
   const ok = await confirm2(
     '復元しますか',

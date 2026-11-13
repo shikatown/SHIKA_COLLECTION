@@ -2,7 +2,7 @@
    公開前の点検のためだけのもので、利用者向けの機能ではない。
    個人情報も外部送信も増やさない（この端末の保存データを読み書きするだけ）。
 
-   入り方: 「その他」画面のいちばん下にあるバージョン表示を7回続けてタップ。
+   入り方: 「その他」画面のいちばん下にあるバージョン表示を7回続けてタップし、パスワードを入れる。
    入ると、ガチャがコイン無しで引けるようになり、
    「カード点検」画面ですべてのカードの状態を一覧できる。 */
 
@@ -16,23 +16,77 @@ import { gpsCards, todayKey } from './state.js';
 import { loginInfo, titles } from './rewards.js';
 import { offerDaily } from './gacha.js';
 
+/* パスワードの文字そのものは書かず、照合に使う値だけを置く。
+   公開されたコードなので、端末の保存データを書き換えれば管理モードに入れてしまう。
+   この端末の中だけに効き、ほかの人のデータや外部には影響しないため、この仕組みで足りると判断している。
+   変えるときは tools/make-admin-hash.mjs で作り直し、塩・回数・ハッシュ値の3つを差し替える。 */
+const ADMIN_PASSWORD_SALT = '4e0c32d78df52fcfadc2230f4f8c0ad5';
+const ADMIN_PASSWORD_ITERATIONS = 150000;
+const ADMIN_PASSWORD_HASH = 'd52a67a58e05909d427561fd20856d07dbd1afa6305c6b2389917973ccf709cb';
+let turningOn = false;
+
 export function isAdmin() {
   return !!(app.state && app.state.flags && app.state.flags.admin);
 }
 
 export async function askTurnOn() {
-  const ok = await dialog({
-    title: '管理モードに入りますか',
-    body: [
-      '公開前の点検用です。利用者に配る前に切ってください。',
-      'ガチャがコイン無しで引けるようになり、すべてのカードの状態を見られます。',
-    ],
-    actions: [{ label: 'やめる', value: false }, { label: '入る', value: true, primary: true }],
-  });
-  if (!ok) return;
-  commit((s) => { s.flags.admin = true; });
-  toast('管理モードに入りました');
-  go('#/admin');
+  // ダイアログを開いている間も、照合している間も、重ねて受け付けない。
+  if (turningOn) return;
+  turningOn = true;
+  let input = null;
+  let password = '';
+  try {
+    input = el('input', {
+      attrs: {
+        type: 'password', placeholder: 'パスワード', 'aria-label': 'パスワード',
+        autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false',
+      },
+      on: {
+        keydown: (e) => {
+          if (e.key !== 'Enter' || e.isComposing) return;
+          e.preventDefault();
+          input.closest('.dialog')?.querySelector('.dialog__acts .btn--primary')?.click();
+        },
+      },
+    });
+    const answer = dialog({
+      title: '管理モードに入りますか',
+      body: [
+        '公開前の点検用です。利用者に配る前に切ってください。',
+        'ガチャがコイン無しで引けるようになり、すべてのカードの状態を見られます。',
+        input,
+      ],
+      actions: [{ label: 'やめる', value: false }, { label: '入る', value: true, primary: true }],
+    });
+    // タップから続けてフォーカスし、スマホでもキーボードを出せるようにする。
+    input.focus();
+    if (!await answer) return;
+    password = input.value;
+    input.value = '';
+    if (password === '') { toast('パスワードを入れてください'); return; }
+    if (!globalThis.crypto?.subtle) {
+      toast('この環境では管理モードに入れません（https で開いてください）');
+      return;
+    }
+    // 前後の空白も含め、入力された文字をそのまま UTF-8 にする。保存・送信・出力はしない。
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+    password = '';
+    const salt = Uint8Array.from(ADMIN_PASSWORD_SALT.match(/../g), (b) => parseInt(b, 16));
+    const bits = await crypto.subtle.deriveBits({
+      name: 'PBKDF2', hash: 'SHA-256', salt, iterations: ADMIN_PASSWORD_ITERATIONS,
+    }, key, 256);
+    const hash = Array.from(new Uint8Array(bits), (b) => b.toString(16).padStart(2, '0')).join('');
+    if (hash !== ADMIN_PASSWORD_HASH) { toast('パスワードが違います'); return; }
+    commit((s) => { s.flags.admin = true; });
+    toast('管理モードに入りました');
+    go('#/admin');
+  } catch (_) {
+    toast('パスワードを確認できませんでした。もう一度お試しください');
+  } finally {
+    if (input) input.value = '';
+    password = '';
+    turningOn = false;
+  }
 }
 
 export function turnOff() {
