@@ -397,7 +397,7 @@ function prefetchTitleArt() {
    ・起動画面のあいだは読まない。起動の絵（カードの裏やロゴ）の読み込みと取り合わないよう、起動画面が消えてから読む
    ・ホームを離れたら止めて、読み込みも手放す。戻ってきたら、離れたところの続きから流す（v1.47）
    ・アプリを閉じたら止め、戻ったら続きから
-   ・動きを減らす設定の端末と、データセーバーの端末では、絵だけにする
+   ・データセーバーの端末では、絵だけにする
    ・Service Worker では控えない（service-worker.js）。動画は途中から読む要求が多く、控えから返すと iPhone で流れないことがあるため */
 const HOME_VIDEO = './assets/video/home.mp4';
 const HOME_POSTER = './assets/video/home-poster.jpg';
@@ -428,9 +428,8 @@ function homeVideo() {
     attrs: { role: 'img', 'aria-label': '志賀町の風景と SHIKA COLLECTION のロゴ' },
     style: { backgroundImage: `url("${HOME_POSTER}")` },
   });
-  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const saveData = !!(navigator.connection && navigator.connection.saveData);
-  if (reduce || saveData) return box;   // 絵だけ
+  if (saveData) return box;   // 絵だけ
 
   const v = el('video', {
     class: 'homevideo__v',

@@ -880,56 +880,6 @@
   }
 }
 
-/* animations.css globally collapses every animation under this preference.
-   Explicit end states keep the reduced version complete and predictable. */
-@media (prefers-reduced-motion:reduce){
-  #boot.opening .opening__shore,
-  #boot.opening .opening__shore::before,
-  #boot.opening .opening__twilight,
-  #boot.opening .opening__vignette,
-  #boot.opening .opening__particles,
-  #boot.opening .opening__hero-card,
-  #boot.opening .opening__hero-card::after,
-  #boot.opening .opening__side--featured,
-  #boot.opening .opening__card-sheen,
-  #boot.opening .opening__fan-card,
-  #boot.opening .opening__flash,
-  #boot.opening .opening__title,
-  #boot.opening .opening__logo,
-  #boot.opening .opening__start{
-    animation:none !important;
-    transition:none !important;
-  }
-
-  #boot.opening.is-running:not(.is-title) .opening__shore{
-    opacity:1;
-    transform:scale(1.012);
-  }
-  #boot.opening .opening__shore::before{
-    opacity:.28;
-    transform:none;
-  }
-  #boot.opening.is-running:not(.is-title) .opening__twilight{opacity:.58}
-  #boot.opening.is-running:not(.is-title) .opening__hero-card{
-    opacity:1;
-    transform:translate3d(-50%,-50%,0) rotateX(0deg) rotateZ(-1deg) scale(.9);
-  }
-  #boot.opening.is-running:not(.is-title) .opening__title{
-    opacity:0;
-    pointer-events:none;
-  }
-  #boot.opening.is-title .opening__title,
-  #boot.opening.is-title .opening__logo{
-    opacity:1;
-    transform:none;
-  }
-  #boot.opening.is-title .opening__start{
-    opacity:1;
-    transform:translate3d(-50%,0,0);
-  }
-  #boot.opening.is-title .opening__title,
-  #boot.opening.is-title .opening__start{pointer-events:auto}
-}
 
 @media (forced-colors:active){
   #boot.opening .opening__start{

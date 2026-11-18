@@ -263,5 +263,7 @@ export function externalLink(label, url, cls = 'btn btn--block') {
 }
 
 export function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
-export const reduceMotion = () =>
-  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// v1.55.1 から、端末の設定によって動画や演出が動かなく見えるのを避けるため、いつも動かす。
+// 簡易版の処理は残してある。戻すときは、下の false を
+// window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches に戻す。
+export const reduceMotion = () => false;

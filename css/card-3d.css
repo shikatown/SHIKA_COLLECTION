@@ -91,7 +91,6 @@
   27% { opacity:0; transform:translateX(520%) skewX(-14deg) }   /* 2.6s × 27% ≒ 0.7秒 */
   100%{ opacity:0; transform:translateX(520%) skewX(-14deg) }
 }
-@media (prefers-reduced-motion: reduce){ .card3d__glint{ display:none } }
 
 /* 全幅に広がるので、閉じるボタンのタップを奪わないようにする */
 .viewer3d__caption{

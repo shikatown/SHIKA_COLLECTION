@@ -8,7 +8,7 @@
    ・受け取った記録は state.rewardClaims.missions（ミッションの id の並び）。 */
 
 import { app, commit, saveOk, CATEGORIES, categoryStats } from './state.js';
-import { el, clear, toast, coinIcon, dialog } from './ui.js';
+import { el, clear, toast, coinIcon, dialog, reduceMotion } from './ui.js';
 import { coinCfg, loginInfo } from './rewards.js';
 import { visitStats } from './geo.js';
 import { sfx, unlock } from './sound.js';
@@ -320,7 +320,7 @@ function loginPanel() {
   const before = Math.min(total, lettersFor(Math.max(0, day - 1)));
   const shownToday = app.state.loginShownDate === app.state.dailyBonusDate;
   const animate = today && day > 0 && !shownToday;
-  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = reduceMotion();
   const complete = day >= cycle;
 
   const p = el('div', { class: `panel loginbonus${complete ? ' is-done' : ''}` });

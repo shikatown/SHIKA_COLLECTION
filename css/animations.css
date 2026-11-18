@@ -170,6 +170,3 @@ body.is-drawing{ overflow:hidden }
 /* 大きい1枚のときは、カードから離して下に置く */
 .reveal-msg--low{ margin-top:34px }
 
-@media (prefers-reduced-motion: reduce){
-  *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
-}
